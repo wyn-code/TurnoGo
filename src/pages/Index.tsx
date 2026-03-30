@@ -8,20 +8,32 @@ import Categories from "@/components/landing/Categories";
 import BusinessCTA from "@/components/landing/BusinessCTA";
 import VIPPlan from "@/components/landing/VIPPlan";
 import Footer from "@/components/landing/Footer";
+import { useEffect, useState } from "react";
 
-const Index = () => (
-  <div className="min-h-screen bg-background">
-    <Navbar />
-    <Hero />
-    <Categories />
-    <RecommendedBusinesses />
-    <BenefitsClients />
-    <BenefitsBusiness />
-    <HowItWorks />
-    <BusinessCTA />
-    <VIPPlan />
-    <Footer />
-  </div>
-);
+const Index = () => {
+  const [data, setData] = useState("");
+
+  useEffect(() => {
+    fetch("http://localhost:8000/test")
+      .then(res => res.json())
+      .then(data => setData(data.message))
+      .catch(err => console.error(err));
+  }, []);
+
+  return (
+    <div>
+      <Navbar />
+      <Hero />
+      <Categories />
+      <RecommendedBusinesses />
+      <BenefitsClients />
+      <BenefitsBusiness />
+      <HowItWorks />
+      <BusinessCTA />
+      <VIPPlan />
+      <Footer />
+    </div>
+  );
+};
 
 export default Index;
