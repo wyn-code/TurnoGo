@@ -32,7 +32,7 @@ const Dashboard = () => {
           <DashboardHeader title={title} />
           <main className="flex-1 p-6">
             <Routes>
-              <Route index element={<DashboardResumen />} />
+              <Route index element={<DashboardResumen />} /> 
               <Route path="turnos" element={<DashboardTurnos />} />
               <Route path="servicios" element={<DashboardServicios />} />
               <Route path="empleados" element={<DashboardEmpleados />} />
