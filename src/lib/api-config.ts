@@ -2,14 +2,13 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 const API_VERSION = "v1";
 
+/** Base para `/login`, `/register`, `/me`. El backend Turnexo usa `…/api/auth` (no `/api/v1/auth`). */
+export const AUTH_API_ROOT =
+  import.meta.env.VITE_AUTH_API_ROOT || `${API_BASE_URL}/api/auth`;
+
 export const API_CONFIG = {
   baseURL: `${API_BASE_URL}/api/${API_VERSION}`,
   endpoints: {
-    // Auth
-    login: "/auth/login",
-    register: "/auth/register",
-    logout: "/auth/logout",
-    
     // Negocios
     businesses: "/businesses",
     businessCreate: "/businesses",

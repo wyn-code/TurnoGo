@@ -19,7 +19,7 @@ const Categories = () => {
   const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
-    fetch("http://localhost:8000/categorias")
+    fetch("http://localhost:8000/api/categorias")
       .then((res) => res.json())
       .then((data) => setCategories(data))
       .catch((err) => console.error(err));

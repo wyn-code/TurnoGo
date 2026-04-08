@@ -13,7 +13,9 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { UserPlus, AlertCircle } from "lucide-react";
 
 const schema = z.object({
-  name: z.string().min(2, "Mínimo 2 caracteres"),
+  nombre: z.string().min(2, "Ingresá tu nombre"),
+  apellido: z.string().min(2, "Ingresá tu apellido"),
+  usuario: z.string().min(3, "Mínimo 3 caracteres").max(30, "Máximo 30 caracteres"),
   email: z.string().email("Ingresá un email válido"),
   password: z.string().min(6, "Mínimo 6 caracteres"),
   confirmPassword: z.string(),
@@ -37,9 +39,9 @@ const Registro = () => {
 
   const onSubmit = async (data: FormData) => {
     setServerError("");
-    const result = await authRegister(data.name, data.email, data.password);
+    const result = await authRegister(data.usuario, data.email, data.password);
     if (result.success) {
-      navigate(from, { replace: true });
+      navigate("/registrar-negocio", { replace: true });
     } else {
       setServerError(result.error || "Error al registrarse.");
     }
@@ -70,9 +72,19 @@ const Registro = () => {
             )}
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
-                <Label>Nombre completo</Label>
-                <Input {...register("name")} placeholder="Juan Pérez" />
-                {errors.name && <p className="text-sm text-destructive">{errors.name.message}</p>}
+                <Label>Nombre</Label>
+                <Input {...register("nombre")} autoComplete="given-name" placeholder="Juan" />
+                {errors.nombre && <p className="text-sm text-destructive">{errors.nombre.message}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label>Apellido</Label>
+                <Input {...register("apellido")} autoComplete="family-name" placeholder="Pérez" />
+                {errors.apellido && <p className="text-sm text-destructive">{errors.apellido.message}</p>}
+              </div>
+              <div className="space-y-2">
+                <Label>Nombre de usuario</Label>
+                <Input {...register("usuario")} autoComplete="username" placeholder="tu_usuario" />
+                {errors.usuario && <p className="text-sm text-destructive">{errors.usuario.message}</p>}
               </div>
               <div className="space-y-2">
                 <Label>Email</Label>

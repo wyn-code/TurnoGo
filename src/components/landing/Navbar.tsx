@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X } from "lucide-react";
 
 const Navbar = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const location = useLocation();
+  const hideRegisterBusinessButton = location.pathname === "/login" || location.pathname === "/registro";
 
   return (
     <nav className="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-lg">
@@ -18,9 +20,11 @@ const Navbar = () => {
           <Button variant="ghost" size="sm" asChild>
             <Link to="/negocios">Explorar negocios</Link>
           </Button>
-          <Button size="sm" asChild>
-            <Link to="/registrar-negocio">Registrar negocio</Link>
-          </Button>
+          {!hideRegisterBusinessButton && (
+            <Button size="sm" asChild>
+              <Link to="/login" state={{ from: "/registrar-negocio" }}>Registrar mi negocio</Link>
+            </Button>
+          )}
         </div>
 
         {/* Mobile toggle */}
@@ -40,10 +44,14 @@ const Navbar = () => {
             <Button variant="ghost" size="sm" className="justify-start" asChild>
               <Link to="/negocios">Explorar negocios</Link>
             </Button>
-            <Button variant="ghost" size="sm" className="justify-start">Iniciar sesión</Button>
-            <Button size="sm" asChild>
-              <Link to="/registrar-negocio">Registrar negocio</Link>
+            <Button variant="ghost" size="sm" className="justify-start" asChild>
+              <Link to="/login">Iniciar sesión</Link>
             </Button>
+            {!hideRegisterBusinessButton && (
+              <Button size="sm" asChild>
+                <Link to="/login" state={{ from: "/registrar-negocio" }}>Registrar mi negocio</Link>
+              </Button>
+            )}
           </div>
         </div>
       )}

@@ -8,16 +8,16 @@ import Categories from "@/components/landing/Categories";
 import BusinessCTA from "@/components/landing/BusinessCTA";
 import VIPPlan from "@/components/landing/VIPPlan";
 import Footer from "@/components/landing/Footer";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 const Index = () => {
-  const [data, setData] = useState("");
-
   useEffect(() => {
     fetch("http://localhost:8000/test")
-      .then(res => res.json())
-      .then(data => setData(data.message))
-      .catch(err => console.error(err));
+      .then((res) => res.json())
+      .then((json: { message?: string }) => {
+        console.log(json.message);
+      })
+      .catch((err) => console.error(err));
   }, []);
 
   return (

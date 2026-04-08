@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { LogIn, AlertCircle } from "lucide-react";
 
 const schema = z.object({
-  email: z.string().email("Ingresá un email válido"),
+  email: z.string().min(1, "Ingresá tu email").email("Ingresá un email válido"),
   password: z.string().min(6, "Mínimo 6 caracteres"),
 });
 
@@ -24,6 +24,7 @@ const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: string })?.from || "/dashboard";
+  const postLoginTarget = from.startsWith("/login") || from.startsWith("/registro") ? "/dashboard" : from;
   const [serverError, setServerError] = useState("");
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
@@ -34,7 +35,7 @@ const Login = () => {
     setServerError("");
     const result = await login(data.email, data.password);
     if (result.success) {
-      navigate(from, { replace: true });
+      navigate(postLoginTarget, { replace: true });
     } else {
       setServerError(result.error || "Error al iniciar sesión.");
     }
@@ -66,7 +67,7 @@ const Login = () => {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
                 <Label>Email</Label>
-                <Input {...register("email")} type="email" placeholder="tu@email.com" />
+                <Input {...register("email")} type="email" autoComplete="email" placeholder="tu@email.com" />
                 {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
               </div>
               <div className="space-y-2">
@@ -80,7 +81,7 @@ const Login = () => {
             </form>
             <p className="text-center text-sm text-muted-foreground">
               ¿No tenés cuenta?{" "}
-              <Link to="/registro" state={{ from }} className="font-medium text-primary hover:underline">
+              <Link to="/registro" state={{ from: postLoginTarget }} className="font-medium text-primary hover:underline">
                 Registrate
               </Link>
             </p>
