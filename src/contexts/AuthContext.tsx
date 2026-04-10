@@ -1,13 +1,13 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
-import { AUTH_API_ROOT } from "@/lib/api-config";
 import apiClient from "@/lib/api-client";
+import { authService } from "@/services/auth.service";
 
 interface User {
   id?: string;
   email: string;
   name?: string;
-  hasBusiness?: boolean; // 👈 NUEVO
+  hasBusiness?: boolean;
 }
 
 function normalizeUser(raw: Record<string, unknown>): User {
@@ -22,7 +22,7 @@ function normalizeUser(raw: Record<string, unknown>): User {
         : raw.name != null
         ? String(raw.name)
         : undefined,
-    hasBusiness: Boolean(raw.has_business), // 👈 NUEVO (ajustar según backend)
+    hasBusiness: Boolean(raw.has_business),
   };
 }
 
@@ -32,10 +32,11 @@ interface AuthContextType {
   login: (
     email: string,
     password: string
-  ) => Promise<{ success: boolean; user?: User; error?: string }>;  register: (
+  ) => Promise<{ success: boolean; user?: User; error?: string }>;
+  register: (
     usuario: string,
     email: string,
-    password: string,
+    password: string
   ) => Promise<{ success: boolean; error?: string }>;
   logout: () => void;
 }
@@ -43,14 +44,17 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 const USER_KEY = "turnexo_user";
-/** Misma clave que usa `api-client` para peticiones autenticadas */
 const TOKEN_KEY = "auth_token";
 
 function normalizeApiDetail(detail: unknown): string {
   if (typeof detail === "string") return detail;
   if (Array.isArray(detail)) {
     return detail
-      .map((e) => (typeof e === "object" && e && "msg" in e ? String((e as { msg: string }).msg) : JSON.stringify(e)))
+      .map((e) =>
+        typeof e === "object" && e && "msg" in e
+          ? String((e as { msg: string }).msg)
+          : JSON.stringify(e)
+      )
       .join(", ");
   }
   if (detail && typeof detail === "object" && "msg" in detail) {
@@ -59,7 +63,6 @@ function normalizeApiDetail(detail: unknown): string {
   return "Error al procesar la solicitud";
 }
 
-/** El backend solo acepta `email_us` + `contrasena_us` (email válido). */
 function loginBody(email: string, password: string) {
   return { email_us: email.trim(), contrasena_us: password };
 }
@@ -71,30 +74,28 @@ async function applySessionFromToken(
   localStorage.setItem(TOKEN_KEY, token);
   apiClient.setToken(token);
 
-  const meRes = await fetch(`${AUTH_API_ROOT}/me`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  try {
+    const userData = await authService.me();
+    const user = normalizeUser(userData as Record<string, unknown>);
 
-  const userData = await meRes.json().catch(() => null);
+    setUser(user);
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
 
-  if (!meRes.ok) {
+    return { success: true as const, user };
+  } catch (error) {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     apiClient.clearToken();
     setUser(null);
+
     return {
       success: false as const,
       error:
-        normalizeApiDetail(userData?.detail) ||
-        "No se pudo obtener el perfil",
+        normalizeApiDetail(
+          error instanceof Error ? error.message : error
+        ) || "No se pudo obtener el perfil",
     };
   }
-
-  const user = normalizeUser(userData as Record<string, unknown>);
-  setUser(user);
-  localStorage.setItem(USER_KEY, JSON.stringify(user));
-
-  return { success: true as const, user }; // 👈 IMPORTANTE
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -102,80 +103,72 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    try {
-      const storedUser = localStorage.getItem(USER_KEY);
-      const token = localStorage.getItem(TOKEN_KEY);
-      if (token) {
-        apiClient.setToken(token);
+    const initSession = async () => {
+      try {
+        const token = localStorage.getItem(TOKEN_KEY);
+
+        if (token) {
+          await applySessionFromToken(token, setUser);
+          return;
+        }
+
+        const storedUser = localStorage.getItem(USER_KEY);
+        if (storedUser) {
+          setUser(
+            normalizeUser(JSON.parse(storedUser) as Record<string, unknown>)
+          );
+        }
+      } catch {
+        localStorage.removeItem(USER_KEY);
+        localStorage.removeItem(TOKEN_KEY);
+        apiClient.clearToken();
+      } finally {
+        setIsLoading(false);
       }
-      if (storedUser) {
-        setUser(normalizeUser(JSON.parse(storedUser) as Record<string, unknown>));
-      }
-    } catch {
-      localStorage.removeItem(USER_KEY);
-      localStorage.removeItem(TOKEN_KEY);
-      apiClient.clearToken();
-    }
-    setIsLoading(false);
+    };
+
+    void initSession();
   }, []);
 
-const login = async (email: string, password: string) => {
-  try {
-    const response = await fetch(`${AUTH_API_ROOT}/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(loginBody(email, password)),
-    });
+  const login = async (email: string, password: string) => {
+    try {
+      const data = await authService.login(loginBody(email, password));
 
-    const data = await response.json().catch(() => ({}));
+      const token = data.access_token as string | undefined;
 
-    if (!response.ok) {
+      if (!token) {
+        return { success: false, error: "Respuesta del servidor sin token" };
+      }
+
+      const session = await applySessionFromToken(token, setUser);
+      setIsLoading(false);
+
+      return session;
+    } catch (error: any) {
+      console.error(error);
+      setIsLoading(false);
+
       return {
         success: false,
-        error: normalizeApiDetail(data.detail) || "Error al iniciar sesión",
+        error:
+          error?.response?.data?.detail ||
+          error?.message ||
+          "Error al iniciar sesión",
       };
     }
+  };
 
-    const token = data.access_token as string | undefined;
-
-    if (!token) {
-      return { success: false, error: "Respuesta del servidor sin token" };
-    }
-
-    const session = await applySessionFromToken(token, setUser);
-    setIsLoading(false);
-
-    return session; // 👈 ahora devuelve user también
-  } catch (error) {
-    console.error(error);
-    setIsLoading(false);
-    return {
-      success: false,
-      error: "Error de conexión con el servidor",
-    };
-  }
-};
-
-  const register = async (usuario: string, email: string, password: string) => {
+  const register = async (
+    usuario: string,
+    email: string,
+    password: string
+  ) => {
     try {
-      const response = await fetch(`${AUTH_API_ROOT}/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          usuario_us: usuario.trim(),
-          email_us: email.trim(),
-          contrasena_us: password,
-        }),
+      const data = await authService.register({
+        usuario_us: usuario.trim(),
+        email_us: email.trim(),
+        contrasena_us: password,
       });
-
-      const data = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        return {
-          success: false,
-          error: normalizeApiDetail(data.detail) || "Error al registrarse",
-        };
-      }
 
       const token = data.access_token as string | undefined;
 
@@ -184,7 +177,8 @@ const login = async (email: string, password: string) => {
         if (!loginResult.success) {
           return {
             success: false,
-            error: "Cuenta creada pero no se pudo iniciar sesión. Probá iniciar sesión manualmente.",
+            error:
+              "Cuenta creada pero no se pudo iniciar sesión. Probá iniciar sesión manualmente.",
           };
         }
         setIsLoading(false);
@@ -193,10 +187,12 @@ const login = async (email: string, password: string) => {
 
       const session = await applySessionFromToken(token, setUser);
       setIsLoading(false);
+
       return session.success ? { success: true } : session;
     } catch (error) {
       console.error(error);
       setIsLoading(false);
+
       return {
         success: false,
         error: "Error de conexión con el servidor",

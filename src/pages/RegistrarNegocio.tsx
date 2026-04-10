@@ -167,7 +167,7 @@ const RegistrarNegocio = () => {
 
       // Preparar datos para enviar al backend
       // NOTA: Reemplaza el import y la llamada según tu backend
-      // import { businessService } from "@/services/api";
+      // import { businessService } from "@/services/business.service";
       
       // Generar slug a partir del nombre
       const slug = data.name

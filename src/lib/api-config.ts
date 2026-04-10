@@ -1,5 +1,5 @@
 // Configuración de la API
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+export const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
 const API_VERSION = "v1";
 
 /** Base para `/login`, `/register`, `/me`. El backend Turnexo usa `…/api/auth` (no `/api/v1/auth`). */

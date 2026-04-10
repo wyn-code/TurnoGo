@@ -1,4 +1,4 @@
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { MapPin, Phone, Clock, CreditCard, Instagram, Globe, Star } from "lucide-react";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
@@ -11,6 +11,7 @@ import type { Service } from "@/types";
 
 const NegocioPerfil = () => {
   const { slug } = useParams<{ slug: string }>();
+  const navigate = useNavigate();
   const business = getBusinessBySlug(slug || "");
 
   if (!business) {
@@ -30,7 +31,7 @@ const NegocioPerfil = () => {
   const bizProfessionals = getProfessionalsByBusinessId(business.id);
 
   const handleBook = (service: Service) => {
-    window.location.href = `/reservar/${business.slug}?servicio=${service.id}`;
+    navigate(`/reservar/${business.slug}?servicio=${service.id}`);
   };
 
   return (
