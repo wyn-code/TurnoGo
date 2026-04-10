@@ -31,15 +31,17 @@ const Login = () => {
     resolver: zodResolver(schema),
   });
 
-  const onSubmit = async (data: FormData) => {
-    setServerError("");
-    const result = await login(data.email, data.password);
-    if (result.success) {
-      navigate(postLoginTarget, { replace: true });
-    } else {
-      setServerError(result.error || "Error al iniciar sesión.");
-    }
-  };
+const onSubmit = async (data: FormData) => {
+  setServerError("");
+
+  const result = await login(data.email, data.password);
+
+  if (result.success) {
+    navigate("/dashboard", { replace: true }); // 👈 SIEMPRE dashboard
+  } else {
+    setServerError(result.error || "Error al iniciar sesión.");
+  }
+};
 
   return (
     <div className="min-h-screen bg-background">
