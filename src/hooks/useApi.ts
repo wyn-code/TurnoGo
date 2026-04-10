@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { businessService, type CreateBusinessRequest } from "@/services/api";
+import { businessService, type CreateBusinessRequest } from "@/services/business.service";
 
 // Hook para crear un negocio
 export const useCreateBusiness = () => {

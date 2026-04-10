@@ -1,6 +1,7 @@
 import { Scissors, Sparkles, Heart, Hand } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
+import { businessService } from "@/services/business.service";
 
 const iconMap: Record<string, ReactNode> = {
   scissors: <Scissors size={28} />,
@@ -19,10 +20,16 @@ const Categories = () => {
   const [categories, setCategories] = useState<Category[]>([]);
 
   useEffect(() => {
-    fetch("http://localhost:8000/api/categorias")
-      .then((res) => res.json())
-      .then((data) => setCategories(data))
-      .catch((err) => console.error(err));
+    const loadCategories = async () => {
+      try {
+        const data = await businessService.getCategories();
+        setCategories(data);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    void loadCategories();
   }, []);
 
   return (
