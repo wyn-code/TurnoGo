@@ -1,13 +1,15 @@
-// Configuración de la API
-export const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
-const API_VERSION = "v1";
+// Base del backend, sin /api
+export const API_HOST = import.meta.env.VITE_API_URL || "http://localhost:8000";
 
-/** Base para `/login`, `/register`, `/me`. El backend Turnexo usa `…/api/auth` (no `/api/v1/auth`). */
+// Backend actual usa /api, no /api/v1
+export const API_BASE_URL = `${API_HOST}/api`;
+
+/** Base para auth */
 export const AUTH_API_ROOT =
-  import.meta.env.VITE_AUTH_API_ROOT || `${API_BASE_URL}/api/auth`;
+  import.meta.env.VITE_AUTH_API_ROOT || `${API_BASE_URL}/auth`;
 
 export const API_CONFIG = {
-  baseURL: `${API_BASE_URL}/api/${API_VERSION}`,
+  baseURL: API_BASE_URL,
   endpoints: {
     // Negocios
     businesses: "/businesses",
@@ -15,20 +17,20 @@ export const API_CONFIG = {
     businessDetail: (slug: string) => `/businesses/${slug}`,
     businessUpdate: (id: string) => `/businesses/${id}`,
     businessDelete: (id: string) => `/businesses/${id}`,
-    
+
     // Servicios
     services: "/services",
     servicesByBusiness: (businessId: string) => `/businesses/${businessId}/services`,
-    
+
     // Empleados
     professionals: "/professionals",
     professionalsByBusiness: (businessId: string) => `/businesses/${businessId}/professionals`,
-    
+
     // Horarios
     schedules: "/schedules",
     schedulesByBusiness: (businessId: string) => `/businesses/${businessId}/schedules`,
-    
-    // Turnos/Reservas
+
+    // Turnos
     appointments: "/appointments",
     appointmentCreate: "/appointments",
     appointmentDetail: (id: string) => `/appointments/${id}`,

@@ -108,7 +108,7 @@ class ApiClient {
     if (body && (method === "POST" || method === "PUT" || method === "PATCH")) {
       config.body = body instanceof FormData ? body : JSON.stringify(body);
     }
-
+    console.log("API URL FINAL:", url);
     try {
       const response = await fetch(url, config);
 
@@ -206,6 +206,7 @@ class ApiClient {
   }
 
   async getWithBase<T>(baseUrl: string, endpoint: string, params?: Record<string, string | number | boolean>): Promise<T> {
+    console.log("API URL FINAL WITH BASE:", baseUrl);
     return this.requestWithBase<T>(baseUrl, endpoint, { method: "GET", params });
   }
 

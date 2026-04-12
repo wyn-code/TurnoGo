@@ -3,19 +3,15 @@ export interface Business {
   name: string;
   slug: string;
   category: string;
-  rating: number;
-  reviewCount: number;
   address: string;
   city: string;
-  description: string;
-  image: string;
+  image?: string;
   phone?: string;
-  whatsapp?: string;
+  whatsapp: string;
   instagram?: string;
   facebook?: string;
-  website?: string;
-  hours?: Record<string, string>;
-  paymentMethods?: string[];
+  active?: boolean;
+  createdAt?: string;
 }
 
 export interface Category {
@@ -31,17 +27,16 @@ export interface Service {
   duration: number;
   price: number;
   businessId: string;
-  description?: string;
+  requiresApproval?: boolean;
   active?: boolean;
 }
 
 export interface Professional {
   id: string;
   name: string;
-  specialty: string;
-  photo: string;
   businessId: string;
-  serviceIds?: string[];
+  phone?: string;
+  active?: boolean;
 }
 
 export interface TimeSlot {

@@ -11,7 +11,7 @@ import NegocioPerfil from "./pages/NegocioPerfil.tsx";
 import Reservar from "./pages/Reservar.tsx";
 import Login from "./pages/Login.tsx";
 import Registro from "./pages/Registro.tsx";
-import RegistrarNegocio from "./pages/RegistrarNegocio.tsx";
+import RegistrarNegocio from "./pages/registrar-negocio/RegistrarNegocio.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import NotFound from "./pages/NotFound.tsx";
 const queryClient = new QueryClient();

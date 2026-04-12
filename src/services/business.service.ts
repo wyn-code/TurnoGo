@@ -1,91 +1,131 @@
 import apiClient from "@/lib/api-client";
-import { API_BASE_URL, API_CONFIG } from "@/lib/api-config";
-import type { Service, Professional } from "@/types";
+import { API_BASE_URL } from "@/lib/api-config";
 
-export interface CreateBusinessRequest {
-  name: string;
-  slug: string;
-  category: string;
-  description: string;
-  image: string;
-  address: string;
-  city: string;
-  province: string;
-  locality?: string;
-  phone?: string;
-  whatsapp: string;
-  instagram?: string;
-  facebook?: string;
-  website?: string;
+import type { Business, Service, Professional, Category } from "@/types";
+import type {
+  ApiBusiness,
+  ApiService,
+  ApiEmployee,
+  ApiCategory,
+} from "@/types/api";
+
+export interface CreateCompleteBusinessRequest {
+  nombre: string;
+  rubro: string;
+  wsp: string;
+  telefono?: string | null;
+  direccion: string;
+  ciudad: string;
+  id_localidad?: number | null;
+  id_provincia?: number | null;
+  ig_url?: string | null;
+  logo?: string | null;
+  activo: boolean;
+  servicios: {
+    nombre_servicio: string;
+    precio: number;
+    requiere_aprobacion: boolean;
+    duracion_min: number;
+    duracion_max: number;
+    activo: boolean;
+  }[];
+  empleados: {
+    nombre: string;
+    apellido: string;
+    telefono: string;
+    activo: boolean;
+  }[];
 }
 
-export interface BusinessResponse {
-  id: string;
-  name: string;
-  slug: string;
-  category: string;
-  description: string;
-  image: string;
-  rating: number;
-  reviewCount: number;
-  address: string;
-  city: string;
-  province: string;
-  locality?: string;
-  phone?: string;
-  whatsapp: string;
-  instagram?: string;
-  facebook?: string;
-  website?: string;
-  createdAt: string;
-  updatedAt: string;
-}
+const mapBusinessFromApi = (item: ApiBusiness): Business => ({
+  id: String(item.id_negocio),
+  name: item.nombre,
+  slug: item.slug,
+  category: item.rubro,
+  address: item.direccion,
+  city: item.ciudad,
+  image: item.logo || undefined,
+  phone: item.telefono || undefined,
+  whatsapp: item.wsp,
+  instagram: item.ig_url || undefined,
+  facebook: item.url_fb || undefined,
+  active: item.activo,
+  createdAt: item.creado_at || undefined,
+});
 
-export interface CategoryResponse {
-  id: number;
-  name: string;
-  icon: string;
-}
+const mapServiceFromApi = (item: ApiService): Service => ({
+  id: String(item.id_servicio),
+  name: item.nombre_servicio,
+  duration: item.duracion_min,
+  price: item.precio,
+  businessId: String(item.id_negocio),
+  requiresApproval: item.requiere_aprobacion,
+  active: item.activo,
+});
+
+const mapProfessionalFromApi = (item: ApiEmployee): Professional => ({
+  id: String(item.id_empleado),
+  name: `${item.nombre} ${item.apellido}`.trim(),
+  businessId: String(item.id_negocio),
+  phone: item.telefono || undefined,
+  active: item.activo,
+});
+
+const mapCategoryFromApi = (item: ApiCategory): Category => ({
+  id: String(item.id),
+  name: item.name,
+  icon: item.icon || "briefcase",
+  slug: item.slug || item.name.toLowerCase().replace(/\s+/g, "-"),
+});
 
 export const businessService = {
-  getAllBusinesses: async (params?: { category?: string; city?: string; page?: number; limit?: number }) => {
-    return apiClient.get<BusinessResponse[]>(API_CONFIG.endpoints.businesses, params);
+  getAllBusinesses: async (): Promise<Business[]> => {
+    const data = await apiClient.get<ApiBusiness[]>("/negocios/");
+    return data.map(mapBusinessFromApi);
   },
 
-  getBusinessBySlug: async (slug: string) => {
-    return apiClient.get<BusinessResponse>(API_CONFIG.endpoints.businessDetail(slug));
+  getBusinessById: async (id: string): Promise<Business> => {
+    const data = await apiClient.get<ApiBusiness>(`/negocios/${id}`);
+    return mapBusinessFromApi(data);
   },
 
-  getBusinessById: async (id: string) => {
-    return apiClient.get<BusinessResponse>(`${API_CONFIG.endpoints.businesses}/${id}`);
+  getBusinessBySlug: async (slug: string): Promise<Business> => {
+    const data = await apiClient.get<ApiBusiness[]>("/negocios/");
+    const found = data.find((b) => b.slug === slug);
+
+    if (!found) {
+      throw new Error("Negocio no encontrado");
+    }
+
+    return mapBusinessFromApi(found);
   },
 
-  createBusiness: async (data: CreateBusinessRequest) => {
-    return apiClient.post<BusinessResponse>(API_CONFIG.endpoints.businessCreate, data);
+  createCompleteBusiness: async (data: CreateCompleteBusinessRequest) => {
+    return apiClient.post("/negocios/complete", data);
   },
 
-  updateBusiness: async (id: string, data: Partial<CreateBusinessRequest>) => {
-    return apiClient.put<BusinessResponse>(API_CONFIG.endpoints.businessUpdate(id), data);
+  getBusinessServices: async (businessId: string): Promise<Service[]> => {
+    const data = await apiClient.get<ApiService[]>(
+      `/servicios?business_id=${businessId}`
+    );
+    return data.map(mapServiceFromApi);
   },
 
-  deleteBusiness: async (id: string) => {
-    return apiClient.delete<{ message: string }>(API_CONFIG.endpoints.businessDelete(id));
+  getBusinessProfessionals: async (
+    businessId: string
+  ): Promise<Professional[]> => {
+    const data = await apiClient.get<ApiEmployee[]>(
+      `/empleados?business_id=${businessId}`
+    );
+    return data.map(mapProfessionalFromApi);
   },
 
-  getBusinessServices: async (businessId: string) => {
-    return apiClient.get<Service[]>(API_CONFIG.endpoints.servicesByBusiness(businessId));
-  },
-
-  getBusinessProfessionals: async (businessId: string) => {
-    return apiClient.get<Professional[]>(API_CONFIG.endpoints.professionalsByBusiness(businessId));
-  },
-
-  getBusinessSchedule: async (businessId: string) => {
-    return apiClient.get<Record<string, Record<string, string>>>(API_CONFIG.endpoints.schedulesByBusiness(businessId));
-  },
-
-  getCategories: async () => {
-    return apiClient.getWithBase<CategoryResponse[]>(API_BASE_URL, "/api/categorias");
+  getCategories: async (): Promise<Category[]> => {
+    const data = await apiClient.getWithBase<ApiCategory[]>(
+      API_BASE_URL,
+      "/categorias"
+    );
+    return data.map(mapCategoryFromApi);
   },
 };
 
