@@ -12,5 +12,7 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
+  console.log("PROTECTED ROUTE USER:", user);
   return <>{children}</>;
+  
 }

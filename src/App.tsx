@@ -14,6 +14,8 @@ import Registro from "./pages/Registro.tsx";
 import RegistrarNegocio from "./pages/registrar-negocio/RegistrarNegocio.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import AdminPanel from "./pages/AdminPanel.tsx";
+import { AdminRoute } from "./components/admin/AdminRoute.tsx";
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -35,6 +37,7 @@ const App = () => (
             {/* Rutas protegidas — solo dueños de negocio */}
             <Route path="/registrar-negocio" element={<ProtectedRoute><RegistrarNegocio /></ProtectedRoute>} />
             <Route path="/dashboard/*" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/admin"element={<AdminRoute><AdminPanel /></AdminRoute>}/>
 
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

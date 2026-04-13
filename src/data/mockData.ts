@@ -1,4 +1,4 @@
-import type { Business, Category, City, Service, Professional, TimeSlot } from "@/types";
+import type { Business, Category, City, Service, Professional, TimeSlot } from "../types";
 
 export const recommendedBusinesses: Business[] = [
   {
@@ -178,16 +178,10 @@ export const services: Service[] = [
 ];
 
 export const professionals: Professional[] = [
-  { id: "p1", name: "Carlos Méndez", specialty: "Cortes clásicos y modernos", photo: "/placeholder.svg", businessId: "1" },
-  { id: "p2", name: "Martín López", specialty: "Barba y diseño", photo: "/placeholder.svg", businessId: "1" },
-  { id: "p3", name: "Diego Ruiz", specialty: "Coloración", photo: "/placeholder.svg", businessId: "1" },
-  { id: "p4", name: "Ana García", specialty: "Esculpidas y nail art", photo: "/placeholder.svg", businessId: "2" },
-  { id: "p5", name: "Lucía Fernández", specialty: "Semipermanente", photo: "/placeholder.svg", businessId: "2" },
-  { id: "p6", name: "Sofía Torres", specialty: "Corte y color", photo: "/placeholder.svg", businessId: "3" },
-  { id: "p7", name: "Valentina Romero", specialty: "Mechas y balayage", photo: "/placeholder.svg", businessId: "3" },
-  { id: "p8", name: "Laura Díaz", specialty: "Tratamientos faciales", photo: "/placeholder.svg", businessId: "4" },
-  { id: "p9", name: "Marcos Silva", specialty: "Masajes terapéuticos", photo: "/placeholder.svg", businessId: "5" },
-  { id: "p10", name: "Paula Vega", specialty: "Masajes relajantes", photo: "/placeholder.svg", businessId: "5" },
+  { id: "p1", name: "Carlos Méndez", businessId: "1" },
+  { id: "p2", name: "Martín López", businessId: "1" },
+  { id: "p3", name: "Diego Ruiz", businessId: "1" },
+  { id: "p4", name: "Ana García", businessId: "2" },
 ];
 
 export const generateTimeSlots = (): TimeSlot[] => {

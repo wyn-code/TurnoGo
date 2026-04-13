@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -22,9 +22,6 @@ type FormData = z.infer<typeof schema>;
 const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-  const from = (location.state as { from?: string })?.from || "/dashboard";
-  const postLoginTarget = from.startsWith("/login") || from.startsWith("/registro") ? "/dashboard" : from;
   const [serverError, setServerError] = useState("");
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
@@ -36,8 +33,16 @@ const onSubmit = async (data: FormData) => {
 
   const result = await login(data.email, data.password);
 
-  if (result.success) {
-    navigate("/dashboard", { replace: true }); // 👈 SIEMPRE dashboard
+  if (result.success && result.user) {
+    const role = result.user.role?.toLowerCase();
+
+    if (role === "admin") {
+      navigate("/admin", { replace: true });
+    } else if (role === "duenio") {
+      navigate("/dashboard", { replace: true });
+    } else {
+      navigate("/", { replace: true });
+    }
   } else {
     setServerError(result.error || "Error al iniciar sesión.");
   }
@@ -83,9 +88,7 @@ const onSubmit = async (data: FormData) => {
             </form>
             <p className="text-center text-sm text-muted-foreground">
               ¿No tenés cuenta?{" "}
-              <Link to="/registro" state={{ from: postLoginTarget }} className="font-medium text-primary hover:underline">
-                Registrate
-              </Link>
+              <Link to="/registro" state={{ from: "/dashboard" }} className="font-medium text-primary hover:underline">Registrate</Link>
             </p>
           </CardContent>
         </Card>

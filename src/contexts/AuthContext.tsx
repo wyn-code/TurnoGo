@@ -8,6 +8,7 @@ interface User {
   email: string;
   name?: string;
   hasBusiness?: boolean;
+  role?: string;
 }
 
 function normalizeUser(raw: Record<string, unknown>): User {
@@ -23,6 +24,7 @@ function normalizeUser(raw: Record<string, unknown>): User {
         ? String(raw.name)
         : undefined,
     hasBusiness: Boolean(raw.has_business),
+    role: String(raw.role ?? ""), // 👈 AGREGAR ESTO
   };
 }
 
@@ -76,10 +78,14 @@ async function applySessionFromToken(
 
   try {
     const userData = await authService.me();
+    
+
     const user = normalizeUser(userData as Record<string, unknown>);
+    
 
     setUser(user);
     localStorage.setItem(USER_KEY, JSON.stringify(user));
+    console.log("SET USER:", user); 
 
     return { success: true as const, user };
   } catch (error) {
@@ -140,10 +146,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, error: "Respuesta del servidor sin token" };
       }
 
-      const session = await applySessionFromToken(token, setUser);
-      setIsLoading(false);
+    const session = await applySessionFromToken(token, setUser);
+    setIsLoading(false);
 
-      return session;
+    return session; 
     } catch (error: any) {
       console.error(error);
       setIsLoading(false);

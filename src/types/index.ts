@@ -5,11 +5,20 @@ export interface Business {
   category: string;
   address: string;
   city: string;
+
   image?: string;
   phone?: string;
-  whatsapp: string;
+  whatsapp?: string;
   instagram?: string;
   facebook?: string;
+
+  // 👇 agregados para que coincida con tu mock
+  description?: string;
+  rating?: number;
+  reviewCount?: number;
+  hours?: Record<string, string>;
+  paymentMethods?: string[];
+
   active?: boolean;
   createdAt?: string;
 }
