@@ -17,6 +17,10 @@ const AdminPanel = () => {
   const [editBusiness, setEditBusiness] = useState<AdminBusiness | null>(null);
   const [deleteBusiness, setDeleteBusiness] = useState<AdminBusiness | null>(null);
 
+  useEffect(() => {
+    console.log("ADMIN PANEL MOUNTED");
+  }, []);
+
   if (isLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -46,11 +50,6 @@ const AdminPanel = () => {
   const handleDelete = (id: string) => {
     setBusinesses((prev) => prev.filter((b) => b.id !== id));
     setDeleteBusiness(null);
-
-    // 👇 AGREGALO ACÁ
-  useEffect(() => {
-    console.log("ADMIN PANEL MOUNTED");
-  }, []);
   };
 
   return (
@@ -175,7 +174,7 @@ const AdminPanel = () => {
         </div>
       </main>
 
-      <EditBusinessModal business={editBusiness} open={!!editBusiness} onOpenChange={(o) => !o && setEditBusiness(null)} onSave={handleSave} />
+      <EditBusinessModal key={editBusiness?.id ?? "none"} business={editBusiness} open={!!editBusiness} onOpenChange={(o) => !o && setEditBusiness(null)} onSave={handleSave} />
       <DeleteBusinessDialog business={deleteBusiness} open={!!deleteBusiness} onOpenChange={(o) => !o && setDeleteBusiness(null)} onConfirm={handleDelete} />
     </div>
   );

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,30 +15,18 @@ interface EditBusinessModalProps {
   onSave: (updated: AdminBusiness) => void;
 }
 
-export function EditBusinessModal({ business, open, onOpenChange, onSave }: EditBusinessModalProps) {
-  const [form, setForm] = useState({
-    businessName: "",
-    ownerFirstName: "",
-    ownerLastName: "",
-    ownerEmail: "",
-    category: "",
-    primaryColor: "#7c3aed",
-    status: "activo" as "activo" | "inactivo",
-  });
+const getFormFromBusiness = (business: AdminBusiness | null) => ({
+  businessName: business?.businessName ?? "",
+  ownerFirstName: business?.ownerFirstName ?? "",
+  ownerLastName: business?.ownerLastName ?? "",
+  ownerEmail: business?.ownerEmail ?? "",
+  category: business?.category ?? "",
+  primaryColor: business?.primaryColor || "#7c3aed",
+  status: business?.status ?? ("activo" as "activo" | "inactivo"),
+});
 
-  useEffect(() => {
-    if (business) {
-      setForm({
-        businessName: business.businessName,
-        ownerFirstName: business.ownerFirstName,
-        ownerLastName: business.ownerLastName,
-        ownerEmail: business.ownerEmail,
-        category: business.category,
-        primaryColor: business.primaryColor || "#7c3aed",
-        status: business.status,
-      });
-    }
-  }, [business]);
+export function EditBusinessModal({ business, open, onOpenChange, onSave }: EditBusinessModalProps) {
+  const [form, setForm] = useState(() => getFormFromBusiness(business));
 
   if (!business) return null;
 

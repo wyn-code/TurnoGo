@@ -105,19 +105,23 @@ export const businessService = {
   },
 
   getBusinessServices: async (businessId: string): Promise<Service[]> => {
-    const data = await apiClient.get<ApiService[]>(
-      `/servicios?business_id=${businessId}`
-    );
-    return data.map(mapServiceFromApi);
+    const data = await apiClient.get<ApiService[]>("/servicios", {
+      id_negocio: businessId,
+    });
+    return data
+      .map(mapServiceFromApi)
+      .filter((service) => service.businessId === businessId);
   },
 
   getBusinessProfessionals: async (
     businessId: string
   ): Promise<Professional[]> => {
-    const data = await apiClient.get<ApiEmployee[]>(
-      `/empleados?business_id=${businessId}`
-    );
-    return data.map(mapProfessionalFromApi);
+    const data = await apiClient.get<ApiEmployee[]>("/empleados", {
+      id_negocio: businessId,
+    });
+    return data
+      .map(mapProfessionalFromApi)
+      .filter((professional) => professional.businessId === businessId);
   },
 
   getCategories: async (): Promise<Category[]> => {
