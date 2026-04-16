@@ -8,7 +8,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index.tsx";
 import Negocios from "./pages/Negocios.tsx";
 import NegocioPerfil from "./pages/NegocioPerfil.tsx";
-import Reservar from "./pages/Reservar.tsx";
+import Reservar from "./pages/reserva/Reservar.tsx";
 import Login from "./pages/Login.tsx";
 import Registro from "./pages/Registro.tsx";
 import RegistrarNegocio from "./pages/registrar-negocio/RegistrarNegocio.tsx";

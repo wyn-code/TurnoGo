@@ -1,0 +1,697 @@
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { useParams, useSearchParams, Link } from "react-router-dom";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+
+import { appointmentService } from "@/services/appointment.service";
+import { businessService } from "@/services/business.service";
+import { clientService } from "@/services/cliente.service";
+
+import { cn } from "@/lib/utils";
+
+import Navbar from "@/components/landing/Navbar";
+import Footer from "@/components/landing/Footer";
+import BookingStepper from "@/components/booking/BookingStepper";
+import BookingForm from "@/components/booking/BookingForm";
+import BookingSummary from "@/components/booking/BookingSummary";
+import ServiceCard from "@/components/business/ServiceCard";
+import ProfessionalCard from "@/components/business/ProfessionalCard";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+
+import type { BookingData } from "@/types";
+import type { ApiBusiness, ApiService, ApiEmployee } from "@/types/api";
+import { ApiError } from "@/lib/api-client";
+
+const STEPS = [
+  "Servicio",
+  "Profesional",
+  "Fecha",
+  "Horario",
+  "Datos",
+  "Confirmar",
+  "Completado",
+];
+
+type TimeSlot = {
+  id: string;
+  time: string;
+  available: boolean;
+};
+
+type ApiTurno = {
+  id_turno: number;
+  id_negocio: number;
+  id_cliente: number;
+  id_servicio: number;
+  id_estado: number;
+  id_empleado: number | null;
+  fecha_hora_inicio: string;
+  fecha_hora_fin: string | null;
+};
+
+const pad = (value: number) => String(value).padStart(2, "0");
+
+const toLocalDateKey = (date: Date) => {
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+};
+
+const buildDateTimeFromSlot = (date: Date, time: string) => {
+  const [hours, minutes] = time.split(":").map(Number);
+  const result = new Date(date);
+  result.setHours(hours, minutes, 0, 0);
+  return result;
+};
+
+const addMinutes = (date: Date, minutes: number) => {
+  return new Date(date.getTime() + minutes * 60 * 1000);
+};
+
+const rangesOverlap = (
+  startA: Date,
+  endA: Date,
+  startB: Date,
+  endB: Date
+) => {
+  return startA < endB && endA > startB;
+};
+
+const buildLocalDateTimeString = (date: Date, time: string) => {
+  const year = date.getFullYear();
+  const month = pad(date.getMonth() + 1);
+  const day = pad(date.getDate());
+  return `${year}-${month}-${day}T${time}:00`;
+};
+
+const generateTimeSlots = (
+  selectedDate: Date | null,
+  occupiedAppointments: ApiTurno[],
+  durationMinutes: number
+): TimeSlot[] => {
+  const slots: TimeSlot[] = [];
+  const startHour = 9;
+  const endHour = 18;
+
+  for (let hour = startHour; hour < endHour; hour++) {
+    for (const minute of [0, 30]) {
+      const time = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+
+      let available = true;
+
+      if (selectedDate) {
+        const slotStart = buildDateTimeFromSlot(selectedDate, time);
+        const slotEnd = addMinutes(slotStart, durationMinutes);
+
+        available = !occupiedAppointments.some((turno) => {
+          if (!turno.fecha_hora_fin) return false;
+
+          const bookedStart = new Date(turno.fecha_hora_inicio);
+          const bookedEnd = new Date(turno.fecha_hora_fin);
+
+          return rangesOverlap(slotStart, slotEnd, bookedStart, bookedEnd);
+        });
+      }
+
+      slots.push({
+        id: time,
+        time,
+        available,
+      });
+    }
+  }
+
+  return slots;
+};
+
+const Reservar = () => {
+  const { slug } = useParams<{ slug: string }>();
+  const [searchParams] = useSearchParams();
+  const preSelectedService = searchParams.get("servicio") || "";
+
+  const [business, setBusiness] = useState<ApiBusiness | null>(null);
+  const [services, setServices] = useState<ApiService[]>([]);
+  const [professionals, setProfessionals] = useState<ApiEmployee[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [step, setStep] = useState(1);
+  const [booking, setBooking] = useState<BookingData>({
+    serviceId: preSelectedService,
+    professionalId: "",
+    date: null,
+    timeSlot: "",
+    client: {
+      firstName: "",
+      lastName: "",
+      phone: "",
+      email: "",
+      notes: "",
+    },
+  });
+
+  const [occupiedAppointments, setOccupiedAppointments] = useState<ApiTurno[]>([]);
+  const [occupiedDays, setOccupiedDays] = useState<Set<string>>(new Set());
+  const [isLoadingSlots, setIsLoadingSlots] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [visibleMonth, setVisibleMonth] = useState<Date>(new Date());
+
+  useEffect(() => {
+    const loadBookingData = async () => {
+      try {
+        if (!slug) {
+          throw new Error("Slug no recibido");
+        }
+
+        setIsLoading(true);
+        setError(null);
+
+        const businessData = await businessService.getBusinessBySlug(slug);
+        setBusiness(businessData);
+
+        const [servicesData, professionalsData] = await Promise.all([
+          businessService.getBusinessServices(businessData.id_negocio),
+          businessService.getBusinessProfessionals(businessData.id_negocio),
+        ]);
+
+        setServices(servicesData);
+        setProfessionals(professionalsData);
+      } catch (err) {
+        console.error(err);
+        setError("No se pudo cargar el negocio para reservar");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadBookingData();
+  }, [slug]);
+
+  const selectedService = services.find(
+    (service) => String(service.id_servicio) === String(booking.serviceId)
+  );
+
+  const selectedProfessional = professionals.find(
+    (professional) =>
+      String(professional.id_empleado) === String(booking.professionalId)
+  );
+
+  const serviceDuration = selectedService?.duracion_min ?? 30;
+
+  const timeSlots = useMemo(
+    () => generateTimeSlots(booking.date, occupiedAppointments, serviceDuration),
+    [booking.date, occupiedAppointments, serviceDuration]
+  );
+
+  const refreshOccupiedAppointments = useCallback(async () => {
+    if (!business || !booking.date) {
+      setOccupiedAppointments([]);
+      return;
+    }
+
+    try {
+      setIsLoadingSlots(true);
+
+      const from = new Date(booking.date);
+      from.setHours(0, 0, 0, 0);
+
+      const to = new Date(booking.date);
+      to.setHours(23, 59, 59, 999);
+
+      const params = new URLSearchParams({
+        id_negocio: String(business.id_negocio),
+        desde: from.toISOString(),
+        hasta: to.toISOString(),
+      });
+
+      if (booking.professionalId) {
+        params.append("id_empleado", String(booking.professionalId));
+      }
+
+      const response = await fetch(`/api/turnos/por-rango?${params.toString()}`);
+
+      if (!response.ok) {
+        throw new Error("No se pudieron obtener los turnos ocupados");
+      }
+
+      const data: ApiTurno[] = await response.json();
+      const selectedDateKey = toLocalDateKey(booking.date);
+
+      const filtered = data.filter((turno) => {
+        const turnoDate = new Date(turno.fecha_hora_inicio);
+        return toLocalDateKey(turnoDate) === selectedDateKey;
+      });
+
+      setOccupiedAppointments(filtered);
+    } catch (fetchError) {
+      console.error(fetchError);
+      setOccupiedAppointments([]);
+    } finally {
+      setIsLoadingSlots(false);
+    }
+  }, [business, booking.date, booking.professionalId]);
+
+  const refreshOccupiedDays = useCallback(
+    async (baseDate?: Date) => {
+      if (!business) {
+        setOccupiedDays(new Set());
+        return;
+      }
+
+      try {
+        const referenceDate = baseDate ?? visibleMonth ?? booking.date ?? new Date();
+
+        const monthStart = new Date(
+          referenceDate.getFullYear(),
+          referenceDate.getMonth(),
+          1
+        );
+        const monthEnd = new Date(
+          referenceDate.getFullYear(),
+          referenceDate.getMonth() + 1,
+          1
+        );
+
+        const params = new URLSearchParams({
+          id_negocio: String(business.id_negocio),
+          desde: monthStart.toISOString(),
+          hasta: monthEnd.toISOString(),
+        });
+
+        if (booking.professionalId) {
+          params.append("id_empleado", String(booking.professionalId));
+        }
+
+        const response = await fetch(`/api/turnos/por-rango?${params.toString()}`);
+
+        if (!response.ok) {
+          throw new Error("No se pudieron obtener los turnos del mes");
+        }
+
+        const data: ApiTurno[] = await response.json();
+        const blockedDays = new Set<string>();
+
+        for (
+          let day = new Date(monthStart);
+          day < monthEnd;
+          day.setDate(day.getDate() + 1)
+        ) {
+          const currentDay = new Date(day);
+          const dayKey = toLocalDateKey(currentDay);
+
+          const dayAppointments = data.filter((turno) => {
+            const turnoDate = new Date(turno.fecha_hora_inicio);
+            return toLocalDateKey(turnoDate) === dayKey;
+          });
+
+          const slots = generateTimeSlots(currentDay, dayAppointments, serviceDuration);
+          const hasAvailable = slots.some((slot) => slot.available);
+
+          if (!hasAvailable) {
+            blockedDays.add(dayKey);
+          }
+        }
+
+        setOccupiedDays(blockedDays);
+      } catch (fetchError) {
+        console.error(fetchError);
+        setOccupiedDays(new Set());
+      }
+    },
+    [business, booking.professionalId, booking.date, visibleMonth, serviceDuration]
+  );
+
+  useEffect(() => {
+    refreshOccupiedAppointments();
+  }, [refreshOccupiedAppointments]);
+
+  useEffect(() => {
+    refreshOccupiedDays(visibleMonth);
+  }, [refreshOccupiedDays, visibleMonth]);
+
+  const canNext = (): boolean => {
+    switch (step) {
+      case 1:
+        return !!booking.serviceId;
+      case 2:
+        return !!booking.professionalId;
+      case 3:
+        return !!booking.date;
+      case 4:
+        return !!booking.timeSlot;
+      case 5:
+        return !!(
+          booking.client.firstName &&
+          booking.client.lastName &&
+          booking.client.phone &&
+          booking.client.email
+        );
+      default:
+        return false;
+    }
+  };
+
+  const handleConfirm = async () => {
+    try {
+      setSubmitError(null);
+
+      if (!business || !booking.date || !booking.timeSlot || !booking.serviceId) {
+        setSubmitError("Faltan datos para confirmar la reserva");
+        return;
+      }
+
+      if (
+        !booking.client.firstName.trim() ||
+        !booking.client.lastName.trim() ||
+        !booking.client.phone.trim()
+      ) {
+        setSubmitError("Faltan datos del cliente");
+        return;
+      }
+
+      const cliente = await clientService.getOrCreateClient({
+        telefono: booking.client.phone.trim(),
+        nombre: booking.client.firstName.trim(),
+        apellido: booking.client.lastName.trim(),
+      });
+
+      const payload = {
+        id_negocio: Number(business.id_negocio),
+        id_cliente: Number(cliente.id_cliente),
+        id_servicio: Number(booking.serviceId),
+        id_empleado: booking.professionalId
+          ? Number(booking.professionalId)
+          : null,
+        fecha_hora_inicio: buildLocalDateTimeString(booking.date, booking.timeSlot),
+      };
+
+      await appointmentService.createAppointment(payload);
+
+      await refreshOccupiedAppointments();
+      await refreshOccupiedDays(booking.date);
+
+      setStep(7);
+    } catch (error: unknown) {
+      console.error(error);
+
+      if (error instanceof ApiError) {
+        if (error.status === 409) {
+          setSubmitError("Ese horario ya fue reservado. Elegí otro horario disponible.");
+
+          setBooking((current) => ({
+            ...current,
+            timeSlot: "",
+          }));
+
+          await refreshOccupiedAppointments();
+          await refreshOccupiedDays(booking.date ?? visibleMonth);
+          setStep(4);
+          return;
+        }
+
+        setSubmitError(error.detail || error.message);
+        return;
+      }
+
+      if (error instanceof Error) {
+        setSubmitError(error.message);
+        return;
+      }
+
+      setSubmitError("Error inesperado al crear la reserva");
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="mx-auto max-w-7xl px-4 py-20 text-center">
+          <p>Cargando reserva...</p>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error || !business) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="mx-auto max-w-7xl px-4 py-20 text-center">
+          <h1 className="text-2xl font-bold text-foreground">Negocio no encontrado</h1>
+          <Button asChild className="mt-4">
+            <Link to="/negocios">Ver todos los negocios</Link>
+          </Button>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (step === 7 && selectedService && selectedProfessional && booking.date) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <main className="mx-auto max-w-lg px-4 py-16">
+          <BookingSummary
+            service={selectedService}
+            professional={selectedProfessional}
+            date={booking.date}
+            time={booking.timeSlot}
+            client={booking.client}
+            businessName={business.nombre}
+            confirmed
+          />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Navbar />
+
+      <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
+        <div className="mb-2">
+          <Link
+            to={`/negocio/${business.slug}`}
+            className="text-sm text-primary hover:underline"
+          >
+            ← {business.nombre}
+          </Link>
+        </div>
+
+        <h1 className="mb-6 text-2xl font-bold text-foreground">Reservar turno</h1>
+
+        <div className="mb-8">
+          <BookingStepper currentStep={step} steps={STEPS} />
+        </div>
+
+        {submitError && (
+          <div className="mb-4 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            {submitError}
+          </div>
+        )}
+
+        <div className="min-h-[300px]">
+          {step === 1 && (
+            <div className="space-y-3">
+              <h2 className="text-lg font-semibold text-foreground">Elegí un servicio</h2>
+              {services.map((service) => (
+                <ServiceCard
+                  key={service.id_servicio}
+                  service={service}
+                  selected={String(booking.serviceId) === String(service.id_servicio)}
+                  onSelect={() => {
+                    setSubmitError(null);
+                    setBooking((current) => ({
+                      ...current,
+                      serviceId: String(service.id_servicio),
+                      timeSlot: "",
+                    }));
+                  }}
+                  showBookButton={false}
+                />
+              ))}
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="space-y-3">
+              <h2 className="text-lg font-semibold text-foreground">Elegí un profesional</h2>
+              {professionals.map((professional) => (
+                <ProfessionalCard
+                  key={professional.id_empleado}
+                  professional={professional}
+                  selected={
+                    String(booking.professionalId) ===
+                    String(professional.id_empleado)
+                  }
+                  onSelect={() => {
+                    setSubmitError(null);
+                    setBooking((current) => ({
+                      ...current,
+                      professionalId: String(professional.id_empleado),
+                      timeSlot: "",
+                    }));
+                  }}
+                />
+              ))}
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-[18px] font-semibold leading-none text-foreground">
+                  Elegí una fecha
+                </h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Seleccioná el día en el que querés reservar tu turno.
+                </p>
+              </div>
+
+              <div className="mx-auto max-w-[520px] rounded-2xl border border-border bg-card px-6 py-7 shadow-sm">
+                <div className="flex justify-center">
+                  <Calendar
+                    mode="single"
+                    selected={booking.date ?? undefined}
+                    month={visibleMonth}
+                    onMonthChange={(month) => {
+                      setVisibleMonth(month);
+                    }}
+                    onSelect={(date) => {
+                      setSubmitError(null);
+                      setBooking((current) => ({
+                        ...current,
+                        date: date ?? null,
+                        timeSlot: "",
+                      }));
+                    }}
+                    disabled={(date) => {
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+
+                      const isPast = date < today;
+                      const isFullyBooked = occupiedDays.has(toLocalDateKey(date));
+
+                      return isPast || isFullyBooked;
+                    }}
+                    showOutsideDays
+                    locale={es}
+                  />
+                </div>
+
+                <div className="mt-7 text-center">
+                  {booking.date ? (
+                    <p className="text-[16px] font-medium capitalize text-primary">
+                      {format(booking.date, "EEEE, MMMM, yyyy", { locale: es })}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-muted-foreground">
+                      Todavía no seleccionaste una fecha.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {step === 4 && (
+            <div className="space-y-3">
+              <h2 className="text-lg font-semibold text-foreground">Elegí un horario</h2>
+
+              {isLoadingSlots ? (
+                <p className="text-sm text-muted-foreground">Cargando horarios...</p>
+              ) : (
+                <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
+                  {timeSlots.map((slot) => (
+                    <button
+                      key={slot.id}
+                      disabled={!slot.available}
+                      onClick={() => {
+                        setSubmitError(null);
+                        setBooking((current) => ({
+                          ...current,
+                          timeSlot: slot.time,
+                        }));
+                      }}
+                      className={cn(
+                        "rounded-lg border px-3 py-2 text-sm font-medium transition-colors",
+                        booking.timeSlot === slot.time
+                          ? "border-primary bg-primary text-primary-foreground"
+                          : slot.available
+                            ? "border-border bg-card text-foreground hover:border-primary/40"
+                            : "border-border bg-muted text-muted-foreground opacity-50 cursor-not-allowed"
+                      )}
+                    >
+                      {slot.time}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {!isLoadingSlots && timeSlots.every((slot) => !slot.available) && (
+                <p className="text-sm text-muted-foreground">
+                  No hay horarios disponibles para esta fecha.
+                </p>
+              )}
+            </div>
+          )}
+
+          {step === 5 && (
+            <BookingForm
+              data={booking.client}
+              onChange={(client) =>
+                setBooking((current) => ({
+                  ...current,
+                  client,
+                }))
+              }
+            />
+          )}
+
+          {step === 6 && selectedService && selectedProfessional && booking.date && (
+            <div className="space-y-4">
+              <h2 className="text-lg font-semibold text-foreground">Confirmá tu turno</h2>
+              <BookingSummary
+                service={selectedService}
+                professional={selectedProfessional}
+                date={booking.date}
+                time={booking.timeSlot}
+                client={booking.client}
+                businessName={business.nombre}
+              />
+            </div>
+          )}
+        </div>
+
+        <div className="mt-8 flex justify-between gap-4">
+          <Button
+            variant="outline"
+            onClick={() => setStep((current) => current - 1)}
+            disabled={step === 1}
+          >
+            Atrás
+          </Button>
+
+          {step < 6 ? (
+            <Button
+              onClick={() => setStep((current) => current + 1)}
+              disabled={!canNext()}
+            >
+              Siguiente
+            </Button>
+          ) : (
+            <Button onClick={handleConfirm}>Confirmar turno</Button>
+          )}
+        </div>
+      </main>
+
+      <Footer />
+    </div>
+  );
+};
+
+export default Reservar;
