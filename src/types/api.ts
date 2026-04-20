@@ -38,8 +38,7 @@ export interface ApiEmployee {
 }
 
 export interface ApiCategory {
-  id: number;
-  name: string;
-  icon?: string;
-  slug?: string;
+  id_categoria: number;
+  nombre: string;
+  icono?: string;
 }

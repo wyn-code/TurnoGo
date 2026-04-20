@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
-import { adminBusinesses as initialBusinesses, type AdminBusiness } from "@/data/adminMockData";
+import {type AdminBusiness } from "@/data/adminMockData";
 import { EditBusinessModal } from "@/components/admin/EditBusinessModal";
 import { DeleteBusinessDialog } from "@/components/admin/DeleteBusinessDialog";
 import { Button } from "@/components/ui/button";
@@ -9,17 +9,42 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Pencil, Trash2, ExternalLink, Search, ShieldCheck, LogOut } from "lucide-react";
+import { negocioService } from "../services/negocio.service";
 
 const AdminPanel = () => {
   const { user, logout, isLoading } = useAuth();
-  const [businesses, setBusinesses] = useState<AdminBusiness[]>(initialBusinesses);
+  const [businesses, setBusinesses] = useState<AdminBusiness[]>([]);  
   const [search, setSearch] = useState("");
   const [editBusiness, setEditBusiness] = useState<AdminBusiness | null>(null);
   const [deleteBusiness, setDeleteBusiness] = useState<AdminBusiness | null>(null);
 
-  useEffect(() => {
-    console.log("ADMIN PANEL MOUNTED");
-  }, []);
+useEffect(() => {
+  const fetchNegocios = async () => {
+    try {
+      const data = await negocioService.getAll();
+      console.log("NEGOCIOS BACK:", data);
+
+  const mapped = data.map((n: any) => ({
+    id: String(n.id_negocio), // 🔥 importante
+    businessName: n.nombre,
+    ownerFirstName: "Dueño", // temporal
+    ownerLastName: "",
+    ownerEmail: "email@email.com", // temporal
+    category: n.rubro || "General", // 🔥 importante
+    status: n.activo ? "activo" : "inactivo", // si existe en DB
+    slug: n.slug || "negocio",
+    primaryColor: "#000000",
+    totalAppointments: 0,
+  }));
+
+    setBusinesses(mapped as AdminBusiness[]);  
+  } catch (error) {
+      console.error("Error cargando negocios:", error);
+    }
+  };
+
+  fetchNegocios();
+}, []);
 
   if (isLoading) {
     return (

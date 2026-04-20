@@ -1,4 +1,4 @@
-const API_BASE_URL = "/api";
+const API_BASE_URL = "http://localhost:8000/api";
 
 export type ApiErrorResponse = {
   detail: string;
@@ -16,6 +16,14 @@ export class ApiError extends Error {
   }
 }
 
+export interface RequestOptions {
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
+  headers?: Record<string, string>;
+  body?: Record<string, unknown> | object | FormData | null;
+  params?: Record<string, string | number | boolean>;
+  skipAuthRedirect?: boolean;
+}
+
 class ApiClient {
   private token: string | null = null;
 
@@ -27,134 +35,174 @@ class ApiClient {
     this.token = null;
   }
 
-  private async request<T>(
+  // 🔹 Construye URL con query params
+  private buildUrl(
     endpoint: string,
-    options: RequestInit = {},
-    skipAuthRedirect = false
-  ): Promise<T> {
-    const url = `${API_BASE_URL}${endpoint}`;
+    params?: Record<string, string | number | boolean>,
+    baseUrl: string = API_BASE_URL
+  ): string {
+    let url = `${baseUrl}${endpoint}`;
 
-    const headers: HeadersInit = {
-      "Content-Type": "application/json",
-      ...(this.token ? { Authorization: `Bearer ${this.token}` } : {}),
-      ...options.headers,
+    if (params) {
+      const queryString = new URLSearchParams(
+        Object.entries(params).reduce((acc, [key, value]) => {
+          if (value !== null && value !== undefined) {
+            acc[key] = String(value);
+          }
+          return acc;
+        }, {} as Record<string, string>)
+      ).toString();
+
+      if (queryString) {
+        url += `?${queryString}`;
+      }
+    }
+
+    return url;
+  }
+
+  // 🔹 Headers
+  private buildHeaders(
+    customHeaders?: Record<string, string>,
+    body?: RequestOptions["body"]
+  ): Record<string, string> {
+    const headers: Record<string, string> = {};
+
+    if (!(body instanceof FormData)) {
+      headers["Content-Type"] = "application/json";
+    }
+
+    if (this.token) {
+      headers["Authorization"] = `Bearer ${this.token}`;
+    }
+
+    return { ...headers, ...customHeaders };
+  }
+
+  // 🔹 Core request
+  async request<T>(
+    endpoint: string,
+    options: RequestOptions = {},
+    baseUrl?: string
+  ): Promise<T> {
+    const {
+      method = "GET",
+      headers: customHeaders,
+      body,
+      params,
+      skipAuthRedirect = false,
+    } = options;
+
+    const url = this.buildUrl(endpoint, params, baseUrl);
+
+    const headers = this.buildHeaders(customHeaders, body);
+
+    const config: RequestInit = {
+      method,
+      headers,
     };
 
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    });
+    if (body && ["POST", "PUT", "PATCH"].includes(method)) {
+      config.body = body instanceof FormData ? body : JSON.stringify(body);
+    }
 
-    if (!response.ok) {
-      const errorData: Partial<ApiErrorResponse> = await response
-        .json()
-        .catch(() => ({ detail: "Unknown error" }));
+    try {
+      const response = await fetch(url, config);
 
-      const errorMessage = errorData.detail ?? `HTTP ${response.status}`;
+      if (!response.ok) {
+        const errorData = await response
+          .json()
+          .catch(() => ({ detail: "Unknown error" }));
 
-      if (response.status === 401 && !skipAuthRedirect) {
-        this.clearToken();
-        window.location.href = "/login";
+        const message =
+          errorData.detail || errorData.message || `HTTP ${response.status}`;
+
+        if (response.status === 401 && !skipAuthRedirect) {
+          this.clearToken();
+          window.location.href = "/login";
+        }
+
+        throw new ApiError(message, response.status, errorData.detail);
       }
 
-      throw new ApiError(errorMessage, response.status, errorData.detail);
-    }
+      if (response.status === 204) {
+        return {} as T;
+      }
 
-    return response.json() as Promise<T>;
+      return await response.json();
+    } catch (error) {
+      console.error(`API ERROR [${method} ${endpoint}]:`, error);
+      throw error;
+    }
   }
 
-  private async requestWithBase<T>(
-    baseUrl: string,
+  // 🔹 Métodos públicos
+  get<T>(
     endpoint: string,
-    options: RequestInit = {}
+    params?: Record<string, string | number | boolean>
   ): Promise<T> {
-    const url = `${baseUrl}${endpoint}`;
-
-    const headers: HeadersInit = {
-      "Content-Type": "application/json",
-      ...(this.token ? { Authorization: `Bearer ${this.token}` } : {}),
-      ...options.headers,
-    };
-
-    const response = await fetch(url, {
-      ...options,
-      headers,
-    });
-
-    if (!response.ok) {
-      const errorData: Partial<ApiErrorResponse> = await response
-        .json()
-        .catch(() => ({ detail: "Unknown error" }));
-
-      const errorMessage = errorData.detail ?? `HTTP ${response.status}`;
-
-      throw new ApiError(errorMessage, response.status, errorData.detail);
-    }
-
-    return response.json() as Promise<T>;
+    return this.request<T>(endpoint, { method: "GET", params });
   }
 
-  get<T>(endpoint: string, params?: Record<string, string | number | boolean | undefined>): Promise<T> {
-    const filteredParams = params
-      ? Object.fromEntries(
-          Object.entries(params).filter(([, value]) => value !== undefined)
-        )
-      : undefined;
-
-    const query = filteredParams
-      ? `?${new URLSearchParams(
-          Object.fromEntries(
-            Object.entries(filteredParams).map(([key, value]) => [key, String(value)])
-          )
-        ).toString()}`
-      : "";
-
-    return this.request<T>(`${endpoint}${query}`);
+  post<T>(
+    endpoint: string,
+    body?: Record<string, unknown> | object | null,
+    headers?: Record<string, string>
+  ): Promise<T> {
+    return this.request<T>(endpoint, { method: "POST", body, headers });
   }
 
-  post<T, B = unknown>(endpoint: string, data?: B): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
+  put<T>(
+    endpoint: string,
+    body?: Record<string, unknown> | object | null,
+    headers?: Record<string, string>
+  ): Promise<T> {
+    return this.request<T>(endpoint, { method: "PUT", body, headers });
   }
 
-  put<T, B = unknown>(endpoint: string, data?: B): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: "PUT",
-      body: JSON.stringify(data),
-    });
+  patch<T>(
+    endpoint: string,
+    body?: Record<string, unknown> | object | null,
+    headers?: Record<string, string>
+  ): Promise<T> {
+    return this.request<T>(endpoint, { method: "PATCH", body, headers });
   }
 
-  delete<T>(endpoint: string): Promise<T> {
-    return this.request<T>(endpoint, {
-      method: "DELETE",
-    });
+  delete<T>(
+    endpoint: string,
+    params?: Record<string, string | number | boolean>
+  ): Promise<T> {
+    return this.request<T>(endpoint, { method: "DELETE", params });
   }
 
+  // 🔹 Para usar otro base URL (ej: microservicios)
   getWithBase<T>(
     baseUrl: string,
     endpoint: string,
-    params?: Record<string, string | number | boolean | undefined>
+    params?: Record<string, string | number | boolean>
   ): Promise<T> {
-    const filteredParams = params
-      ? Object.fromEntries(
-          Object.entries(params).filter(([, value]) => value !== undefined)
-        )
-      : undefined;
+    return this.request<T>(endpoint, { method: "GET", params }, baseUrl);
+  }
 
-    const query = filteredParams
-      ? `?${new URLSearchParams(
-          Object.fromEntries(
-            Object.entries(filteredParams).map(([key, value]) => [key, String(value)])
-          )
-        ).toString()}`
-      : "";
-
-    return this.requestWithBase<T>(baseUrl, `${endpoint}${query}`);
+  postWithBase<T>(
+    baseUrl: string,
+    endpoint: string,
+    body?: object | FormData | null,
+    headers?: Record<string, string>,
+    skipAuthRedirect = false
+  ): Promise<T> {
+    return this.request<T>(
+      endpoint,
+      {
+        method: "POST",
+        body,
+        headers,
+        skipAuthRedirect,
+      },
+      baseUrl
+    );
   }
 }
 
 const apiClient = new ApiClient();
-
 export default apiClient;

@@ -8,6 +8,12 @@ import type {
   ApiCategory,
 } from "@/types/api";
 
+const mapCategoryFromApi = (item: ApiCategory) => ({
+  id: item.id_categoria,
+  name: item.nombre,
+  icon: item.icono || "scissors",
+});
+
 export interface CreateCompleteBusinessRequest {
   nombre: string;
   rubro: string;
@@ -84,11 +90,12 @@ export const businessService = {
     );
   },
 
-  getCategories: async (): Promise<ApiCategory[]> => {
-    return apiClient.getWithBase<ApiCategory[]>(
-      API_BASE_URL,
-      "/categorias"
-    );
+  getCategories: async () => {
+    const data = await apiClient.get<ApiCategory[]>("/categorias");
+
+    console.log("RAW API:", data);
+
+    return data.map(mapCategoryFromApi);
   },
 };
 
