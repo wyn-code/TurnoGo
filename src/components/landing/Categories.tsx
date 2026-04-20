@@ -11,7 +11,7 @@ const iconMap: Record<string, ReactNode> = {
 };
 
 interface Category {
-  id: number;
+  id: string;
   name: string;
   icon: string;
 }
@@ -44,19 +44,19 @@ const Categories = () => {
           </p>
         </div>
 
-        <div className="mt-12 flex flex-wrap items-center justify-center gap-4">
-          {categories.map((cat) => (
-            <button
-              key={cat.id}
-              className="flex items-center gap-3 rounded-xl border border-border bg-card px-6 py-4 text-foreground transition-colors hover:border-primary hover:bg-accent"
-            >
-              <span className="text-primary">
-                {iconMap[cat.icon] ?? <Scissors size={28} />}
-              </span>
-              <span className="font-medium">{cat.name}</span>
-            </button>
-          ))}
-        </div>
+          <div className="mt-12 flex flex-wrap items-center justify-center gap-4">
+      {categories.map((cat) => (
+        <button
+          key={cat.id}
+          className="flex items-center gap-3 rounded-xl border border-border bg-card px-6 py-4 text-foreground transition-colors hover:border-primary hover:bg-accent"
+        >
+          <span className="text-primary">
+            {iconMap[cat.icon] ?? <Scissors size={28} />}
+          </span>
+          <span className="font-medium">{cat.name}</span>
+        </button>
+      ))}
+</div>
       </div>
     </section>
   );

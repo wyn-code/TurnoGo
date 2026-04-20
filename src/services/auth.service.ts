@@ -10,6 +10,8 @@ export interface RegisterRequest {
   usuario_us: string;
   email_us: string;
   contrasena_us: string;
+  nombre_us: string;   // <--- Agregar
+  apellido_us: string; // <--- Agregar
 }
 
 export interface AuthTokenResponse {
@@ -38,14 +40,8 @@ export const authService = {
   },
 
   register: async (data: RegisterRequest) => {
-    return apiClient.postWithBase<AuthTokenResponse>(
-      AUTH_API_ROOT,
-      "/register",
-      data,
-      undefined,
-      true,
-    );
-  },
+  return apiClient.postWithBase<AuthTokenResponse>(AUTH_API_ROOT, "/register", data);
+},
 
   me: async () => {
     return apiClient.getWithBase<AuthUserResponse>(AUTH_API_ROOT, "/me");

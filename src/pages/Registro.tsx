@@ -1,3 +1,4 @@
+// pages/Registro.tsx
 import { useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -10,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { UserPlus, AlertCircle } from "lucide-react";
+import { UserPlus, AlertCircle, Eye, EyeOff } from "lucide-react";
 
 const schema = z.object({
   nombre: z.string().min(2, "Ingresá tu nombre"),
@@ -32,6 +33,7 @@ const Registro = () => {
   const location = useLocation();
   const from = (location.state as { from?: string })?.from || "/dashboard";
   const [serverError, setServerError] = useState("");
+  const [showPassword, setShowPassword] = useState(false); // Estado para el ojo
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -39,7 +41,13 @@ const Registro = () => {
 
   const onSubmit = async (data: FormData) => {
     setServerError("");
-    const result = await authRegister(data.usuario, data.email, data.password);
+    const result = await authRegister(
+      data.usuario, 
+      data.email, 
+      data.password, 
+      data.nombre, 
+      data.apellido
+    );
     if (result.success) {
       navigate("/registrar-negocio", { replace: true });
     } else {
@@ -57,12 +65,7 @@ const Registro = () => {
               <UserPlus className="h-6 w-6 text-primary" />
             </div>
             <h1 className="text-2xl font-bold text-foreground">Creá tu cuenta</h1>
-            <p className="text-sm text-muted-foreground">
-              ¿Querés registrar tu negocio? Creá una cuenta para empezar.
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Los clientes pueden seguir reservando sin cuenta.
-            </p>
+            <p className="text-sm text-muted-foreground">¿Querés registrar tu negocio?</p>
           </CardHeader>
           <CardContent className="space-y-4 pt-4">
             {serverError && (
@@ -71,36 +74,69 @@ const Registro = () => {
               </div>
             )}
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="space-y-2">
-                <Label>Nombre</Label>
-                <Input {...register("nombre")} autoComplete="given-name" placeholder="Juan" />
-                {errors.nombre && <p className="text-sm text-destructive">{errors.nombre.message}</p>}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Nombre</Label>
+                  <Input {...register("nombre")} placeholder="Juan" />
+                  {errors.nombre && <p className="text-xs text-destructive">{errors.nombre.message}</p>}
+                </div>
+                <div className="space-y-2">
+                  <Label>Apellido</Label>
+                  <Input {...register("apellido")} placeholder="Pérez" />
+                  {errors.apellido && <p className="text-xs text-destructive">{errors.apellido.message}</p>}
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label>Apellido</Label>
-                <Input {...register("apellido")} autoComplete="family-name" placeholder="Pérez" />
-                {errors.apellido && <p className="text-sm text-destructive">{errors.apellido.message}</p>}
-              </div>
+
               <div className="space-y-2">
                 <Label>Nombre de usuario</Label>
-                <Input {...register("usuario")} autoComplete="username" placeholder="tu_usuario" />
+                <Input {...register("usuario")} placeholder="tu_usuario" />
                 {errors.usuario && <p className="text-sm text-destructive">{errors.usuario.message}</p>}
               </div>
+
               <div className="space-y-2">
                 <Label>Email</Label>
                 <Input {...register("email")} type="email" placeholder="tu@email.com" />
                 {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
               </div>
+
               <div className="space-y-2">
                 <Label>Contraseña</Label>
-                <Input {...register("password")} type="password" placeholder="Mínimo 6 caracteres" />
+                <div className="relative">
+                  <Input 
+                    {...register("password")} 
+                    type={showPassword ? "text" : "password"} 
+                    placeholder="Mínimo 6 caracteres" 
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
                 {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
               </div>
+
               <div className="space-y-2">
                 <Label>Confirmar contraseña</Label>
-                <Input {...register("confirmPassword")} type="password" placeholder="Repetí tu contraseña" />
+                <div className="relative">
+                  <Input 
+                    {...register("confirmPassword")} 
+                    type={showPassword ? "text" : "password"} 
+                    placeholder="Repetí tu contraseña" 
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
                 {errors.confirmPassword && <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>}
               </div>
+
               <Button type="submit" className="w-full" disabled={isSubmitting}>
                 {isSubmitting ? "Creando cuenta..." : "Crear cuenta"}
               </Button>

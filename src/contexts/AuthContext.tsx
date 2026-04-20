@@ -11,6 +11,8 @@ interface User {
   role?: string;
 }
 
+
+
 function normalizeUser(raw: Record<string, unknown>): User {
   const idRaw = raw.id_us ?? raw.id;
 
@@ -35,11 +37,16 @@ interface AuthContextType {
     email: string,
     password: string
   ) => Promise<{ success: boolean; user?: User; error?: string }>;
+  
+  // ACTUALIZA ESTA LÍNEA:
   register: (
     usuario: string,
     email: string,
-    password: string
+    password: string,
+    nombre: string,   // <--- Agregar
+    apellido: string  // <--- Agregar
   ) => Promise<{ success: boolean; error?: string }>;
+  
   logout: () => void;
 }
 
@@ -165,46 +172,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const register = async (
-    usuario: string,
-    email: string,
-    password: string
-  ) => {
-    try {
-      const data = await authService.register({
-        usuario_us: usuario.trim(),
-        email_us: email.trim(),
-        contrasena_us: password,
-      });
+  usuario: string,
+  email: string,
+  password: string,
+  nombre: string,   // <--- Recibir
+  apellido: string  // <--- Recibir
+) => {
+  try {
+    const data = await authService.register({
+      usuario_us: usuario.trim(),
+      email_us: email.trim(),
+      contrasena_us: password,
+      nombre_us: nombre.trim(),   // <--- Pasar al servicio
+      apellido_us: apellido.trim() // <--- Pasar al servicio
+    });
 
-      const token = data.access_token as string | undefined;
+    const token = data.access_token as string | undefined;
 
-      if (!token) {
-        const loginResult = await login(email, password);
-        if (!loginResult.success) {
-          return {
-            success: false,
-            error:
-              "Cuenta creada pero no se pudo iniciar sesión. Probá iniciar sesión manualmente.",
-          };
-        }
-        setIsLoading(false);
-        return { success: true };
+    if (!token) {
+      // Intentar login automático si el registro no devolvió token pero fue exitoso
+      const loginResult = await login(email, password);
+      if (!loginResult.success) {
+        return {
+          success: false,
+          error: "Cuenta creada pero no se pudo iniciar sesión automáticamente.",
+        };
       }
-
-      const session = await applySessionFromToken(token, setUser);
-      setIsLoading(false);
-
-      return session.success ? { success: true } : session;
-    } catch (error) {
-      console.error(error);
-      setIsLoading(false);
-
-      return {
-        success: false,
-        error: "Error de conexión con el servidor",
-      };
+      return { success: true };
     }
-  };
+
+    const session = await applySessionFromToken(token, setUser);
+    return session.success ? { success: true } : session;
+  } catch (error: any) {
+    console.error(error);
+    return {
+      success: false,
+      error: error?.response?.data?.detail || "Error al registrarse",
+    };
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const logout = () => {
     setUser(null);

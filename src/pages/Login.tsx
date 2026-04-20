@@ -1,3 +1,4 @@
+// pages/Login.tsx
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -10,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { LogIn, AlertCircle } from "lucide-react";
+import { Eye, EyeOff, LogIn, AlertCircle } from "lucide-react"; 
 
 const schema = z.object({
   email: z.string().min(1, "Ingresá tu email").email("Ingresá un email válido"),
@@ -23,30 +24,25 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const [serverError, setServerError] = useState("");
+  const [showPassword, setShowPassword] = useState(false); // Estado para el ojo
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
 
-const onSubmit = async (data: FormData) => {
-  setServerError("");
+  const onSubmit = async (data: FormData) => {
+    setServerError("");
+    const result = await login(data.email, data.password);
 
-  const result = await login(data.email, data.password);
-
-  if (result.success && result.user) {
-    const role = result.user.role?.toLowerCase();
-
-    if (role === "admin") {
-      navigate("/admin", { replace: true });
-    } else if (role === "duenio") {
-      navigate("/dashboard", { replace: true });
+    if (result.success && result.user) {
+      const role = result.user.role?.toLowerCase();
+      if (role === "admin") navigate("/admin", { replace: true });
+      else if (role === "duenio") navigate("/dashboard", { replace: true });
+      else navigate("/", { replace: true });
     } else {
-      navigate("/", { replace: true });
+      setServerError(result.error || "Error al iniciar sesión.");
     }
-  } else {
-    setServerError(result.error || "Error al iniciar sesión.");
-  }
-};
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -58,12 +54,7 @@ const onSubmit = async (data: FormData) => {
               <LogIn className="h-6 w-6 text-primary" />
             </div>
             <h1 className="text-2xl font-bold text-foreground">Iniciá sesión</h1>
-            <p className="text-sm text-muted-foreground">
-              Accedé para crear y administrar tu negocio en Turnexo.
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Los clientes pueden seguir reservando sin cuenta.
-            </p>
+            <p className="text-sm text-muted-foreground">Accedé para administrar tu negocio.</p>
           </CardHeader>
           <CardContent className="space-y-4 pt-4">
             {serverError && (
@@ -74,21 +65,35 @@ const onSubmit = async (data: FormData) => {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-2">
                 <Label>Email</Label>
-                <Input {...register("email")} type="email" autoComplete="email" placeholder="tu@email.com" />
+                <Input {...register("email")} type="email" placeholder="tu@email.com" />
                 {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
               </div>
+              
               <div className="space-y-2">
                 <Label>Contraseña</Label>
-                <Input {...register("password")} type="password" placeholder="••••••" />
+                <div className="relative">
+                  <Input 
+                    {...register("password")} 
+                    type={showPassword ? "text" : "password"} 
+                    placeholder="••••••" 
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  </button>
+                </div>
                 {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
               </div>
+
               <Button type="submit" className="w-full" disabled={isSubmitting}>
                 {isSubmitting ? "Ingresando..." : "Iniciar sesión"}
               </Button>
             </form>
             <p className="text-center text-sm text-muted-foreground">
-              ¿No tenés cuenta?{" "}
-              <Link to="/registro" state={{ from: "/dashboard" }} className="font-medium text-primary hover:underline">Registrate</Link>
+              ¿No tenés cuenta? <Link to="/registro" className="font-medium text-primary hover:underline">Registrate</Link>
             </p>
           </CardContent>
         </Card>
