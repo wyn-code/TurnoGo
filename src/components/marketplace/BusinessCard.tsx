@@ -1,12 +1,12 @@
 import { Link } from "react-router-dom";
-import { Star, MapPin } from "lucide-react";
+import { MapPin } from "lucide-react";
 import { Card, CardContent } from "../ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
-import type { Business } from "../../types";
+import type { ApiBusiness } from "@/types/api";
 
 interface BusinessCardProps {
-  business: Business;
+  business: ApiBusiness;
 }
 
 const BusinessCard = ({ business }: BusinessCardProps) => (
@@ -14,18 +14,13 @@ const BusinessCard = ({ business }: BusinessCardProps) => (
     <div className="h-40 bg-muted" />
     <CardContent className="flex flex-1 flex-col gap-3 p-5">
       <div className="flex items-start justify-between gap-2">
-        <h3 className="font-semibold leading-snug text-foreground">{business.name}</h3>
-        <Badge variant="secondary" className="shrink-0 text-xs">{business.category}</Badge>
+        <h3 className="font-semibold leading-snug text-foreground">{business.nombre}</h3>
+        <Badge variant="secondary" className="shrink-0 text-xs">{business.categoria}</Badge>
       </div>
-      <p className="text-sm text-muted-foreground line-clamp-2">{business.description}</p>
+      <p className="text-sm text-muted-foreground line-clamp-2">{business.descripcion}</p>
       <div className="flex items-center gap-1 text-sm text-muted-foreground">
         <MapPin size={14} className="shrink-0" />
-        <span>{business.city} — {business.address}</span>
-      </div>
-      <div className="flex items-center gap-1 text-sm">
-        <Star size={14} className="fill-primary text-primary" />
-        <span className="font-medium text-foreground">{business.rating}</span>
-        <span className="text-muted-foreground">({business.reviewCount})</span>
+        <span>{business.ciudad} — {business.direccion}</span>
       </div>
       <div className="mt-auto flex gap-2 pt-2">
         <Button variant="outline" size="sm" className="flex-1" asChild>

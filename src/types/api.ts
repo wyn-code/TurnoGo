@@ -1,3 +1,4 @@
+
 export interface ApiBusiness {
   id_negocio: number;
   nombre: string;
@@ -15,6 +16,8 @@ export interface ApiBusiness {
   creado_at?: string;
   slug: string;
   usuario_id?: number | null;
+  descripcion?: string;
+  categoria?: string;
 }
 
 export interface ApiService {
@@ -37,8 +40,10 @@ export interface ApiEmployee {
   activo: boolean;
 }
 
-export interface ApiCategory {
+export interface ApiCategory{
   id_categoria: number;
   nombre: string;
-  icono?: string;
+  icono: string | null; 
+  slug: string;         
+  created_at?: string;  
 }

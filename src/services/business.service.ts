@@ -1,5 +1,6 @@
 import apiClient from "@/lib/api-client";
 
+// Importamos los tipos crudos de la API
 import type {
   ApiBusiness,
   ApiService,
@@ -7,63 +8,16 @@ import type {
   ApiCategory,
 } from "@/types/api";
 
-import type {
-  Business,
-  Service,
-  Professional,
-  Category,
-} from "@/types";
+// Importamos el tipo limpio solo para Categoría
 
-// 🔹 MAPPERS
-
-const mapBusinessFromApi = (item: ApiBusiness): Business => ({
-  id: String(item.id_negocio),
-  name: item.nombre,
-  slug: item.slug,
-  category: item.rubro,
-  address: item.direccion,
-  city: item.ciudad,
-  image: item.logo || undefined,
-  phone: item.telefono || undefined,
-  whatsapp: item.wsp,
-  instagram: item.ig_url || undefined,
-  facebook: item.url_fb || undefined,
-  active: item.activo,
-  createdAt: item.creado_at || undefined,
+const mapCategoryFromApi = (item: ApiCategory) => ({
+  ...item,
+  icono: item.icono ?? "scissors",
+  slug: item.nombre
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-"),
 });
-
-const mapServiceFromApi = (item: ApiService): Service => ({
-  id: String(item.id_servicio),
-  name: item.nombre_servicio,
-  duration: item.duracion_min,
-  price: item.precio,
-  businessId: String(item.id_negocio),
-  requiresApproval: item.requiere_aprobacion,
-  active: item.activo,
-});
-
-const mapProfessionalFromApi = (item: ApiEmployee): Professional => ({
-  id: String(item.id_empleado),
-  name: `${item.nombre} ${item.apellido}`.trim(),
-  businessId: String(item.id_negocio),
-  phone: item.telefono || undefined,
-  active: item.activo,
-});
-
-// 🔥 IMPORTANTE: dejamos SOLO UNA versión (la flexible)
-const mapCategoryFromApi = (item: ApiCategory): Category => ({
-  id: String((item as any).id_categoria ?? (item as any).id),
-  name: (item as any).nombre ?? (item as any).name,
-  icon: (item as any).icono ?? (item as any).icon ?? "scissors",
-  slug:
-    (item as any).slug ??
-    ((item as any).nombre ?? (item as any).name)
-      .toLowerCase()
-      .replace(/\s+/g, "-"),
-});
-
-// 🔹 REQUEST TYPE
-
 export interface CreateCompleteBusinessRequest {
   nombre: string;
   rubro: string;
@@ -92,20 +46,17 @@ export interface CreateCompleteBusinessRequest {
   }[];
 }
 
-// 🔹 SERVICE
-
 export const businessService = {
-  getAllBusinesses: async (): Promise<Business[]> => {
-    const data = await apiClient.get<ApiBusiness[]>("/negocios/");
-    return data.map(mapBusinessFromApi);
+  // 🔹 DEVOLVEMOS DATOS PUROS para Negocios, Servicios y Empleados
+  getAllBusinesses: async (): Promise<ApiBusiness[]> => {
+    return apiClient.get<ApiBusiness[]>("/negocios/");
   },
 
-  getBusinessById: async (id: string | number): Promise<Business> => {
-    const data = await apiClient.get<ApiBusiness>(`/negocios/${id}`);
-    return mapBusinessFromApi(data);
+  getBusinessById: async (id: string | number): Promise<ApiBusiness> => {
+    return apiClient.get<ApiBusiness>(`/negocios/${id}`);
   },
 
-  getBusinessBySlug: async (slug: string): Promise<Business> => {
+  getBusinessBySlug: async (slug: string): Promise<ApiBusiness> => {
     const data = await apiClient.get<ApiBusiness[]>("/negocios/");
     const found = data.find((b) => b.slug === slug);
 
@@ -113,7 +64,7 @@ export const businessService = {
       throw new Error("Negocio no encontrado");
     }
 
-    return mapBusinessFromApi(found);
+    return found;
   },
 
   createCompleteBusiness: async (data: CreateCompleteBusinessRequest) => {
@@ -122,38 +73,31 @@ export const businessService = {
 
   getBusinessServices: async (
     businessId: string | number
-  ): Promise<Service[]> => {
+  ): Promise<ApiService[]> => {
     const data = await apiClient.get<ApiService[]>("/servicios", {
       id_negocio: businessId,
     });
 
-    return data
-      .map(mapServiceFromApi)
-      .filter(
-        (service) => String(service.businessId) === String(businessId)
-      );
+    return data.filter(
+      (service) => String(service.id_negocio) === String(businessId)
+    );
   },
 
   getBusinessProfessionals: async (
     businessId: string | number
-  ): Promise<Professional[]> => {
+  ): Promise<ApiEmployee[]> => {
     const data = await apiClient.get<ApiEmployee[]>("/empleados", {
       id_negocio: businessId,
     });
 
-    return data
-      .map(mapProfessionalFromApi)
-      .filter(
-        (professional) =>
-          String(professional.businessId) === String(businessId)
-      );
+    return data.filter(
+      (professional) => String(professional.id_negocio) === String(businessId)
+    );
   },
 
-  getCategories: async (): Promise<Category[]> => {
+  // 🔹 EXCEPCIÓN: Usamos el mapper flexible SOLO para Categorías
+  getCategories: async (): Promise<ApiCategory[]> => {
     const data = await apiClient.get<ApiCategory[]>("/categorias");
-
-    console.log("RAW API:", data);
-
     return data.map(mapCategoryFromApi);
   },
 };

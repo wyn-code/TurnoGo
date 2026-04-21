@@ -10,15 +10,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 import { businessService } from "@/services/business.service";
-import type { Business, Service, Professional } from "@/types";
+import type { ApiBusiness, ApiEmployee, ApiService } from "@/types/api";
 
 const NegocioPerfil = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
 
-  const [business, setBusiness] = useState<Business | null>(null);
-  const [services, setServices] = useState<Service[]>([]);
-  const [professionals, setProfessionals] = useState<Professional[]>([]);
+  const [business, setBusiness] = useState<ApiBusiness | null>(null);
+  const [services, setServices] = useState<ApiService[]>([]);
+  const [professionals, setProfessionals] = useState<ApiEmployee[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -36,8 +36,8 @@ const NegocioPerfil = () => {
         setBusiness(businessData);
 
         const [servicesData, professionalsData] = await Promise.all([
-          businessService.getBusinessServices(businessData.id),
-          businessService.getBusinessProfessionals(businessData.id),
+          businessService.getBusinessServices(businessData.id_negocio),
+          businessService.getBusinessProfessionals(businessData.id_negocio),
         ]);
 
         setServices(servicesData);
@@ -53,9 +53,9 @@ const NegocioPerfil = () => {
     loadBusinessData();
   }, [slug]);
 
-  const handleBook = (service: Service) => {
+  const handleBook = (service: ApiService) => {
     if (!business?.slug) return;
-    navigate(`/reservar/${business.slug}?servicio=${service.id}`);
+    navigate(`/reservar/${business.slug}?servicio=${service.id_servicio}`);
   };
 
   if (isLoading) {
@@ -95,21 +95,21 @@ const NegocioPerfil = () => {
         <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6">
             <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-2xl font-bold text-primary">
-              {business.image ? (
+              {business.logo ? (
                 <img
-                  src={business.image}
-                  alt={business.name}
+                  src={business.logo}
+                  alt={business.nombre}
                   className="h-full w-full rounded-xl object-cover"
                 />
               ) : (
-                business.name.charAt(0)
+                business.nombre.charAt(0)
               )}
             </div>
 
             <div className="flex-1 space-y-2">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-2xl font-bold text-foreground">{business.name}</h1>
-                <Badge variant="secondary">{business.category}</Badge>
+                <h1 className="text-2xl font-bold text-foreground">{business.nombre}</h1>
+                <Badge variant="secondary">{business.rubro}</Badge>
               </div>
             </div>
 
@@ -127,28 +127,28 @@ const NegocioPerfil = () => {
               <div className="flex items-start gap-2 text-muted-foreground">
                 <MapPin size={16} className="mt-0.5 shrink-0 text-primary" />
                 <span>
-                  {business.address}, {business.city}
+                  {business.direccion}, {business.ciudad}
                 </span>
               </div>
 
-              {business.phone && (
+              {business.telefono && (
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Phone size={16} className="shrink-0 text-primary" />
-                  <span>{business.phone}</span>
+                  <span>{business.telefono}</span>
                 </div>
               )}
 
-              {business.instagram && (
+              {business.ig_url && (
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Instagram size={16} className="shrink-0 text-primary" />
-                  <span>{business.instagram}</span>
+                  <span>{business.ig_url}</span>
                 </div>
               )}
 
-              {business.facebook && (
+              {business.url_fb && (
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Facebook size={16} className="shrink-0 text-primary" />
-                  <span>{business.facebook}</span>
+                  <span>{business.url_fb}</span>
                 </div>
               )}
             </div>
@@ -159,7 +159,7 @@ const NegocioPerfil = () => {
             <div className="space-y-3">
               {services.length > 0 ? (
                 services.map((service) => (
-                  <ServiceCard key={service.id} service={service} onBook={handleBook} />
+                  <ServiceCard key={service.id_servicio} service={service} onBook={handleBook} />
                 ))
               ) : (
                 <p className="text-sm text-muted-foreground">
@@ -176,7 +176,7 @@ const NegocioPerfil = () => {
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {professionals.map((professional) => (
                 <ProfessionalCard
-                  key={professional.id}
+                  key={professional.id_empleado}
                   professional={professional}
                 />
               ))}
