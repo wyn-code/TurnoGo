@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
+import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, ArrowRight, CheckCircle } from "lucide-react";
 
@@ -32,7 +32,7 @@ export default function RegistrarNegocioPage() {
   const navigate = useNavigate();
 
   const form = useForm<FormData>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema) as Resolver<FormData>,
     defaultValues,
     mode: "onTouched",
   });
@@ -50,17 +50,21 @@ export default function RegistrarNegocioPage() {
     setStep((current) => Math.max(current - 1, 1));
   };
 
-  const onSubmit = form.handleSubmit(async (data) => {
+  const onSubmit = form.handleSubmit(async ( data ) => {
     try {
       setIsLoading(true);
 
-      const payload = toCreateCompleteBusinessRequest(data);
+      // ✅ El mapper ahora convierte los campos en inglés del form 
+      // a la estructura id_categoria / usuario_id que espera FastAPI.
+      const payload = toCreateCompleteBusinessRequest( data );
+      
       await businessService.createCompleteBusiness(payload);
 
       setSubmitted(true);
     } catch (err) {
+      // Ahora el error 422 ya no debería aparecer porque el payload es correcto.
       console.error("Error al crear negocio:", err);
-      alert("Error al crear negocio");
+      alert("Hubo un problema al registrar el negocio. Revisa los datos ingresados.");
     } finally {
       setIsLoading(false);
     }

@@ -6,7 +6,8 @@ import CategoryFilter from "@/components/marketplace/CategoryFilter";
 import BusinessGrid from "@/components/marketplace/BusinessesGrid";
 import { businessService } from "@/services/business.service";
 
-import type { Business, Category, City } from "@/types";
+import type { Category, City } from "@/types";
+import type { ApiBusiness } from "@/types/api";
 
 import {
   Select,
@@ -21,7 +22,7 @@ const Negocios = () => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
 
-  const [businesses, setBusinesses] = useState<Business[]>([]);
+  const [businesses, setBusinesses] = useState<ApiBusiness[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -30,7 +31,7 @@ const Negocios = () => {
     const uniqueCities = Array.from(
       new Set(
         businesses
-          .map((b) => b.city?.trim())
+          .map((b) => b.ciudad?.trim())
           .filter((city): city is string => Boolean(city))
       )
     );
@@ -74,10 +75,10 @@ const Negocios = () => {
 
       result = result.filter(
         (b) =>
-          b.name.toLowerCase().includes(q) ||
-          b.category.toLowerCase().includes(q) ||
-          b.address.toLowerCase().includes(q) ||
-          b.city.toLowerCase().includes(q)
+          b.nombre.toLowerCase().includes(q) ||
+          (b.categoria?.nombre ?? "").toLowerCase().includes(q) ||
+          b.direccion.toLowerCase().includes(q) ||
+          b.ciudad.toLowerCase().includes(q)
       );
     }
 
@@ -87,7 +88,9 @@ const Negocios = () => {
       )?.name;
 
       if (selectedCategoryName) {
-        result = result.filter((b) => b.category === selectedCategoryName);
+        result = result.filter(
+          (b) => b.categoria?.nombre === selectedCategoryName
+        );
       }
     }
 
@@ -95,7 +98,7 @@ const Negocios = () => {
       const selectedCityName = cities.find((c) => c.slug === selectedCity)?.name;
 
       if (selectedCityName) {
-        result = result.filter((b) => b.city === selectedCityName);
+        result = result.filter((b) => b.ciudad === selectedCityName);
       }
     }
 

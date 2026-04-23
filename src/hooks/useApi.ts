@@ -1,17 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { businessService, type CreateBusinessRequest } from "@/services/business.service";
+import { businessService, type CreateCompleteBusinessRequest } from "@/services/business.service";
 
 // Hook para crear un negocio
 export const useCreateBusiness = () => {
   const queryClient = useQueryClient();
 
-  return useMutation({
-    mutationFn: (data: CreateBusinessRequest) => businessService.createBusiness(data),
+  return useMutation<
+    unknown,
+    Error,
+    CreateCompleteBusinessRequest
+  >({
+    mutationFn: (data) => businessService.createCompleteBusiness(data),
     onSuccess: (data) => {
-      // Invalidar lista de negocios para refrescar
       queryClient.invalidateQueries({ queryKey: ["businesses"] });
-      // Guardar el negocio creado en cache
-      queryClient.setQueryData(["business", data.slug], data);
+      if (data && typeof data === "object" && "slug" in data) {
+        queryClient.setQueryData(["business", (data as any).slug], data);
+      }
     },
     onError: (error: Error) => {
       console.error("Error creating business:", error);
@@ -38,32 +42,6 @@ export const useBusinessBySlug = (slug: string) => {
   });
 };
 
-// Hook para actualizar un negocio
-export const useUpdateBusiness = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<CreateBusinessRequest> }) =>
-      businessService.updateBusiness(id, data),
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["businesses"] });
-      queryClient.setQueryData(["business", data.slug], data);
-    },
-  });
-};
-
-// Hook para eliminar un negocio
-export const useDeleteBusiness = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (id: string) => businessService.deleteBusiness(id),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["businesses"] });
-    },
-  });
-};
-
 // Hook para obtener servicios de un negocio
 export const useBusinessServices = (businessId: string) => {
   return useQuery({
@@ -82,11 +60,3 @@ export const useBusinessProfessionals = (businessId: string) => {
   });
 };
 
-// Hook para obtener horarios de un negocio
-export const useBusinessSchedule = (businessId: string) => {
-  return useQuery({
-    queryKey: ["schedule", businessId],
-    queryFn: () => businessService.getBusinessSchedule(businessId),
-    enabled: !!businessId,
-  });
-};

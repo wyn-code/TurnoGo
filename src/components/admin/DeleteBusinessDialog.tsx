@@ -1,5 +1,5 @@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import type { AdminBusiness } from "../../data/adminMockData";
+import type { AdminBusiness } from "../../types/api";
 
 interface DeleteBusinessDialogProps {
   business: AdminBusiness | null;

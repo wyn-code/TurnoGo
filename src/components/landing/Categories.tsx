@@ -2,6 +2,7 @@ import { Scissors, Sparkles, Heart, Hand } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import { businessService } from "@/services/business.service";
+import type { Category } from "@/types";
 
 const iconMap: Record<string, ReactNode> = {
   scissors: <Scissors size={28} />,
@@ -9,12 +10,6 @@ const iconMap: Record<string, ReactNode> = {
   heart: <Heart size={28} />,
   hand: <Hand size={28} />,
 };
-
-interface Category {
-  id: string;
-  name: string;
-  icon: string;
-}
 
 const Categories = () => {
   const [categories, setCategories] = useState<Category[]>([]);

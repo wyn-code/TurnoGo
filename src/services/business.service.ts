@@ -7,21 +7,24 @@ import type {
   ApiEmployee,
   ApiCategory,
 } from "@/types/api";
+import type { Category } from "@/types";
 
-// Importamos el tipo limpio solo para Categoría
-
-const mapCategoryFromApi = (item: ApiCategory) => ({
-  ...item,
-  icono: item.icono ?? "scissors",
-  slug: item.nombre
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, "-"),
+const mapCategoryFromApi = (item: ApiCategory): Category => ({
+  id: String(item.id_categoria),
+  name: item.nombre,
+  icon: item.icono ?? "scissors",
+  slug:
+    item.slug ??
+    item.nombre
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, "-"),
 });
 export interface CreateCompleteBusinessRequest {
   nombre: string;
-  rubro: string;
   wsp: string;
+  id_categoria: number;
+  usuario_id: number;
   telefono?: string | null;
   direccion: string;
   ciudad: string;
@@ -48,8 +51,10 @@ export interface CreateCompleteBusinessRequest {
 
 export const businessService = {
   // 🔹 DEVOLVEMOS DATOS PUROS para Negocios, Servicios y Empleados
-  getAllBusinesses: async (): Promise<ApiBusiness[]> => {
-    return apiClient.get<ApiBusiness[]>("/negocios/");
+  getAllBusinesses: async (
+    params?: Record<string, string | number | boolean>
+  ): Promise<ApiBusiness[]> => {
+    return apiClient.get<ApiBusiness[]>("/negocios/", params);
   },
 
   getBusinessById: async (id: string | number): Promise<ApiBusiness> => {
@@ -86,17 +91,14 @@ export const businessService = {
   getBusinessProfessionals: async (
     businessId: string | number
   ): Promise<ApiEmployee[]> => {
-    const data = await apiClient.get<ApiEmployee[]>("/empleados", {
-      id_negocio: businessId,
-    });
-
-    return data.filter(
-      (professional) => String(professional.id_negocio) === String(businessId)
+    const data = await apiClient.get<ApiEmployee[]>(
+      `/empleados/?id_negocio=${businessId}`
     );
+    return data
   },
 
   // 🔹 EXCEPCIÓN: Usamos el mapper flexible SOLO para Categorías
-  getCategories: async (): Promise<ApiCategory[]> => {
+  getCategories: async (): Promise<Category[]> => {
     const data = await apiClient.get<ApiCategory[]>("/categorias");
     return data.map(mapCategoryFromApi);
   },

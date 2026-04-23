@@ -33,6 +33,15 @@ export const appointmentService = {
     return apiClient.get<AppointmentResponse>(`/turnos/${id}`);
   },
 
+  getAppointmentsByRange: async (params: {
+    id_negocio: string | number;
+    desde: string;
+    hasta: string;
+    id_empleado?: string | number;
+  }) => {
+    return apiClient.get<AppointmentResponse[]>("/turnos/por-rango", params);
+  },
+
   updateAppointment: async (
     id: string | number,
     data: Partial<CreateAppointmentRequest>

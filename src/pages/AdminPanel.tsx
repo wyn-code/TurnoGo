@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
-import {type AdminBusiness } from "@/data/adminMockData";
+import {type AdminBusiness } from "@/types/api";
 import { EditBusinessModal } from "@/components/admin/EditBusinessModal";
 import { DeleteBusinessDialog } from "@/components/admin/DeleteBusinessDialog";
 import { Button } from "@/components/ui/button";

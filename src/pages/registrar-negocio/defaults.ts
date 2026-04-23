@@ -1,20 +1,10 @@
 import type { FormData } from "./schema";
 
-export const DAYS = [
-  "Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"
-];
-
-export const STEPS = [
-  "Información","Imagen","Contacto","Ubicación","Servicios","Empleados","Horarios"
-];
-
-export const defaultSchedule = Object.fromEntries(
-  DAYS.map((d) => [d, { open: d !== "Domingo", start: "09:00", end: "18:00" }])
-);
+export const STEPS = ["Información", "Imagen", "Contacto", "Ubicación", "Servicios", "Empleados", "Horarios"];
 
 export const defaultValues: FormData = {
   name: "",
-  category: "",
+  category: 0, // ✅ Número, no string
   description: "",
   image: "",
   whatsapp: "",
@@ -24,17 +14,17 @@ export const defaultValues: FormData = {
   address: "",
   city: "",
   locality: "",
-  province: "",
+  provinceId: 0, // ✅ Cambiado de 'province' a 'provinceId' y es número
   services: [{ name: "", duration: 30, price: 0, description: "" }],
   employees: [{ name: "", specialty: "" }],
-  schedule: defaultSchedule,
+  schedule: {}, 
 };
 
 export const fieldsPerStep = [
   ["name", "category", "description"],
   ["image"],
   ["whatsapp", "phone", "instagram", "website"],
-  ["address", "city", "locality", "province"],
+  ["address", "city", "locality", "provinceId"], // ✅ Usar provinceId
   ["services"],
   ["employees"],
   ["schedule"],

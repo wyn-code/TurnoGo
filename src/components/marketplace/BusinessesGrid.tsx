@@ -1,8 +1,8 @@
 import BusinessCard from "../../components/marketplace/BusinessCard";
-import type { Business } from "../../types";
+import type { ApiBusiness } from "@/types/api";
 
 interface BusinessGridProps {
-  businesses: Business[];
+  businesses: ApiBusiness[];
 }
 
 const BusinessGrid = ({ businesses }: BusinessGridProps) => {
@@ -19,7 +19,7 @@ const BusinessGrid = ({ businesses }: BusinessGridProps) => {
   return (
     <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {businesses.map((biz) => (
-        <BusinessCard key={biz.id} business={biz} />
+        <BusinessCard key={biz.id_negocio} business={biz} />
       ))}
     </div>
   );

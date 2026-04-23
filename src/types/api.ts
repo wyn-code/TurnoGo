@@ -1,8 +1,16 @@
+export interface ApiCategory {
+  id_categoria: number;
+  nombre: string;
+  icono?: string | null;
+  slug?: string;
+  created_at?: string;
+}
 
 export interface ApiBusiness {
   id_negocio: number;
   nombre: string;
-  rubro: string;
+  id_categoria: number;
+  categoria?: ApiCategory | null;
   wsp: string;
   telefono?: string | null;
   direccion: string;
@@ -17,7 +25,6 @@ export interface ApiBusiness {
   slug: string;
   usuario_id?: number | null;
   descripcion?: string;
-  categoria?: string;
 }
 
 export interface ApiService {
@@ -40,10 +47,31 @@ export interface ApiEmployee {
   activo: boolean;
 }
 
-export interface ApiCategory{
-  id_categoria: number;
-  nombre: string;
-  icono: string | null; 
-  slug: string;         
-  created_at?: string;  
+export interface AdminBusiness {
+  id: string;
+  businessName: string;
+  ownerFirstName: string;
+  ownerLastName: string;
+  ownerEmail: string;
+  slug: string;
+  category: string;
+  logo?: string;
+  primaryColor?: string;
+  totalAppointments: number;
+  status: "activo" | "inactivo";
+  createdAt: string;
+}
+
+export interface BookingData {
+  serviceId: string;
+  professionalId: string;
+  date: Date | null;
+  timeSlot: string;
+  client: {
+    firstName: string;
+    lastName: string;
+    phone: string;
+    email: string;
+    notes: string;
+  };
 }

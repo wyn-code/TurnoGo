@@ -19,9 +19,10 @@ import ProfessionalCard from "@/components/business/ProfessionalCard";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 
-import type { BookingData } from "@/types";
+import type { BookingData } from "@/types/api";
 import type { ApiBusiness, ApiService, ApiEmployee } from "@/types/api";
 import { ApiError } from "@/lib/api-client";
+import type { AppointmentResponse } from "@/services/appointment.service";
 
 const STEPS = [
   "Servicio",
@@ -39,16 +40,7 @@ type TimeSlot = {
   available: boolean;
 };
 
-type ApiTurno = {
-  id_turno: number;
-  id_negocio: number;
-  id_cliente: number;
-  id_servicio: number;
-  id_estado: number;
-  id_empleado: number | null;
-  fecha_hora_inicio: string;
-  fecha_hora_fin: string | null;
-};
+type ApiTurno = AppointmentResponse;
 
 const pad = (value: number) => String(value).padStart(2, "0");
 
@@ -217,31 +209,14 @@ const Reservar = () => {
       const to = new Date(booking.date);
       to.setHours(23, 59, 59, 999);
 
-      const params = new URLSearchParams({
+      const response = await appointmentService.getAppointmentsByRange({
         id_negocio: String(business.id_negocio),
         desde: from.toISOString(),
         hasta: to.toISOString(),
+        ...(booking.professionalId && { id_empleado: String(booking.professionalId) }),
       });
 
-      if (booking.professionalId) {
-        params.append("id_empleado", String(booking.professionalId));
-      }
-
-      const response = await fetch(`/api/turnos/por-rango?${params.toString()}`);
-
-      if (!response.ok) {
-        throw new Error("No se pudieron obtener los turnos ocupados");
-      }
-
-      const data: ApiTurno[] = await response.json();
-      const selectedDateKey = toLocalDateKey(booking.date);
-
-      const filtered = data.filter((turno) => {
-        const turnoDate = new Date(turno.fecha_hora_inicio);
-        return toLocalDateKey(turnoDate) === selectedDateKey;
-      });
-
-      setOccupiedAppointments(filtered);
+      setOccupiedAppointments(response);
     } catch (fetchError) {
       console.error(fetchError);
       setOccupiedAppointments([]);
@@ -271,23 +246,14 @@ const Reservar = () => {
           1
         );
 
-        const params = new URLSearchParams({
+        const response = await appointmentService.getAppointmentsByRange({
           id_negocio: String(business.id_negocio),
           desde: monthStart.toISOString(),
           hasta: monthEnd.toISOString(),
+          ...(booking.professionalId && { id_empleado: String(booking.professionalId) }),
         });
 
-        if (booking.professionalId) {
-          params.append("id_empleado", String(booking.professionalId));
-        }
-
-        const response = await fetch(`/api/turnos/por-rango?${params.toString()}`);
-
-        if (!response.ok) {
-          throw new Error("No se pudieron obtener los turnos del mes");
-        }
-
-        const data: ApiTurno[] = await response.json();
+        const data = response;
         const blockedDays = new Set<string>();
 
         for (
@@ -326,7 +292,7 @@ const Reservar = () => {
 
   useEffect(() => {
     refreshOccupiedDays(visibleMonth);
-  }, [refreshOccupiedDays, visibleMonth]);
+  }, [refreshOccupiedDays, visibleMonth, booking.professionalId]);
 
   const canNext = (): boolean => {
     switch (step) {
@@ -528,11 +494,11 @@ const Reservar = () => {
                     String(booking.professionalId) ===
                     String(professional.id_empleado)
                   }
-                  onSelect={() => {
+                  onSelect={(selectedProfessional) => {
                     setSubmitError(null);
                     setBooking((current) => ({
                       ...current,
-                      professionalId: String(professional.id_empleado),
+                      professionalId: String(selectedProfessional.id_empleado),
                       timeSlot: "",
                     }));
                   }}

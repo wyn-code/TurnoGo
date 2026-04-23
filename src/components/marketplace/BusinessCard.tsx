@@ -15,7 +15,9 @@ const BusinessCard = ({ business }: BusinessCardProps) => (
     <CardContent className="flex flex-1 flex-col gap-3 p-5">
       <div className="flex items-start justify-between gap-2">
         <h3 className="font-semibold leading-snug text-foreground">{business.nombre}</h3>
-        <Badge variant="secondary" className="shrink-0 text-xs">{business.categoria}</Badge>
+        <Badge variant="secondary" className="shrink-0 text-xs">
+          {business.categoria?.nombre ?? "Sin categoría"}
+        </Badge>
       </div>
       <p className="text-sm text-muted-foreground line-clamp-2">{business.descripcion}</p>
       <div className="flex items-center gap-1 text-sm text-muted-foreground">

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import type { AdminBusiness } from "../../data/adminMockData";
+import type { AdminBusiness } from "../../types/api";
 import { toast } from "sonner";
 
 interface EditBusinessModalProps {

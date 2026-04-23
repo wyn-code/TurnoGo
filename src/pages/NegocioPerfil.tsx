@@ -109,7 +109,7 @@ const NegocioPerfil = () => {
             <div className="flex-1 space-y-2">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-2xl font-bold text-foreground">{business.nombre}</h1>
-                <Badge variant="secondary">{business.rubro}</Badge>
+                <Badge variant="secondary">{business.categoria?.nombre ?? "Sin categoría"}</Badge>
               </div>
             </div>
 

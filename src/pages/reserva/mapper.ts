@@ -1,5 +1,5 @@
 import type { CreateAppointmentRequest } from "@/services/appointment.service";
-import type { BookingData } from "@/types";
+import type { BookingData } from "@/types/api";
 
 export const toCreateAppointmentRequest = (
   booking: BookingData,

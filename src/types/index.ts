@@ -1,7 +1,4 @@
-/* import type { ApiService } from "./api";
-
 export interface Business {
-  id_negocio(id_negocio: string | number): Promise<ApiService[]>;
   id: string;
   name: string;
   slug: string;
@@ -15,7 +12,6 @@ export interface Business {
   instagram?: string;
   facebook?: string;
 
-  // 👇 agregados para que coincida con tu mock
   description?: string;
   rating?: number;
   reviewCount?: number;
@@ -111,4 +107,4 @@ export interface DaySchedule {
   end: string;
 }
 
-export type WeekSchedule = Record<string, DaySchedule>; */
+export type WeekSchedule = Record<string, DaySchedule>;
