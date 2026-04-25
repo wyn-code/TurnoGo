@@ -1,4 +1,4 @@
-import apiClient from "@/lib/api-client";
+import apiClient, { ApiError } from "@/lib/api-client";
 
 // Importamos los tipos crudos de la API
 import type {
@@ -7,6 +7,7 @@ import type {
   ApiEmployee,
   ApiCategory,
 } from "@/types/api";
+
 import type { Category } from "@/types";
 
 const mapCategoryFromApi = (item: ApiCategory): Category => ({
@@ -20,6 +21,17 @@ const mapCategoryFromApi = (item: ApiCategory): Category => ({
       .trim()
       .replace(/\s+/g, "-"),
 });
+
+export interface CreateBusinessResponse {
+  id_negocio: number;
+}
+
+export interface BusinessSchedulePayload {
+  dia_semana: number;
+  hora_apertura: string;
+  hora_cierre: string;
+}
+
 export interface CreateCompleteBusinessRequest {
   nombre: string;
   wsp: string;
@@ -33,6 +45,7 @@ export interface CreateCompleteBusinessRequest {
   ig_url?: string | null;
   logo?: string | null;
   activo: boolean;
+
   servicios: {
     nombre_servicio: string;
     precio: number;
@@ -41,6 +54,7 @@ export interface CreateCompleteBusinessRequest {
     duracion_max: number;
     activo: boolean;
   }[];
+
   empleados: {
     nombre: string;
     apellido: string;
@@ -50,20 +64,70 @@ export interface CreateCompleteBusinessRequest {
 }
 
 export const businessService = {
-  // 🔹 DEVOLVEMOS DATOS PUROS para Negocios, Servicios y Empleados
+  // ✅ Crear horarios
+  createHorarios: async (
+    idNegocio: number,
+    horarios: BusinessSchedulePayload[]
+  ) => {
+    try {
+      return await apiClient.post(
+        `/horarios/${idNegocio}`,
+        horarios
+      );
+    } catch (error) {
+      // Backward compatibility for APIs that expect id_negocio in body.
+      if (error instanceof ApiError && error.status === 404) {
+        return apiClient.post(
+          "/horarios",
+          {
+            id_negocio: idNegocio,
+            horarios,
+          }
+        );
+      }
+
+      throw error;
+    }
+  },
+
+  // ✅ Crear negocio completo
+  createCompleteBusiness: async (
+    data: CreateCompleteBusinessRequest
+  ): Promise<CreateBusinessResponse> => {
+    return apiClient.post<CreateBusinessResponse>(
+      "/negocios/complete",
+      data
+    );
+  },
+
+  // 🔹 Negocios
   getAllBusinesses: async (
     params?: Record<string, string | number | boolean>
   ): Promise<ApiBusiness[]> => {
-    return apiClient.get<ApiBusiness[]>("/negocios/", params);
+    return apiClient.get<ApiBusiness[]>(
+      "/negocios/",
+      params
+    );
   },
 
-  getBusinessById: async (id: string | number): Promise<ApiBusiness> => {
-    return apiClient.get<ApiBusiness>(`/negocios/${id}`);
+  getBusinessById: async (
+    id: string | number
+  ): Promise<ApiBusiness> => {
+    return apiClient.get<ApiBusiness>(
+      `/negocios/${id}`
+    );
   },
 
-  getBusinessBySlug: async (slug: string): Promise<ApiBusiness> => {
-    const data = await apiClient.get<ApiBusiness[]>("/negocios/");
-    const found = data.find((b) => b.slug === slug);
+  getBusinessBySlug: async (
+    slug: string
+  ): Promise<ApiBusiness> => {
+    const data = await apiClient.get<ApiBusiness[]>(
+      "/negocios/"
+    );
+
+    const found = data.find(
+      (b) => b.slug === slug
+    );
 
     if (!found) {
       throw new Error("Negocio no encontrado");
@@ -72,34 +136,39 @@ export const businessService = {
     return found;
   },
 
-  createCompleteBusiness: async (data: CreateCompleteBusinessRequest) => {
-    return apiClient.post("/negocios/complete", data);
-  },
-
+  // 🔹 Servicios
   getBusinessServices: async (
     businessId: string | number
   ): Promise<ApiService[]> => {
-    const data = await apiClient.get<ApiService[]>("/servicios", {
-      id_negocio: businessId,
-    });
+    const data = await apiClient.get<ApiService[]>(
+      "/servicios",
+      {
+        id_negocio: businessId,
+      }
+    );
 
     return data.filter(
-      (service) => String(service.id_negocio) === String(businessId)
+      (service) =>
+        String(service.id_negocio) ===
+        String(businessId)
     );
   },
 
+  // 🔹 Empleados
   getBusinessProfessionals: async (
     businessId: string | number
   ): Promise<ApiEmployee[]> => {
-    const data = await apiClient.get<ApiEmployee[]>(
+    return apiClient.get<ApiEmployee[]>(
       `/empleados/?id_negocio=${businessId}`
     );
-    return data
   },
 
-  // 🔹 EXCEPCIÓN: Usamos el mapper flexible SOLO para Categorías
+  // 🔹 Categorías
   getCategories: async (): Promise<Category[]> => {
-    const data = await apiClient.get<ApiCategory[]>("/categorias");
+    const data = await apiClient.get<ApiCategory[]>(
+      "/categorias"
+    );
+
     return data.map(mapCategoryFromApi);
   },
 };

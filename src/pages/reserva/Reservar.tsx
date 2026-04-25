@@ -253,8 +253,15 @@ const Reservar = () => {
           ...(booking.professionalId && { id_empleado: String(booking.professionalId) }),
         });
 
-        const data = response;
         const blockedDays = new Set<string>();
+        const appointmentsByDay = new Map<string, ApiTurno[]>();
+
+        response.forEach((turno) => {
+          const turnoDate = new Date(turno.fecha_hora_inicio);
+          const dayKey = toLocalDateKey(turnoDate);
+          const current = appointmentsByDay.get(dayKey) ?? [];
+          appointmentsByDay.set(dayKey, [...current, turno]);
+        });
 
         for (
           let day = new Date(monthStart);
@@ -263,12 +270,7 @@ const Reservar = () => {
         ) {
           const currentDay = new Date(day);
           const dayKey = toLocalDateKey(currentDay);
-
-          const dayAppointments = data.filter((turno) => {
-            const turnoDate = new Date(turno.fecha_hora_inicio);
-            return toLocalDateKey(turnoDate) === dayKey;
-          });
-
+          const dayAppointments = appointmentsByDay.get(dayKey) ?? [];
           const slots = generateTimeSlots(currentDay, dayAppointments, serviceDuration);
           const hasAvailable = slots.some((slot) => slot.available);
 
@@ -544,6 +546,25 @@ const Reservar = () => {
 
                       return isPast || isFullyBooked;
                     }}
+                    modifiers={{
+                      fullyBooked: (date) => occupiedDays.has(toLocalDateKey(date)),
+                    }}
+                    modifiersClassNames={{
+                      fullyBooked:
+                        "!opacity-100 bg-destructive/15 text-destructive hover:bg-destructive/20",
+                    }}
+                    components={{
+                      DayContent: ({ date, activeModifiers }) => (
+                        <span className="relative inline-flex h-full w-full items-center justify-center">
+                          {date.getDate()}
+                          {activeModifiers.fullyBooked && (
+                            <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-destructive/80 text-base font-semibold">
+                              ×
+                            </span>
+                          )}
+                        </span>
+                      ),
+                    }}
                     showOutsideDays
                     locale={es}
                   />
@@ -551,7 +572,7 @@ const Reservar = () => {
 
                 <div className="mt-7 text-center">
                   {booking.date ? (
-                    <p className="text-[16px] font-medium capitalize text-primary">
+                    <p className="text-[16px] font-medium capitalize text-violet-600">
                       {format(booking.date, "EEEE, MMMM, yyyy", { locale: es })}
                     </p>
                   ) : (

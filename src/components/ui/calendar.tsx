@@ -11,46 +11,47 @@ function Calendar({
   className,
   classNames,
   showOutsideDays = true,
+  components,
   ...props
 }: CalendarProps) {
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      className={cn("p-3", className)}
+      className={cn("p-4", className)}
       classNames={{
         months: "flex flex-col",
-        month: "space-y-4",
+        month: "space-y-5",
 
-        caption: "flex justify-center pt-1 relative items-center",
-        caption_label: "text-sm font-medium capitalize",
+        caption: "flex justify-center relative items-center",
+        caption_label: "text-base font-semibold capitalize tracking-tight",
 
-        nav: "space-x-1 flex items-center",
+        nav: "flex items-center gap-1",
         nav_button: cn(
           buttonVariants({ variant: "outline" }),
-          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100"
+          "h-8 w-8 rounded-full border-border/70 bg-background p-0 opacity-80 hover:opacity-100"
         ),
         nav_button_previous: "absolute left-1",
         nav_button_next: "absolute right-1",
 
-        table: "w-full border-collapse space-y-1",
-        
+        table: "w-full border-collapse",
+        head_row: "mb-1 flex w-full justify-between",
         head_cell:
-          "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem] text-center",
+          "text-muted-foreground rounded-md w-10 font-semibold text-xs text-center uppercase",
 
-        row: "mt-2 flex w-full",
-        cell: "h-9 w-9 text-center text-sm p-0 relative",
+        row: "mt-1.5 flex w-full justify-between",
+        cell: "h-10 w-10 text-center text-sm p-0 relative",
 
         day: cn(
           buttonVariants({ variant: "ghost" }),
-          "h-9 w-9 p-0 font-normal rounded-md aria-selected:!bg-primary aria-selected:!text-primary-foreground hover:aria-selected:!bg-primary focus:aria-selected:!bg-primary"
+          "h-10 w-10 p-0 font-medium rounded-lg transition-colors hover:bg-violet-50 hover:text-violet-700 aria-selected:!bg-violet-600 aria-selected:!text-white hover:aria-selected:!bg-violet-600 focus:aria-selected:!bg-violet-600"
         ),
         
         day_selected:
-          "!bg-primary !text-primary-foreground hover:!bg-primary hover:!text-primary-foreground focus:!bg-primary focus:!text-primary-foreground",
+          "!bg-violet-600 !text-white hover:!bg-violet-600 hover:!text-white focus:!bg-violet-600 focus:!text-white",
         
-        day_today: "bg-accent text-accent-foreground",
+        day_today: "bg-violet-100 text-violet-800",
         day_outside: "text-muted-foreground opacity-40",
-        day_disabled: "text-muted-foreground opacity-40 cursor-not-allowed",
+        day_disabled: "text-muted-foreground opacity-30 cursor-not-allowed",
 
         day_hidden: "invisible",
 
@@ -63,7 +64,7 @@ function Calendar({
             year: "numeric",
           }),
         formatWeekdayName: (date) =>
-          ["do", "lu", "ma", "mi", "ju", "vi", "sá"][date.getDay()],
+          ["D", "L", "M", "M", "J", "V", "S"][date.getDay()],
       }}
       components={{
         Chevron: ({ orientation, className, ...props }) => {
@@ -71,6 +72,7 @@ function Calendar({
             orientation === "left" ? ChevronLeft : ChevronRight;
           return <Icon className={cn("h-4 w-4", className)} {...props} />;
         },
+        ...components,
       }}
       {...props}
     />

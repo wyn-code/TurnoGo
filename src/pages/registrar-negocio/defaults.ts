@@ -4,7 +4,7 @@ export const STEPS = ["Información", "Imagen", "Contacto", "Ubicación", "Servi
 
 export const defaultValues: FormData = {
   name: "",
-  category: 0, // ✅ Número, no string
+  category: 0,
   description: "",
   image: "",
   whatsapp: "",
@@ -14,10 +14,61 @@ export const defaultValues: FormData = {
   address: "",
   city: "",
   locality: "",
-  provinceId: 0, // ✅ Cambiado de 'province' a 'provinceId' y es número
-  services: [{ name: "", duration: 30, price: 0, description: "" }],
-  employees: [{ name: "", specialty: "" }],
-  schedule: {}, 
+  provinceId: 0,
+
+  services: [
+    {
+      name: "",
+      duration: 30,
+      price: 0,
+      description: "",
+    },
+  ],
+
+  employees: [
+    {
+      name: "",
+      specialty: "",
+    },
+  ],
+
+  schedule: {
+    Lunes: {
+      open: false,
+      start: "",
+      end: "",
+    },
+    Martes: {
+      open: false,
+      start: "",
+      end: "",
+    },
+    Miércoles: {
+      open: false,
+      start: "",
+      end: "",
+    },
+    Jueves: {
+      open: false,
+      start: "",
+      end: "",
+    },
+    Viernes: {
+      open: false,
+      start: "",
+      end: "",
+    },
+    Sábado: {
+      open: false,
+      start: "",
+      end: "",
+    },
+    Domingo: {
+      open: false,
+      start: "",
+      end: "",
+    },
+  },
 };
 
 export const fieldsPerStep = [

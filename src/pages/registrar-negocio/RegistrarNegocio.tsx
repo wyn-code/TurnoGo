@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, ArrowRight, CheckCircle } from "lucide-react";
 
 import businessService from "@/services/business.service";
+import type { BusinessSchedulePayload } from "@/services/business.service";
 import { toCreateCompleteBusinessRequest } from "./mapper";
 import { schema, type FormData } from "./schema";
 import { defaultValues, fieldsPerStep, STEPS } from "./defaults";
@@ -50,25 +51,88 @@ export default function RegistrarNegocioPage() {
     setStep((current) => Math.max(current - 1, 1));
   };
 
-  const onSubmit = form.handleSubmit(async ( data ) => {
+  const dayMap: Record<keyof FormData["schedule"], number> = {
+    Lunes: 0,
+    Martes: 1,
+    Miércoles: 2,
+    Jueves: 3,
+    Viernes: 4,
+    Sábado: 5,
+    Domingo: 6,
+  };
+
+  const formatScheduleForBackend = (
+    schedule: FormData["schedule"]
+  ): BusinessSchedulePayload[] => {
+    return (Object.entries(schedule) as Array<
+      [keyof FormData["schedule"], FormData["schedule"][keyof FormData["schedule"]]]
+    >)
+      .filter(([_, value]) => value.open && value.start && value.end)
+      .map(([day, value]) => ({
+        dia_semana: dayMap[day],
+        hora_apertura: `${value.start}:00`,
+        hora_cierre: `${value.end}:00`,
+      }));
+  };
+
+  const getBusinessIdFromResponse = (response: unknown): number | null => {
+    if (!response || typeof response !== "object") {
+      return null;
+    }
+
+    const candidate = response as {
+      id_negocio?: number;
+      negocio?: { id_negocio?: number };
+    };
+
+    if (typeof candidate.id_negocio === "number") {
+      return candidate.id_negocio;
+    }
+
+    if (typeof candidate.negocio?.id_negocio === "number") {
+      return candidate.negocio.id_negocio;
+    }
+
+    return null;
+  };
+
+  const onSubmit = form.handleSubmit(async (data) => {
     try {
       setIsLoading(true);
 
-      // ✅ El mapper ahora convierte los campos en inglés del form 
-      // a la estructura id_categoria / usuario_id que espera FastAPI.
-      const payload = toCreateCompleteBusinessRequest( data );
-      
-      await businessService.createCompleteBusiness(payload);
+      const payload = toCreateCompleteBusinessRequest(data);
+      const horarios = formatScheduleForBackend(data.schedule);
+
+      const negocioCreado = await businessService.createCompleteBusiness(payload);
+      const idNegocio = getBusinessIdFromResponse(negocioCreado);
+
+      if (!idNegocio) {
+        throw new Error("No se pudo obtener el id del negocio creado.");
+      }
+
+      if (horarios.length > 0) {
+        await businessService.createHorarios(idNegocio, horarios);
+      }
 
       setSubmitted(true);
     } catch (err) {
-      // Ahora el error 422 ya no debería aparecer porque el payload es correcto.
       console.error("Error al crear negocio:", err);
-      alert("Hubo un problema al registrar el negocio. Revisa los datos ingresados.");
+      alert("Hubo un problema al registrar el negocio.");
     } finally {
       setIsLoading(false);
     }
   });
+
+  const handleFormSubmit = (event: FormEvent<HTMLFormElement>) => {
+    // Prevent accidental submit before the last step (e.g. pressing Enter).
+    if (step < STEPS.length) {
+      event.preventDefault();
+      void next();
+      return;
+    }
+
+    void onSubmit(event);
+  };
 
   const renderStep = () => {
     switch (step) {
@@ -110,28 +174,43 @@ export default function RegistrarNegocioPage() {
         <BookingStepper currentStep={step} steps={STEPS} />
 
         <Card className="mt-8">
+          <form onSubmit={handleFormSubmit}>
           <CardContent className="p-6 space-y-5">
             {renderStep()}
 
             <div className="flex justify-between pt-4 border-t border-border">
-              <Button variant="outline" onClick={prev} disabled={step === 1}>
-                <ArrowLeft size={16} className="mr-2" />
+              <button
+                type="button"
+                onClick={prev}
+                disabled={step === 1}
+                className="border px-4 py-2 rounded"
+              >
                 Anterior
-              </Button>
+              </button>
 
               {step < STEPS.length ? (
-                <Button onClick={next}>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    next();
+                  }}
+                  className="border px-4 py-2 rounded"
+                >
                   Siguiente
-                  <ArrowRight size={16} className="ml-2" />
-                </Button>
+                </button>
               ) : (
-                <Button onClick={onSubmit} disabled={isLoading} className="gap-2">
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="border px-4 py-2 rounded"
+                >
                   {isLoading ? "Registrando..." : "Registrar negocio"}
-                  {!isLoading && <CheckCircle size={16} />}
-                </Button>
+                </button>
               )}
             </div>
           </CardContent>
+          </form>
         </Card>
       </main>
 

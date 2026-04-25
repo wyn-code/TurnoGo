@@ -7,7 +7,13 @@ type Props = {
 };
 
 const DAYS = [
-  "Lunes","Martes","Miércoles","Jueves","Viernes","Sábado","Domingo"
+  "Lunes",
+  "Martes",
+  "Miércoles",
+  "Jueves",
+  "Viernes",
+  "Sábado",
+  "Domingo"
 ];
 
 export default function BusinessScheduleStep({ form }: Props) {
@@ -20,14 +26,24 @@ export default function BusinessScheduleStep({ form }: Props) {
 
         return (
           <div key={day} className="flex items-center gap-3">
-            <input type="checkbox" {...register(`schedule.${day}.open`)} />
+            <input
+              type="checkbox"
+              {...register(`schedule.${day}.open`)}
+            />
 
             <span>{day}</span>
 
             {open && (
               <>
-                <Input type="time" {...register(`schedule.${day}.start`)} />
-                <Input type="time" {...register(`schedule.${day}.end`)} />
+                <Input
+                  type="time"
+                  {...register(`schedule.${day}.start`)}
+                />
+
+                <Input
+                  type="time"
+                  {...register(`schedule.${day}.end`)}
+                />
               </>
             )}
           </div>
