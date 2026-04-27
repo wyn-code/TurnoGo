@@ -10,7 +10,7 @@ export interface ApiBusiness {
   id_negocio: number;
   nombre: string;
   id_categoria: number;
-  categoria?: ApiCategory | null;
+  categoria: ApiCategory | null;
   wsp: string;
   telefono?: string | null;
   direccion: string;

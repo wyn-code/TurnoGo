@@ -6,8 +6,8 @@ import CategoryFilter from "@/components/marketplace/CategoryFilter";
 import BusinessGrid from "@/components/marketplace/BusinessesGrid";
 import { businessService } from "@/services/business.service";
 
-import type { Category, City } from "@/types";
-import type { ApiBusiness } from "@/types/api";
+import type { City } from "@/types";
+import type { ApiBusiness, ApiCategory } from "@/types/api";
 
 import {
   Select,
@@ -19,11 +19,11 @@ import {
 
 const Negocios = () => {
   const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
 
   const [businesses, setBusinesses] = useState<ApiBusiness[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const [categories, setCategories] = useState<ApiCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -83,15 +83,9 @@ const Negocios = () => {
     }
 
     if (selectedCategory) {
-      const selectedCategoryName = categories.find(
-        (c) => c.slug === selectedCategory
-      )?.name;
-
-      if (selectedCategoryName) {
-        result = result.filter(
-          (b) => b.categoria?.nombre === selectedCategoryName
-        );
-      }
+      result = result.filter(
+        (b) => b.id_categoria === selectedCategory
+      );
     }
 
     if (selectedCity) {

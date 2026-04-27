@@ -25,13 +25,13 @@ useEffect(() => {
       console.log("NEGOCIOS BACK:", data);
 
   const mapped = data.map((n: any) => ({
-    id: String(n.id_negocio), // 🔥 importante
+    id: String(n.id_negocio),
     businessName: n.nombre,
     ownerFirstName: "Dueño", // temporal
     ownerLastName: "",
     ownerEmail: "email@email.com", // temporal
-    category: n.rubro || "General", // 🔥 importante
-    status: n.activo ? "activo" : "inactivo", // si existe en DB
+    category: n.categoria?.nombre || "Sin categoría",
+    status: n.activo ? "activo" : "inactivo",
     slug: n.slug || "negocio",
     primaryColor: "#000000",
     totalAppointments: 0,

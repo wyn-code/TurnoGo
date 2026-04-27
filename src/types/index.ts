@@ -22,12 +22,6 @@ export interface Business {
   createdAt?: string;
 }
 
-export interface Category {
-  id: string;
-  name: string;
-  icon: string;
-  slug: string;
-}
 
 export interface Service {
   id: string;

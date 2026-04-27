@@ -1,40 +1,51 @@
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
-import ProfessionalCard from "@/components/business/ProfessionalCard";
-import { professionals } from "@/data/mockData";
-import type { ApiEmployee } from "@/types/api";
+import { useEffect, useState } from "react";
+// Importá tu servicio y el tipo
+import { businessService } from "@/services/business.service"; 
+import type { ApiEmployee } from "@/types/api"; 
 import { toast } from "sonner";
 
 const DashboardEmpleados = () => {
-  const bizProfessionals: ApiEmployee[] = professionals
-    .filter((p) => p.businessId === "1")
-    .map((p) => {
-      const [firstName, ...rest] = p.name.split(" ");
+  const [employees, setEmployees] = useState<ApiEmployee[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-      return {
-        id_empleado: Number(p.id),
-        id_negocio: Number(p.businessId),
-        nombre: firstName,
-        apellido: rest.join(" "),
-        telefono: p.phone ?? "",
-        activo: p.active ?? true,
-      };
-    });
+  // El businessId lo podrías sacar de un context de Auth o de la URL
+  const businessId = "1"; 
+
+  useEffect(() => {
+    const loadEmployees = async () => {
+      try {
+        setIsLoading(true);
+        // Usamos el método que ya tenés en tu api.ts / service
+        const data = await businessService.getBusinessProfessionals(businessId);
+        setEmployees(data);
+      } catch (error) {
+        console.error(error);
+        toast.error("No se pudieron cargar los empleados");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadEmployees();
+  }, [businessId]);
+
+  if (isLoading) return <p>Cargando profesionales...</p>;
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-foreground">Empleados</h2>
-        <Button size="sm" onClick={() => toast.info("Agregar empleado (próximamente)")}>
-          <Plus size={14} className="mr-1" /> Nuevo empleado
-        </Button>
-      </div>
-
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {bizProfessionals.map((p) => (
-          <ProfessionalCard key={p.id_empleado} professional={p} />
-        ))}
-      </div>
+    <div className="grid gap-4">
+      {employees.map((emp) => (
+        <div key={emp.id_empleado} className="p-4 border rounded">
+          <p className="font-bold">{emp.nombre} {emp.apellido}</p>
+          <p className="text-sm text-muted-foreground">{emp.telefono}</p>
+          <span className={emp.activo ? "text-green-500" : "text-red-500"}>
+            {emp.activo ? "Activo" : "Inactivo"}
+          </span>
+        </div>
+      ))}
+      
+      {employees.length === 0 && (
+        <p>No hay profesionales registrados en este negocio.</p>
+      )}
     </div>
   );
 };

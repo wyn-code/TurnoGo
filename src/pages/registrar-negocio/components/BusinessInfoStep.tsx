@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import type { FormData } from "../schema";
-import type { Category } from "@/types";
+import type { ApiCategory } from "@/types/api";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import businessService from "@/services/business.service";
@@ -14,7 +14,7 @@ export default function BusinessInfoStep({ form }: Props) {
   const { register, formState: { errors } } = form;
   
   // 1. Estado para almacenar las categorías de la DB
-  const [categorias, setCategorias] = useState<Category[]>([]);
+  const [categorias, setCategorias] = useState<ApiCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // 2. Efecto para cargar las categorías al montar el componente
@@ -63,8 +63,8 @@ export default function BusinessInfoStep({ form }: Props) {
           
           {/* 3. Mapeo de las categorías reales de la base de datos */}
           {categorias.map((cat) => (
-            <option key={cat.id} value={cat.id}>
-              {cat.name}
+            <option key={cat.id_categoria} value={String(cat.id_categoria)}>
+              {cat.nombre}
             </option>
           ))}
         </select>

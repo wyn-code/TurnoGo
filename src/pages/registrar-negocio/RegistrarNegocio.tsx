@@ -2,7 +2,6 @@ import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, ArrowRight, CheckCircle } from "lucide-react";
 
 import businessService from "@/services/business.service";
 import type { BusinessSchedulePayload } from "@/services/business.service";
@@ -22,7 +21,6 @@ import BusinessScheduleStep from "./components/BusinessScheduleStep";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import BookingStepper from "@/components/booking/BookingStepper";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function RegistrarNegocioPage() {
@@ -67,7 +65,7 @@ export default function RegistrarNegocioPage() {
     return (Object.entries(schedule) as Array<
       [keyof FormData["schedule"], FormData["schedule"][keyof FormData["schedule"]]]
     >)
-      .filter(([_, value]) => value.open && value.start && value.end)
+      .filter(([,value]) => value.open && value.start && value.end)
       .map(([day, value]) => ({
         dia_semana: dayMap[day],
         hora_apertura: `${value.start}:00`,

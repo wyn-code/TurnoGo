@@ -8,20 +8,6 @@ import type {
   ApiCategory,
 } from "@/types/api";
 
-import type { Category } from "@/types";
-
-const mapCategoryFromApi = (item: ApiCategory): Category => ({
-  id: String(item.id_categoria),
-  name: item.nombre,
-  icon: item.icono ?? "scissors",
-  slug:
-    item.slug ??
-    item.nombre
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, "-"),
-});
-
 export interface CreateBusinessResponse {
   id_negocio: number;
 }
@@ -164,13 +150,8 @@ export const businessService = {
   },
 
   // 🔹 Categorías
-  getCategories: async (): Promise<Category[]> => {
-    const data = await apiClient.get<ApiCategory[]>(
-      "/categorias"
-    );
-
-    return data.map(mapCategoryFromApi);
-  },
+  getCategories: async (): Promise<ApiCategory[]> =>
+    apiClient.get<ApiCategory[]>("/categorias/"),
 };
 
 export default businessService;
