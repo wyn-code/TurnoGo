@@ -22,13 +22,13 @@ export default function BusinessScheduleStep({ form }: Props) {
   return (
     <div className="space-y-3">
       {DAYS.map((day) => {
-        const open = watch(`schedule.${day}.open`);
+        const open = watch(`horarios.${day}.open`);
 
         return (
           <div key={day} className="flex items-center gap-3">
             <input
               type="checkbox"
-              {...register(`schedule.${day}.open`)}
+              {...register(`horarios.${day}.open`)}
             />
 
             <span>{day}</span>
@@ -37,12 +37,12 @@ export default function BusinessScheduleStep({ form }: Props) {
               <>
                 <Input
                   type="time"
-                  {...register(`schedule.${day}.start`)}
+                  {...register(`horarios.${day}.start`)}
                 />
 
                 <Input
                   type="time"
-                  {...register(`schedule.${day}.end`)}
+                  {...register(`horarios.${day}.end`)}
                 />
               </>
             )}

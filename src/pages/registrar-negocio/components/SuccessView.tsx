@@ -22,16 +22,16 @@ export default function SuccessView({ data, navigate }: Props) {
                 ¡Negocio registrado con éxito!
               </h2>
               <p className="mt-2 text-sm text-muted-foreground">
-                Tu negocio <strong>{data.name}</strong> se envió correctamente.
+                Tu negocio <strong>{data.nombre}</strong> se envió correctamente.
               </p>
             </div>
 
             <div className="rounded-xl border border-border bg-muted p-4 text-left">
               <p className="font-medium">Resumen del negocio:</p>
-              <p className="text-sm">Categoría: {data.category}</p>
-              <p className="text-sm">Whatsapp: {data.whatsapp}</p>
-              <p className="text-sm">Ciudad: {data.city}</p>
-              <p className="text-sm">Dirección: {data.address}</p>
+              <p className="text-sm">Categoría: {data.id_categoria}</p>
+              <p className="text-sm">Whatsapp: {data.wsp}</p>
+              <p className="text-sm">Ciudad: {data.ciudad}</p>
+              <p className="text-sm">Dirección: {data.direccion}</p>
             </div>
 
             <Button onClick={() => navigate("/")}>Volver al inicio</Button>

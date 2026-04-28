@@ -14,7 +14,7 @@ export default function BusinessEmployeesStep({ form }: Props) {
 
   const { fields, append, remove } = useFieldArray({
     control,
-    name: "employees",
+    name: "empleados",
   });
 
   return (
@@ -22,13 +22,13 @@ export default function BusinessEmployeesStep({ form }: Props) {
       {fields.map((field, i) => (
         <div key={field.id} className="border p-3 rounded space-y-3">
           <Input
-            {...register(`employees.${i}.name`)}
-            placeholder="Nombre completo"
+            {...register(`empleados.${i}.nombre`)}
+            placeholder="Nombre"
           />
 
           <Input
-            {...register(`employees.${i}.specialty`)}
-            placeholder="Especialidad"
+            {...register(`empleados.${i}.apellido`)}
+            placeholder="Apellido"
           />
 
           <Button type="button" onClick={() => remove(i)}>
@@ -41,8 +41,8 @@ export default function BusinessEmployeesStep({ form }: Props) {
         type="button"
         onClick={() =>
           append({
-            name: "",
-            specialty: "",
+            nombre: "",
+            apellido: "",
           })
         }
       >

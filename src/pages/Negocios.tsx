@@ -6,8 +6,7 @@ import CategoryFilter from "@/components/marketplace/CategoryFilter";
 import BusinessGrid from "@/components/marketplace/BusinessesGrid";
 import { businessService } from "@/services/business.service";
 
-import type { City } from "@/types";
-import type { ApiBusiness, ApiCategory } from "@/types/api";
+import type { City, ApiBusiness, ApiCategory } from "@/types/api";
 
 import {
   Select,
@@ -97,7 +96,7 @@ const Negocios = () => {
     }
 
     return result;
-  }, [businesses, search, selectedCategory, selectedCity, categories, cities]);
+  }, [businesses, search, selectedCategory, selectedCity, cities]);
 
   if (isLoading) {
     return (

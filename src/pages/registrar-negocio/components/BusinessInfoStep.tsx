@@ -39,21 +39,21 @@ export default function BusinessInfoStep({ form }: Props) {
     <div className="space-y-6">
       {/* Nombre del Negocio */}
       <div className="space-y-2">
-        <Label htmlFor="name">Nombre del negocio</Label>
+        <Label htmlFor="nombre">Nombre del negocio</Label>
         <Input 
-          {...register("name")} 
-          id="name"
+          {...register("nombre")} 
+          id="nombre"
           placeholder="Ej: Barbería Rocco" 
         />
-        {errors.name && <p className="text-xs text-red-500">{errors.name.message}</p>}
+        {errors.nombre && <p className="text-xs text-red-500">{errors.nombre.message}</p>}
       </div>
 
       {/* Categoría (Select Dinámico) */}
       <div className="space-y-2">
-        <Label htmlFor="category">Categoría / Rubro</Label>
+        <Label htmlFor="id_categoria">Categoría / Rubro</Label>
         <select
-          {...register("category")}
-          id="category"
+          {...register("id_categoria")}
+          id="id_categoria"
           disabled={isLoading}
           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
         >
@@ -68,19 +68,19 @@ export default function BusinessInfoStep({ form }: Props) {
             </option>
           ))}
         </select>
-        {errors.category && <p className="text-xs text-red-500">{errors.category.message}</p>}
+        {errors.id_categoria && <p className="text-xs text-red-500">{errors.id_categoria.message}</p>}
       </div>
 
       {/* Descripción */}
       <div className="space-y-2">
-        <Label htmlFor="description">Descripción</Label>
+        <Label htmlFor="descripcion">Descripción</Label>
         <textarea
-          {...register("description")}
-          id="description"
+          {...register("descripcion")}
+          id="descripcion"
           placeholder="Contanos brevemente qué hacés..."
           className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
-        {errors.description && <p className="text-xs text-red-500">{errors.description.message}</p>}
+        {errors.descripcion && <p className="text-xs text-red-500">{errors.descripcion.message}</p>}
       </div>
     </div>
   );

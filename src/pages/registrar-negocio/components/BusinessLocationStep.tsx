@@ -42,34 +42,34 @@ export default function BusinessLocationStep({ form }: Props) {
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="address">Dirección</Label>
-        <Input {...register("address")} id="address" placeholder="Dirección" />
-        {errors.address && (
-          <p className="text-xs text-red-500">{errors.address.message}</p>
+        <Label htmlFor="direccion">Dirección</Label>
+        <Input {...register("direccion")} id="direccion" placeholder="Dirección" />
+        {errors.direccion && (
+          <p className="text-xs text-red-500">{errors.direccion.message}</p>
         )}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="city">Ciudad</Label>
-        <Input {...register("city")} id="city" placeholder="Ciudad" />
-        {errors.city && (
-          <p className="text-xs text-red-500">{errors.city.message}</p>
+        <Label htmlFor="ciudad">Ciudad</Label>
+        <Input {...register("ciudad")} id="ciudad" placeholder="Ciudad" />
+        {errors.ciudad && (
+          <p className="text-xs text-red-500">{errors.ciudad.message}</p>
         )}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="locality">Localidad</Label>
-        <Input {...register("locality")} id="locality" placeholder="Localidad" />
-        {errors.locality && (
-          <p className="text-xs text-red-500">{errors.locality.message}</p>
+        <Label htmlFor="id_localidad">Localidad</Label>
+        <Input {...register("id_localidad")} id="id_localidad" placeholder="Localidad" />
+        {errors.id_localidad && (
+          <p className="text-xs text-red-500">{errors.id_localidad.message}</p>
         )}
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="provinceId">Provincia</Label>
+        <Label htmlFor="id_provincia">Provincia</Label>
         <select
-          {...register("provinceId")}
-          id="provinceId"
+          {...register("id_provincia")}
+          id="id_provincia"
           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           defaultValue=""
         >
@@ -80,8 +80,8 @@ export default function BusinessLocationStep({ form }: Props) {
             </option>
           ))}
         </select>
-        {errors.provinceId && (
-          <p className="text-xs text-red-500">{errors.provinceId.message}</p>
+        {errors.id_provincia && (
+          <p className="text-xs text-red-500">{errors.id_provincia.message}</p>
         )}
       </div>
     </div>

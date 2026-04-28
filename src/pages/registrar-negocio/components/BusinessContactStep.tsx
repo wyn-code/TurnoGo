@@ -13,23 +13,23 @@ export default function BusinessContactStep({ form }: Props) {
   return (
     <div className="space-y-4">
       <Input
-        {...register("whatsapp")}
+        {...register("wsp")}
         placeholder="WhatsApp (ej: 3411234567)"
       />
 
       <Input
-        {...register("phone")}
+        {...register("telefono")}
         placeholder="Teléfono (opcional)"
       />
 
       <Input
-        {...register("instagram")}
+        {...register("ig_url")}
         placeholder="Instagram (opcional)"
       />
 
       <Input
-        {...register("website")}
-        placeholder="Sitio web (opcional)"
+        {...register("url_fb")}
+        placeholder="Facebook (opcional)"
       />
     </div>
   );

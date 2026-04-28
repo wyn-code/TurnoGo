@@ -8,14 +8,14 @@ import { toast } from "sonner";
 
 const DashboardConfiguracion = () => {
   const [data, setData] = useState({
-    name: "Barbería Don Carlos",
-    description: "Cortes clásicos y modernos con la mejor atención.",
-    phone: "+54 11 4567-8901",
-    whatsapp: "+5491145678901",
-    instagram: "@barberiadoncarlos",
-    address: "Av. Corrientes 1234",
-    city: "CABA",
-    website: "",
+    nombre: "Barbería Don Carlos",
+    descripcion: "Cortes clásicos y modernos con la mejor atención.",
+    telefono: "+54 11 4567-8901",
+    wsp: "+5491145678901",
+    ig_url: "@barberiadoncarlos",
+    direccion: "Av. Corrientes 1234",
+    ciudad: "CABA",
+    url_fb: "",
   });
 
   const update = (field: string, value: string) => setData((prev) => ({ ...prev, [field]: value }));
@@ -31,40 +31,40 @@ const DashboardConfiguracion = () => {
         <CardContent className="p-5 space-y-4">
           <div className="space-y-2">
             <Label>Nombre del negocio</Label>
-            <Input value={data.name} onChange={(e) => update("name", e.target.value)} />
+            <Input value={data.nombre} onChange={(e) => update("nombre", e.target.value)} />
           </div>
           <div className="space-y-2">
             <Label>Descripción</Label>
-            <Textarea value={data.description} onChange={(e) => update("description", e.target.value)} />
+            <Textarea value={data.descripcion} onChange={(e) => update("descripcion", e.target.value)} />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>Teléfono</Label>
-              <Input value={data.phone} onChange={(e) => update("phone", e.target.value)} />
+              <Input value={data.telefono} onChange={(e) => update("telefono", e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label>WhatsApp</Label>
-              <Input value={data.whatsapp} onChange={(e) => update("whatsapp", e.target.value)} />
+              <Input value={data.wsp} onChange={(e) => update("wsp", e.target.value)} />
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>Instagram</Label>
-              <Input value={data.instagram} onChange={(e) => update("instagram", e.target.value)} />
+              <Input value={data.ig_url} onChange={(e) => update("ig_url", e.target.value)} />
             </div>
             <div className="space-y-2">
-              <Label>Sitio web</Label>
-              <Input value={data.website} onChange={(e) => update("website", e.target.value)} placeholder="https://tunegocio.com" />
+              <Label>Facebook</Label>
+              <Input value={data.url_fb} onChange={(e) => update("url_fb", e.target.value)} placeholder="https://facebook.com/tunegocio" />
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label>Dirección</Label>
-              <Input value={data.address} onChange={(e) => update("address", e.target.value)} />
+              <Input value={data.direccion} onChange={(e) => update("direccion", e.target.value)} />
             </div>
             <div className="space-y-2">
               <Label>Ciudad</Label>
-              <Input value={data.city} onChange={(e) => update("city", e.target.value)} />
+              <Input value={data.ciudad} onChange={(e) => update("ciudad", e.target.value)} />
             </div>
           </div>
         </CardContent>

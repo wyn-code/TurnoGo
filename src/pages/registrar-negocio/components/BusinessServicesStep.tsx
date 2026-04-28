@@ -14,7 +14,7 @@ export default function BusinessServicesStep({ form }: Props) {
 
   const { fields, append, remove } = useFieldArray({
     control,
-    name: "services",
+    name: "servicios",
   });
 
   return (
@@ -22,19 +22,19 @@ export default function BusinessServicesStep({ form }: Props) {
       {fields.map((field, i) => (
         <div key={field.id} className="border p-3 rounded space-y-3">
           <Input
-            {...register(`services.${i}.name`)}
-            placeholder="Nombre"
+            {...register(`servicios.${i}.nombre_servicio`)}
+            placeholder="Nombre del servicio"
           />
 
           <Input
             type="number"
-            {...register(`services.${i}.duration`, { valueAsNumber: true })}
-            placeholder="Duración"
+            {...register(`servicios.${i}.duracion_min`, { valueAsNumber: true })}
+            placeholder="Duración (minutos)"
           />
 
           <Input
             type="number"
-            {...register(`services.${i}.price`, { valueAsNumber: true })}
+            {...register(`servicios.${i}.precio`, { valueAsNumber: true })}
             placeholder="Precio"
           />
 
@@ -47,7 +47,7 @@ export default function BusinessServicesStep({ form }: Props) {
       <Button
         type="button"
         onClick={() =>
-          append({ name: "", duration: 30, price: 0, description: "" })
+          append({ nombre_servicio: "", duracion_min: 30, precio: 0, activo: true })
         }
       >
         Agregar servicio

@@ -24,7 +24,7 @@ useEffect(() => {
       const data = await negocioService.getAll();
       console.log("NEGOCIOS BACK:", data);
 
-  const mapped = data.map((n: any) => ({
+  const mapped = data.map((n: a) => ({
     id: String(n.id_negocio),
     businessName: n.nombre,
     ownerFirstName: "Dueño", // temporal

@@ -49,7 +49,7 @@ export default function RegistrarNegocioPage() {
     setStep((current) => Math.max(current - 1, 1));
   };
 
-  const dayMap: Record<keyof FormData["schedule"], number> = {
+  const dayMap: Record<keyof FormData["horarios"], number> = {
     Lunes: 0,
     Martes: 1,
     Miércoles: 2,
@@ -60,10 +60,10 @@ export default function RegistrarNegocioPage() {
   };
 
   const formatScheduleForBackend = (
-    schedule: FormData["schedule"]
+    horarios: FormData["horarios"]
   ): BusinessSchedulePayload[] => {
-    return (Object.entries(schedule) as Array<
-      [keyof FormData["schedule"], FormData["schedule"][keyof FormData["schedule"]]]
+    return (Object.entries(horarios) as Array<
+      [keyof FormData["horarios"], FormData["horarios"][keyof FormData["horarios"]]]
     >)
       .filter(([,value]) => value.open && value.start && value.end)
       .map(([day, value]) => ({
@@ -99,7 +99,7 @@ export default function RegistrarNegocioPage() {
       setIsLoading(true);
 
       const payload = toCreateCompleteBusinessRequest(data);
-      const horarios = formatScheduleForBackend(data.schedule);
+      const horarios = formatScheduleForBackend(data.horarios);
 
       const negocioCreado = await businessService.createCompleteBusiness(payload);
       const idNegocio = getBusinessIdFromResponse(negocioCreado);

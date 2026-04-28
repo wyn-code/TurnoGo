@@ -3,36 +3,36 @@ import type { FormData } from "./schema";
 export const STEPS = ["Información", "Imagen", "Contacto", "Ubicación", "Servicios", "Empleados", "Horarios"];
 
 export const defaultValues: FormData = {
-  name: "",
-  category: 0,
-  description: "",
-  image: "",
-  whatsapp: "",
-  phone: "",
-  instagram: "",
-  website: "",
-  address: "",
-  city: "",
-  locality: "",
-  provinceId: 0,
+  nombre: "",
+  id_categoria: 0,
+  descripcion: "",
+  logo: "",
+  wsp: "",
+  telefono: "",
+  ig_url: "",
+  url_fb: "",
+  direccion: "",
+  ciudad: "",
+  id_localidad: null,
+  id_provincia: 0,
 
-  services: [
+  servicios: [
     {
-      name: "",
-      duration: 30,
-      price: 0,
-      description: "",
+      nombre_servicio: "",
+      duracion_min: 30,
+      precio: 0,
+      activo: true,
     },
   ],
 
-  employees: [
+  empleados: [
     {
-      name: "",
-      specialty: "",
+      nombre: "",
+      apellido: "",
     },
   ],
 
-  schedule: {
+  horarios: {
     Lunes: {
       open: false,
       start: "",
@@ -72,11 +72,11 @@ export const defaultValues: FormData = {
 };
 
 export const fieldsPerStep = [
-  ["name", "category", "description"],
-  ["image"],
-  ["whatsapp", "phone", "instagram", "website"],
-  ["address", "city", "locality", "provinceId"], // ✅ Usar provinceId
-  ["services"],
-  ["employees"],
-  ["schedule"],
+  ["nombre", "id_categoria", "descripcion"],
+  ["logo"],
+  ["wsp", "telefono", "ig_url", "url_fb"],
+  ["direccion", "ciudad", "id_localidad", "id_provincia"],
+  ["servicios"],
+  ["empleados"],
+  ["horarios"],
 ];

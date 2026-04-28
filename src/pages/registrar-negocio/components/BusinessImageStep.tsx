@@ -11,7 +11,7 @@ export default function BusinessImageStep({ form }: Props) {
 
   return (
     <div>
-      <Input {...register("image")} placeholder="URL de imagen" />
+      <Input {...register("logo")} placeholder="URL de logo" />
     </div>
   );
 }

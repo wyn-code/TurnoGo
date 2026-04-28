@@ -5,34 +5,32 @@ export const toCreateCompleteBusinessRequest = (
   form: FormData
 ): CreateCompleteBusinessRequest => {
   return {
-    nombre: form.name,
-    id_categoria: Number(form.category), 
+    nombre: form.nombre,
+    id_categoria: Number(form.id_categoria), 
     usuario_id: 1, 
-    wsp: form.whatsapp,
-    telefono: form.phone || null,
-    direccion: form.address,
-    ciudad: form.city,
-    id_localidad: 1,
-    id_provincia: 1,
-    ig_url: form.instagram || null,
-    logo: form.image || null,
+    wsp: form.wsp,
+    telefono: form.telefono || null,
+    direccion: form.direccion,
+    ciudad: form.ciudad,
+    id_localidad: form.id_localidad || null,
+    id_provincia: Number(form.id_provincia),
+    ig_url: form.ig_url || null,
+    logo: form.logo || null,
     activo: true,
 
-    servicios: form.services.map((s) => ({
-      nombre_servicio: s.name,
-      precio: Number(s.price),
+    servicios: form.servicios.map((s) => ({
+      nombre_servicio: s.nombre_servicio,
+      precio: Number(s.precio),
       requiere_aprobacion: false,
-      duracion_min: Number(s.duration),
-      duracion_max: Number(s.duration),
-      activo: true,
+      duracion_min: Number(s.duracion_min),
+      duracion_max: Number(s.duracion_min),
+      activo: s.activo ?? true,
     })),
 
-    empleados: form.employees.map((e) => {
-      const parts = e.name.trim().split(" ");
-
+    empleados: form.empleados.map((e) => {
       return {
-        nombre: parts[0] || "",
-        apellido: parts.slice(1).join(" ") || "",
+        nombre: e.nombre,
+        apellido: e.apellido,
 
         // ⚠️ temporal → después deberías pedirlo en el form
         telefono: Math.floor(Math.random() * 1000000000).toString(),
