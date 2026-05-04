@@ -18,10 +18,8 @@ import ServiceCard from "@/components/business/ServiceCard";
 import ProfessionalCard from "@/components/business/ProfessionalCard";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-
-import type { BookingData, ApiNegocio, ApiServicio, ApiEmpleado } from "@/types/api";
+import type { BookingData, ApiNegocio, ApiServicio, ApiEmpleado, ApiTurno } from "@/types/api";
 import { ApiError } from "@/lib/api-client";
-import type { AppointmentResponse } from "@/services/appointment.service";
 
 const STEPS = [
   "Servicio",
@@ -38,8 +36,6 @@ type TimeSlot = {
   time: string;
   available: boolean;
 };
-
-type ApiTurno = AppointmentResponse;
 
 const pad = (value: number) => String(value).padStart(2, "0");
 
@@ -550,19 +546,7 @@ const Reservar = () => {
                     }}
                     modifiersClassNames={{
                       fullyBooked:
-                        "!opacity-100 bg-destructive/15 text-destructive hover:bg-destructive/20",
-                    }}
-                    components={{
-                      DayContent: ({ date, activeModifiers }) => (
-                        <span className="relative inline-flex h-full w-full items-center justify-center">
-                          {date.getDate()}
-                          {activeModifiers.fullyBooked && (
-                            <span className="pointer-events-none absolute inset-0 flex items-center justify-center text-destructive/80 text-base font-semibold">
-                              ×
-                            </span>
-                          )}
-                        </span>
-                      ),
+                        "relative !opacity-100 bg-destructive/15 text-destructive hover:bg-destructive/20 after:absolute after:inset-0 after:flex after:items-center after:justify-center after:content-['×'] after:text-destructive after:text-xl after:-mt-[2px] after:font-semibold",
                     }}
                     showOutsideDays
                     locale={es}
@@ -572,7 +556,7 @@ const Reservar = () => {
                 <div className="mt-7 text-center">
                   {booking.date ? (
                     <p className="text-[16px] font-medium capitalize text-violet-600">
-                      {format(booking.date, "EEEE, MMMM, yyyy", { locale: es })}
+                      {format(booking.date, "EEEE, d 'de' MMMM, yyyy", { locale: es })}
                     </p>
                   ) : (
                     <p className="text-sm text-muted-foreground">
@@ -585,43 +569,93 @@ const Reservar = () => {
           )}
 
           {step === 4 && (
-            <div className="space-y-3">
-              <h2 className="text-lg font-semibold text-foreground">Elegí un horario</h2>
+            <div className="space-y-5">
+              <h2 className="text-lg font-semibold text-foreground">
+                Elegí un horario
+              </h2>
 
               {isLoadingSlots ? (
-                <p className="text-sm text-muted-foreground">Cargando horarios...</p>
-              ) : (
-                <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5">
-                  {timeSlots.map((slot) => (
-                    <button
-                      key={slot.id}
-                      disabled={!slot.available}
-                      onClick={() => {
-                        setSubmitError(null);
-                        setBooking((current) => ({
-                          ...current,
-                          timeSlot: slot.time,
-                        }));
-                      }}
-                      className={cn(
-                        "rounded-lg border px-3 py-2 text-sm font-medium transition-colors",
-                        booking.timeSlot === slot.time
-                          ? "border-primary bg-primary text-primary-foreground"
-                          : slot.available
-                            ? "border-border bg-card text-foreground hover:border-primary/40"
-                            : "border-border bg-muted text-muted-foreground opacity-50 cursor-not-allowed"
-                      )}
-                    >
-                      {slot.time}
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {!isLoadingSlots && timeSlots.every((slot) => !slot.available) && (
                 <p className="text-sm text-muted-foreground">
-                  No hay horarios disponibles para esta fecha.
+                  Cargando horarios...
                 </p>
+              ) : (
+                <>
+                  {(() => {
+                    const availableSlots = timeSlots.filter((s) => s.available);
+
+                    // 👉 AUTOSELECT si hay uno solo
+                    if (availableSlots.length === 1 && !booking.timeSlot) {
+                      setBooking((current) => ({
+                        ...current,
+                        timeSlot: availableSlots[0].time,
+                      }));
+                    }
+
+                    const morning = timeSlots.filter(
+                      (slot) => Number(slot.time.split(":")[0]) < 12
+                    );
+
+                    const afternoon = timeSlots.filter(
+                      (slot) => Number(slot.time.split(":")[0]) >= 12
+                    );
+
+                    const renderGroup = (label: string, slots: TimeSlot[]) => {
+                      if (!slots.length) return null;
+
+                      return (
+                        <div>
+                          <p className="mb-2 text-sm font-medium text-muted-foreground">
+                            {label}
+                          </p>
+
+                          <div className="flex flex-wrap gap-2">
+                            {slots.map((slot) => (
+                              <button
+                                key={slot.id}
+                                disabled={!slot.available}
+                                onClick={() => {
+                                  setSubmitError(null);
+                                  setBooking((current) => ({
+                                    ...current,
+                                    timeSlot: slot.time,
+                                  }));
+                                }}
+                                className={cn(
+                                  "px-4 py-2 rounded-full text-sm font-medium border transition-all",
+                                  booking.timeSlot === slot.time
+                                    ? "bg-primary text-primary-foreground border-primary"
+                                    : slot.available
+                                    ? "bg-muted hover:bg-muted/70 border-border"
+                                    : "bg-muted opacity-40 cursor-not-allowed border-border"
+                                )}
+                              >
+                                {slot.time}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    };
+
+                    return (
+                      <>
+                        {renderGroup("Mañana", morning)}
+                        {renderGroup("Tarde", afternoon)}
+
+                        {availableSlots.length === 0 && (
+                          <div className="text-center py-6">
+                            <p className="text-sm text-muted-foreground">
+                              No hay horarios disponibles para este día.
+                            </p>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Probá seleccionando otra fecha.
+                            </p>
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
+                </>
               )}
             </div>
           )}
