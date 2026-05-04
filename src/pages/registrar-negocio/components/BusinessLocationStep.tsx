@@ -58,14 +58,6 @@ export default function BusinessLocationStep({ form }: Props) {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="id_localidad">Localidad</Label>
-        <Input {...register("id_localidad")} id="id_localidad" placeholder="Localidad" />
-        {errors.id_localidad && (
-          <p className="text-xs text-red-500">{errors.id_localidad.message}</p>
-        )}
-      </div>
-
-      <div className="space-y-2">
         <Label htmlFor="id_provincia">Provincia</Label>
         <select
           {...register("id_provincia")}

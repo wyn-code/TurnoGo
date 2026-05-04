@@ -3,7 +3,7 @@ import { MapPin } from "lucide-react";
 import { Card, CardContent } from "../ui/card";
 import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
-import type { ApiBusiness } from "@/types/api";
+import type { ApiCategory, ApiNegocio } from "@/types/api";
 
 // Diccionario de imágenes por defecto (puedes cambiar las URLs por las tuyas)
 const categoryDefaults: Record<string, string> = {
@@ -15,12 +15,15 @@ const categoryDefaults: Record<string, string> = {
 };
 
 interface BusinessCardProps {
-  business: ApiBusiness;
+  business: ApiNegocio;
+  categories: ApiCategory[]
 }
 
-const BusinessCard = ({ business }: BusinessCardProps) => {
-  const categoryName = business.categoria?.nombre ?? "Sin Categoria";
-  
+const BusinessCard = ({ business, categories }: BusinessCardProps) => {
+  const categoryName = categories.find(
+    cat => cat.id_categoria === business.id_categoria
+  )?.nombre ?? "Sin Categoría";
+
   // Selecciona la imagen según categoría o una genérica si no existe en el mapa
   const coverImage = categoryDefaults[categoryName] || "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=500&auto=format&fit=crop";
 
@@ -46,7 +49,7 @@ const BusinessCard = ({ business }: BusinessCardProps) => {
         </div>
 
         <p className="text-sm text-muted-foreground line-clamp-2 min-h-[40px]">
-          {business.descripcion || "Encontrá el mejor servicio con nosotros."}
+          Encontrá el mejor servicio con nosotros.
         </p>
 
         <div className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground/80">

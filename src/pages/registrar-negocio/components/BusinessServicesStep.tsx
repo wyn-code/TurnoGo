@@ -47,7 +47,7 @@ export default function BusinessServicesStep({ form }: Props) {
       <Button
         type="button"
         onClick={() =>
-          append({ nombre_servicio: "", duracion_min: 30, precio: 0, activo: true })
+          append({ nombre_servicio: "", activo: true })
         }
       >
         Agregar servicio

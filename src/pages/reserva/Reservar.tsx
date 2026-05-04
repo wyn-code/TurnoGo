@@ -19,8 +19,7 @@ import ProfessionalCard from "@/components/business/ProfessionalCard";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 
-import type { BookingData } from "@/types/api";
-import type { ApiBusiness, ApiService, ApiEmployee } from "@/types/api";
+import type { BookingData, ApiNegocio, ApiServicio, ApiEmpleado } from "@/types/api";
 import { ApiError } from "@/lib/api-client";
 import type { AppointmentResponse } from "@/services/appointment.service";
 
@@ -120,9 +119,9 @@ const Reservar = () => {
   const [searchParams] = useSearchParams();
   const preSelectedService = searchParams.get("servicio") || "";
 
-  const [business, setBusiness] = useState<ApiBusiness | null>(null);
-  const [services, setServices] = useState<ApiService[]>([]);
-  const [professionals, setProfessionals] = useState<ApiEmployee[]>([]);
+  const [business, setBusiness] = useState<ApiNegocio | null>(null);
+  const [services, setServices] = useState<ApiServicio[]>([]);
+  const [professionals, setProfessionals] = useState<ApiEmpleado[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 

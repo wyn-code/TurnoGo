@@ -1,11 +1,12 @@
 import BusinessCard from "../../components/marketplace/BusinessCard";
-import type { ApiBusiness } from "@/types/api";
+import type { ApiNegocio, ApiCategory } from "@/types/api";
 
 interface BusinessGridProps {
-  businesses: ApiBusiness[];
+  businesses: ApiNegocio[];
+  categories: ApiCategory[];
 }
 
-const BusinessGrid = ({ businesses }: BusinessGridProps) => {
+const BusinessGrid = ({ businesses, categories }: BusinessGridProps) => {
   if (businesses.length === 0) {
     return (
       <div className="py-20 text-center">
@@ -19,7 +20,7 @@ const BusinessGrid = ({ businesses }: BusinessGridProps) => {
   return (
     <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
       {businesses.map((biz) => (
-        <BusinessCard key={biz.id_negocio} business={biz} />
+        <BusinessCard key={biz.id_negocio} business={biz} categories={categories} />
       ))}
     </div>
   );

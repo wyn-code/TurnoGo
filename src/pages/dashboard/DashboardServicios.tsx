@@ -5,10 +5,10 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Power, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { businessService } from "@/services/business.service";
-import type { ApiService } from "@/types/api";
+import type { ApiServicio } from "@/types/api";
 
 const DashboardServicios = () => {
-  const [services, setServices] = useState<ApiService[]>([]);
+  const [services, setServices] = useState<ApiServicio[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // El id del negocio (luego vendrá de un contexto de usuario)

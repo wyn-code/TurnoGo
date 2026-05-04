@@ -1,36 +1,21 @@
 import apiClient from "@/lib/api-client";
+import type { ApiTurno } from "@/types/api";
 
 export interface CreateAppointmentRequest {
   id_negocio: number;
   id_cliente: number;
   id_servicio: number;
   fecha_hora_inicio: string;
-  id_empleado?: number | null;
-}
-
-export interface AppointmentResponse {
-  id_turno: number;
-  id_negocio: number;
-  id_cliente: number;
-  id_servicio: number;
-  id_estado: number;
-  id_empleado?: number | null;
-  fecha_hora_inicio: string;
-  fecha_hora_fin?: string | null;
-  id_admin_aprobador?: number | null;
-  aprobado_at?: string | null;
-  rechazado_motivo?: string | null;
-  created_at?: string | null;
-  updated_at?: string | null;
+  id_empleado: number | null;
 }
 
 export const appointmentService = {
-  createAppointment: async (data: CreateAppointmentRequest) => {
-    return apiClient.post<AppointmentResponse>("/turnos/", data);
+  createAppointment: async (data: CreateAppointmentRequest): Promise<ApiTurno> => {
+    return apiClient.post<ApiTurno>("/turnos/", data);
   },
 
-  getAppointmentById: async (id: string | number) => {
-    return apiClient.get<AppointmentResponse>(`/turnos/${id}`);
+  getAppointmentById: async (id: string | number): Promise<ApiTurno> => {
+    return apiClient.get<ApiTurno>(`/turnos/${id}`);
   },
 
   getAppointmentsByRange: async (params: {
@@ -38,20 +23,18 @@ export const appointmentService = {
     desde: string;
     hasta: string;
     id_empleado?: string | number;
-  }) => {
-    return apiClient.get<AppointmentResponse[]>("/turnos/por-rango", params);
+  }): Promise<ApiTurno[]> => {
+    return apiClient.get<ApiTurno[]>("/turnos/por-rango", params);
   },
 
   updateAppointment: async (
     id: string | number,
     data: Partial<CreateAppointmentRequest>
-  ) => {
-    return apiClient.put<AppointmentResponse>(`/turnos/${id}`, data);
+  ): Promise<ApiTurno> => {
+    return apiClient.put<ApiTurno>(`/turnos/${id}`, data);
   },
 
-  deleteAppointment: async (id: string | number) => {
-    return apiClient.delete<AppointmentResponse>(`/turnos/${id}`);
+  deleteAppointment: async (id: string | number): Promise<ApiTurno> => {
+    return apiClient.delete<ApiTurno>(`/turnos/${id}`);
   },
 };
-
-export default appointmentService;

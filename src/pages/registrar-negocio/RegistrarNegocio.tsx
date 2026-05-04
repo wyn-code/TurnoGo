@@ -2,6 +2,8 @@ import { useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { ArrowLeft, ArrowRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 import businessService from "@/services/business.service";
 import type { BusinessSchedulePayload } from "@/services/business.service";
@@ -147,7 +149,7 @@ export default function RegistrarNegocioPage() {
       case 6:
         return <BusinessEmployeesStep form={form} />;
       case 7:
-        return <BusinessScheduleStep form={form} />;
+        return <BusinessScheduleStep  form={form} />;
       default:
         return null;
     }
@@ -176,37 +178,41 @@ export default function RegistrarNegocioPage() {
           <CardContent className="p-6 space-y-5">
             {renderStep()}
 
-            <div className="flex justify-between pt-4 border-t border-border">
-              <button
-                type="button"
-                onClick={prev}
-                disabled={step === 1}
-                className="border px-4 py-2 rounded"
-              >
-                Anterior
-              </button>
+          <div className="flex items-center justify-between pt-4 border-t border-border">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={prev}
+              disabled={step === 1}
+              className="gap-2"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Anterior
+            </Button>
 
-              {step < STEPS.length ? (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    next();
-                  }}
-                  className="border px-4 py-2 rounded"
-                >
-                  Siguiente
-                </button>
-              ) : (
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="border px-4 py-2 rounded"
-                >
-                  {isLoading ? "Registrando..." : "Registrar negocio"}
-                </button>
-              )}
-            </div>
+            {step < STEPS.length ? (
+              <Button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  next();
+                }}
+                className="gap-2 bg-violet-600 hover:bg-violet-700 text-white"
+              >
+                Siguiente
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="gap-2 bg-violet-600 hover:bg-violet-700 text-white"
+              >
+                {isLoading ? "Registrando..." : "Registrar negocio"}
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
           </CardContent>
           </form>
         </Card>

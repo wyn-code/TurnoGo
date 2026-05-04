@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 // Importá tu servicio y el tipo
 import { businessService } from "@/services/business.service"; 
-import type { ApiEmployee } from "@/types/api"; 
+import type { ApiEmpleado } from "@/types/api"; 
 import { toast } from "sonner";
 
 const DashboardEmpleados = () => {
-  const [employees, setEmployees] = useState<ApiEmployee[]>([]);
+  const [employees, setEmployees] = useState<ApiEmpleado[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // El businessId lo podrías sacar de un context de Auth o de la URL

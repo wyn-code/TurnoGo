@@ -3,7 +3,7 @@ import { z } from "zod";
 export const schema = z.object({
   nombre: z.string().min(2, "El nombre es muy corto"),
   id_categoria: z.coerce.number().min(1, "Seleccioná una categoría"), 
-  descripcion: z.string().min(10, "Descripción demasiado corta"),
+  descripcion: z.string().min(5, "Descripción demasiado corta"),
   logo: z.string().min(1, "La imagen es obligatoria"),
   wsp: z.string().min(6, "WhatsApp inválido"),
   telefono: z.string().optional().nullable(),
@@ -16,8 +16,8 @@ export const schema = z.object({
 
   servicios: z.array(z.object({
     nombre_servicio: z.string().min(2),
-    duracion_min: z.number().min(5),
-    precio: z.number().min(0),
+    duracion_min: z.number().min(5).optional(),
+    precio: z.number().min(0).optional(),
     activo: z.boolean().default(true),
   })).min(1),
 

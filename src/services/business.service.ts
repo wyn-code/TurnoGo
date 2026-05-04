@@ -1,11 +1,11 @@
 import apiClient, { ApiError } from "@/lib/api-client";
 
-// Importamos los tipos crudos de la API
+// Importamos los tipos del backend en español
 import type {
-  ApiBusiness,
-  ApiService,
-  ApiEmployee,
   ApiCategory,
+  ApiNegocio,
+  ApiServicio,
+  ApiEmpleado,
 } from "@/types/api";
 
 export interface CreateBusinessResponse {
@@ -23,13 +23,13 @@ export interface CreateCompleteBusinessRequest {
   wsp: string;
   id_categoria: number;
   usuario_id: number;
-  telefono?: string | null;
+  telefono: string | null;
   direccion: string;
   ciudad: string;
-  id_localidad?: number | null;
-  id_provincia?: number | null;
-  ig_url?: string | null;
-  logo?: string | null;
+  id_localidad: number | null;
+  id_provincia: number | null;
+  ig_url: string | null;
+  logo: string | null;
   activo: boolean;
 
   servicios: {
@@ -54,7 +54,7 @@ export const businessService = {
   createHorarios: async (
     idNegocio: number,
     horarios: BusinessSchedulePayload[]
-  ) => {
+  ): Promise<void> => {
     try {
       return await apiClient.post(
         `/horarios/${idNegocio}`,
@@ -89,8 +89,8 @@ export const businessService = {
   // 🔹 Negocios
   getAllBusinesses: async (
     params?: Record<string, string | number | boolean>
-  ): Promise<ApiBusiness[]> => {
-    return apiClient.get<ApiBusiness[]>(
+  ): Promise<ApiNegocio[]> => {
+    return apiClient.get<ApiNegocio[]>(
       "/negocios/",
       params
     );
@@ -98,16 +98,16 @@ export const businessService = {
 
   getBusinessById: async (
     id: string | number
-  ): Promise<ApiBusiness> => {
-    return apiClient.get<ApiBusiness>(
+  ): Promise<ApiNegocio> => {
+    return apiClient.get<ApiNegocio>(
       `/negocios/${id}`
     );
   },
 
   getBusinessBySlug: async (
     slug: string
-  ): Promise<ApiBusiness> => {
-    const data = await apiClient.get<ApiBusiness[]>(
+  ): Promise<ApiNegocio> => {
+    const data = await apiClient.get<ApiNegocio[]>(
       "/negocios/"
     );
 
@@ -125,8 +125,8 @@ export const businessService = {
   // 🔹 Servicios
   getBusinessServices: async (
     businessId: string | number
-  ): Promise<ApiService[]> => {
-    const data = await apiClient.get<ApiService[]>(
+  ): Promise<ApiServicio[]> => {
+    const data = await apiClient.get<ApiServicio[]>(
       "/servicios",
       {
         id_negocio: businessId,
@@ -143,8 +143,8 @@ export const businessService = {
   // 🔹 Empleados
   getBusinessProfessionals: async (
     businessId: string | number
-  ): Promise<ApiEmployee[]> => {
-    return apiClient.get<ApiEmployee[]>(
+  ): Promise<ApiEmpleado[]> => {
+    return apiClient.get<ApiEmpleado[]>(
       `/empleados/?id_negocio=${businessId}`
     );
   },

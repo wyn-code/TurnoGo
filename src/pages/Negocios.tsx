@@ -6,7 +6,7 @@ import CategoryFilter from "@/components/marketplace/CategoryFilter";
 import BusinessGrid from "@/components/marketplace/BusinessesGrid";
 import { businessService } from "@/services/business.service";
 
-import type { City, ApiBusiness, ApiCategory } from "@/types/api";
+import type { City, ApiNegocio, ApiCategory } from "@/types/api";
 
 import {
   Select,
@@ -21,7 +21,7 @@ const Negocios = () => {
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
 
-  const [businesses, setBusinesses] = useState<ApiBusiness[]>([]);
+  const [businesses, setBusinesses] = useState<ApiNegocio[]>([]);
   const [categories, setCategories] = useState<ApiCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -75,7 +75,6 @@ const Negocios = () => {
       result = result.filter(
         (b) =>
           b.nombre.toLowerCase().includes(q) ||
-          (b.categoria?.nombre ?? "").toLowerCase().includes(q) ||
           b.direccion.toLowerCase().includes(q) ||
           b.ciudad.toLowerCase().includes(q)
       );
@@ -173,7 +172,7 @@ const Negocios = () => {
           {filteredBusinesses.length !== 1 && "s"}
         </p>
 
-        <BusinessGrid businesses={filteredBusinesses} />
+        <BusinessGrid businesses={filteredBusinesses} categories={categories} />
       </main>
 
       <Footer />

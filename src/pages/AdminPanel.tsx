@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
-import {type AdminBusiness } from "@/types/api";
+import type { ApiNegocio } from "@/types/api";
 import { EditBusinessModal } from "@/components/admin/EditBusinessModal";
 import { DeleteBusinessDialog } from "@/components/admin/DeleteBusinessDialog";
 import { Button } from "@/components/ui/button";
@@ -13,32 +13,18 @@ import { negocioService } from "../services/negocio.service";
 
 const AdminPanel = () => {
   const { user, logout, isLoading } = useAuth();
-  const [businesses, setBusinesses] = useState<AdminBusiness[]>([]);  
+  const [businesses, setBusinesses] = useState<ApiNegocio[]>([]);  
   const [search, setSearch] = useState("");
-  const [editBusiness, setEditBusiness] = useState<AdminBusiness | null>(null);
-  const [deleteBusiness, setDeleteBusiness] = useState<AdminBusiness | null>(null);
+  const [editBusiness, setEditBusiness] = useState<ApiNegocio | null>(null);
+  const [deleteBusiness, setDeleteBusiness] = useState<ApiNegocio | null>(null);
 
 useEffect(() => {
   const fetchNegocios = async () => {
     try {
       const data = await negocioService.getAll();
       console.log("NEGOCIOS BACK:", data);
-
-  const mapped = data.map((n: a) => ({
-    id: String(n.id_negocio),
-    businessName: n.nombre,
-    ownerFirstName: "Dueño", // temporal
-    ownerLastName: "",
-    ownerEmail: "email@email.com", // temporal
-    category: n.categoria?.nombre || "Sin categoría",
-    status: n.activo ? "activo" : "inactivo",
-    slug: n.slug || "negocio",
-    primaryColor: "#000000",
-    totalAppointments: 0,
-  }));
-
-    setBusinesses(mapped as AdminBusiness[]);  
-  } catch (error) {
+      setBusinesses(data);  
+    } catch (error) {
       console.error("Error cargando negocios:", error);
     }
   };
@@ -61,19 +47,18 @@ useEffect(() => {
   const filtered = businesses.filter((b) => {
     const q = search.toLowerCase();
     return (
-      b.businessName.toLowerCase().includes(q) ||
-      b.ownerFirstName.toLowerCase().includes(q) ||
-      b.ownerLastName.toLowerCase().includes(q) ||
-      b.ownerEmail.toLowerCase().includes(q)
+      b.nombre.toLowerCase().includes(q) ||
+      b.ciudad.toLowerCase().includes(q) ||
+      b.direccion.toLowerCase().includes(q)
     );
   });
 
-  const handleSave = (updated: AdminBusiness) => {
-    setBusinesses((prev) => prev.map((b) => (b.id === updated.id ? updated : b)));
+  const handleSave = (updated: ApiNegocio) => {
+    setBusinesses((prev) => prev.map((b) => (b.id_negocio === updated.id_negocio ? updated : b)));
   };
 
-  const handleDelete = (id: string) => {
-    setBusinesses((prev) => prev.filter((b) => b.id !== id));
+  const handleDelete = (id: number) => {
+    setBusinesses((prev) => prev.filter((b) => b.id_negocio !== id));
     setDeleteBusiness(null);
   };
 
@@ -108,11 +93,11 @@ useEffect(() => {
           </div>
           <div className="rounded-xl border border-border bg-card p-5 shadow-soft">
             <p className="text-sm text-muted-foreground">Activos</p>
-            <p className="text-3xl font-bold text-primary">{businesses.filter((b) => b.status === "activo").length}</p>
+            <p className="text-3xl font-bold text-primary">{businesses.filter((b) => b.activo).length}</p>
           </div>
           <div className="rounded-xl border border-border bg-card p-5 shadow-soft">
-            <p className="text-sm text-muted-foreground">Turnos totales</p>
-            <p className="text-3xl font-bold text-foreground">{businesses.reduce((sum, b) => sum + b.totalAppointments, 0)}</p>
+            <p className="text-sm text-muted-foreground">En ciudades</p>
+            <p className="text-3xl font-bold text-foreground">{new Set(businesses.map((b) => b.ciudad)).size}</p>
           </div>
         </div>
 
@@ -132,10 +117,10 @@ useEffect(() => {
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50">
-                <TableHead>Dueño</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Negocio</TableHead>
-                <TableHead>Categoría</TableHead>
+                <TableHead>Nombre</TableHead>
+                <TableHead>Ciudad</TableHead>
+                <TableHead>Dirección</TableHead>
+                <TableHead>Teléfono</TableHead>
                 <TableHead>Estado</TableHead>
                 <TableHead>Enlace</TableHead>
                 <TableHead className="text-right">Acciones</TableHead>
@@ -150,25 +135,20 @@ useEffect(() => {
                 </TableRow>
               ) : (
                 filtered.map((b) => (
-                  <TableRow key={b.id}>
+                  <TableRow key={b.id_negocio}>
                     <TableCell className="font-medium">
-                      {b.ownerFirstName} {b.ownerLastName}
+                      {b.nombre}
                     </TableCell>
-                    <TableCell className="text-muted-foreground">{b.ownerEmail}</TableCell>
+                    <TableCell className="text-muted-foreground">{b.ciudad}</TableCell>
                     <TableCell>
-                      <div className="flex items-center gap-2">
-                        {b.primaryColor && (
-                          <div className="h-3 w-3 rounded-full border border-border" style={{ backgroundColor: b.primaryColor }} />
-                        )}
-                        <span className="font-medium">{b.businessName}</span>
-                      </div>
+                      <span className="text-sm text-muted-foreground">{b.direccion}</span>
                     </TableCell>
                     <TableCell>
-                      <Badge variant="secondary">{b.category}</Badge>
+                      <span className="text-sm">{b.telefono || "—"}</span>
                     </TableCell>
                     <TableCell>
-                      <Badge variant={b.status === "activo" ? "default" : "outline"} className={b.status === "activo" ? "" : "text-muted-foreground"}>
-                        {b.status}
+                      <Badge variant={b.activo ? "default" : "outline"}>
+                        {b.activo ? "Activo" : "Inactivo"}
                       </Badge>
                     </TableCell>
                     <TableCell>
@@ -199,8 +179,8 @@ useEffect(() => {
         </div>
       </main>
 
-      <EditBusinessModal key={editBusiness?.id ?? "none"} business={editBusiness} open={!!editBusiness} onOpenChange={(o) => !o && setEditBusiness(null)} onSave={handleSave} />
-      <DeleteBusinessDialog business={deleteBusiness} open={!!deleteBusiness} onOpenChange={(o) => !o && setDeleteBusiness(null)} onConfirm={handleDelete} />
+      <EditBusinessModal key={editBusiness?.id_negocio ?? "none"} business={editBusiness} open={!!editBusiness} onOpenChange={(o) => !o && setEditBusiness(null)} onSave={handleSave} />
+      <DeleteBusinessDialog business={deleteBusiness} open={!!deleteBusiness} onOpenChange={(o) => !o && setDeleteBusiness(null)} onConfirm={() => deleteBusiness && handleDelete(deleteBusiness.id_negocio)} />
     </div>
   );
 };

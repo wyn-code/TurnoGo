@@ -1,11 +1,11 @@
 import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar";
 import { Card, CardContent } from "../../components/ui/card";
-import type { ApiEmployee } from "@/types/api";
+import type { ApiEmpleado } from "@/types/api";
 
 interface ProfessionalCardProps {
-  professional: ApiEmployee;
+  professional: ApiEmpleado;
   selected?: boolean;
-  onSelect?: (professional: ApiEmployee) => void;
+  onSelect?: (professional: ApiEmpleado) => void;
 }
 
 const ProfessionalCard = ({

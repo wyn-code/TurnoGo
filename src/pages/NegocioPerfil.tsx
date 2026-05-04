@@ -1,24 +1,23 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { MapPin, Phone, Instagram, Facebook } from "lucide-react";
+import { MapPin, Phone, Instagram } from "lucide-react";
 
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import ServiceCard from "@/components/business/ServiceCard";
 import ProfessionalCard from "@/components/business/ProfessionalCard";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
 import { businessService } from "@/services/business.service";
-import type { ApiBusiness, ApiEmployee, ApiService } from "@/types/api";
+import type { ApiNegocio, ApiEmpleado, ApiServicio } from "@/types/api";
 
 const NegocioPerfil = () => {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
 
-  const [business, setBusiness] = useState<ApiBusiness | null>(null);
-  const [services, setServices] = useState<ApiService[]>([]);
-  const [professionals, setProfessionals] = useState<ApiEmployee[]>([]);
+  const [business, setBusiness] = useState<ApiNegocio | null>(null);
+  const [services, setServices] = useState<ApiServicio[]>([]);
+  const [professionals, setProfessionals] = useState<ApiEmpleado[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -53,7 +52,7 @@ const NegocioPerfil = () => {
     loadBusinessData();
   }, [slug]);
 
-  const handleBook = (service: ApiService) => {
+  const handleBook = (service: ApiServicio) => {
     if (!business?.slug) return;
     navigate(`/reservar/${business.slug}?servicio=${service.id_servicio}`);
   };
@@ -109,7 +108,6 @@ const NegocioPerfil = () => {
             <div className="flex-1 space-y-2">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="text-2xl font-bold text-foreground">{business.nombre}</h1>
-                <Badge variant="secondary">{business.categoria?.nombre ?? "Sin categoría"}</Badge>
               </div>
             </div>
 
@@ -142,13 +140,6 @@ const NegocioPerfil = () => {
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Instagram size={16} className="shrink-0 text-primary" />
                   <span>{business.ig_url}</span>
-                </div>
-              )}
-
-              {business.url_fb && (
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <Facebook size={16} className="shrink-0 text-primary" />
-                  <span>{business.url_fb}</span>
                 </div>
               )}
             </div>

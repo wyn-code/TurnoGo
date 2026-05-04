@@ -1,22 +1,16 @@
 import apiClient from "@/lib/api-client";
-
-export interface Negocio {
-  id: number;
-  nombre: string;
-  categoria?: string;
-  slug?: string;
-}
+import type { ApiNegocio } from "@/types/api";
 
 export const negocioService = {
-  getAll: async () => {
-    return apiClient.get<Negocio[]>("/negocios/");
+  getAll: async (): Promise<ApiNegocio[]> => {
+    return apiClient.get<ApiNegocio[]>("/negocios/");
   },
 
-  delete: async (id: number) => {
-    return apiClient.delete(`/negocios/${id}`);
+  delete: async (id: number): Promise<void> => {
+    await apiClient.delete(`/negocios/${id}`);
   },
 
-  update: async (id: number, data: Partial<Negocio>) => {
-    return apiClient.put(`/negocios/${id}`, data);
+  update: async (id: number, data: Partial<ApiNegocio>): Promise<ApiNegocio> => {
+    return apiClient.put<ApiNegocio>(`/negocios/${id}`, data);
   },
 };

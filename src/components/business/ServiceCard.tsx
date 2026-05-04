@@ -1,14 +1,14 @@
 import { Clock } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent } from "../../components/ui/card";
-import type { ApiService } from "@/types/api";
+import type { ApiServicio } from "@/types/api";
 
 interface ServiceCardProps {
-  service: ApiService;
+  service: ApiServicio;
   selected?: boolean;
-  onSelect?: (service: ApiService) => void;
+  onSelect?: (service: ApiServicio) => void;
   showBookButton?: boolean;
-  onBook?: (service: ApiService) => void;
+  onBook?: (service: ApiServicio) => void;
 }
 
 const ServiceCard = ({

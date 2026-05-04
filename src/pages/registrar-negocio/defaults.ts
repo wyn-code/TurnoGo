@@ -19,8 +19,6 @@ export const defaultValues: FormData = {
   servicios: [
     {
       nombre_servicio: "",
-      duracion_min: 30,
-      precio: 0,
       activo: true,
     },
   ],

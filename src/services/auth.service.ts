@@ -10,26 +10,24 @@ export interface RegisterRequest {
   usuario_us: string;
   email_us: string;
   contrasena_us: string;
-  nombre_us: string;   // <--- Agregar
-  apellido_us: string; // <--- Agregar
+  nombre_us: string;
+  apellido_us: string;
 }
 
 export interface AuthTokenResponse {
-  access_token?: string;
-  token_type?: string;
+  access_token: string;
+  token_type: string;
 }
 
 export interface AuthUserResponse {
-  id_us?: string | number;
-  id?: string | number;
-  email_us?: string;
-  email?: string;
-  usuario_us?: string;
-  name?: string;
+  id_us: string | number;
+  email_us: string;
+  usuario_us: string;
+  nombre_us: string;
 }
 
 export const authService = {
-  login: async (data: LoginRequest) => {
+  login: async (data: LoginRequest): Promise<AuthTokenResponse> => {
     return apiClient.postWithBase<AuthTokenResponse>(
       AUTH_API_ROOT,
       "/login",
@@ -39,11 +37,11 @@ export const authService = {
     );
   },
 
-  register: async (data: RegisterRequest) => {
-  return apiClient.postWithBase<AuthTokenResponse>(AUTH_API_ROOT, "/register", data);
-},
+  register: async (data: RegisterRequest): Promise<AuthTokenResponse> => {
+    return apiClient.postWithBase<AuthTokenResponse>(AUTH_API_ROOT, "/register", data);
+  },
 
-  me: async () => {
+  me: async (): Promise<AuthUserResponse> => {
     return apiClient.getWithBase<AuthUserResponse>(AUTH_API_ROOT, "/me");
   },
 };

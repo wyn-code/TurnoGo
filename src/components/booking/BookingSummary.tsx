@@ -4,11 +4,11 @@ import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Link } from "react-router-dom";
-import type { ApiEmployee, ApiService } from "@/types/api";
+import type { ApiEmpleado, ApiServicio } from "@/types/api";
 
 interface BookingSummaryProps {
-  service: ApiService;
-  professional: ApiEmployee;
+  service: ApiServicio;
+  professional: ApiEmpleado;
   date: Date;
   time: string;
   client: { firstName: string; lastName: string; email: string };

@@ -6,28 +6,25 @@ export interface ApiCategory {
   created_at?: string;
 }
 
-export interface ApiBusiness {
+export interface ApiNegocio {
   id_negocio: number;
   nombre: string;
   id_categoria: number;
-  categoria: ApiCategory | null;
   wsp: string;
-  telefono?: string | null;
+  telefono: string | null;
   direccion: string;
   ciudad: string;
-  id_localidad?: number | null;
-  id_provincia?: number | null;
-  ig_url?: string | null;
-  url_fb?: string | null;
-  logo?: string | null;
+  id_localidad: number | null;
+  id_provincia: number | null;
+  ig_url: string | null;
+  logo: string | null;
   activo: boolean;
-  creado_at?: string;
+  creado_at: string;
+  usuario_id: number | null;
   slug: string;
-  usuario_id?: number | null;
-  descripcion?: string;
 }
 
-export interface ApiService {
+export interface ApiServicio {
   id_servicio: number;
   id_negocio: number;
   nombre_servicio: string;
@@ -38,7 +35,7 @@ export interface ApiService {
   activo: boolean;
 }
 
-export interface ApiEmployee {
+export interface ApiEmpleado {
   id_empleado: number;
   id_negocio: number;
   nombre: string;
@@ -47,20 +44,17 @@ export interface ApiEmployee {
   activo: boolean;
 }
 
-export interface AdminBusiness {
-  id: string;
-  businessName: string;
-  ownerFirstName: string;
-  ownerLastName: string;
-  ownerEmail: string;
-  slug: string;
-  category: string;
-  logo?: string;
-  primaryColor?: string;
-  totalAppointments: number;
-  status: "activo" | "inactivo";
-  createdAt: string;
+export interface ApiTurno {
+  id_turno: number;
+  id_negocio: number;
+  id_cliente: number;
+  id_servicio: number;
+  id_estado: number;
+  id_empleado: number;
+  fecha_hora_inicio: string;
+  fecha_hora_fin: string;
 }
+
 
 export interface BookingData {
   serviceId: string;
@@ -123,3 +117,8 @@ export interface TimeSlot {
   time: string;
   available: boolean;
 }
+
+// Aliases de compatibilidad para transición gradual
+export type ApiBusiness = ApiNegocio;
+export type ApiService = ApiServicio;
+export type ApiEmployee = ApiEmpleado;
