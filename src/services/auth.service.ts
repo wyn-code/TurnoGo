@@ -12,6 +12,10 @@ export interface RegisterRequest {
   contrasena_us: string;
   nombre_us: string;
   apellido_us: string;
+  role?: string;
+  rol?: string;
+  role_us?: string;
+  rol_us?: string;
 }
 
 export interface AuthTokenResponse {
@@ -34,11 +38,25 @@ export const authService = {
       data,
       undefined,
       true,
+      true,
     );
   },
 
   register: async (data: RegisterRequest): Promise<AuthTokenResponse> => {
-    return apiClient.postWithBase<AuthTokenResponse>(AUTH_API_ROOT, "/register", data);
+    return apiClient.postWithBase<AuthTokenResponse>(
+      AUTH_API_ROOT,
+      "/register",
+      {
+        ...data,
+        role: "duenio",
+        rol: "duenio",
+        role_us: "duenio",
+        rol_us: "duenio",
+      },
+      undefined,
+      true,
+      true,
+    );
   },
 
   me: async (): Promise<AuthUserResponse> => {

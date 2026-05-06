@@ -331,7 +331,7 @@ const Reservar = () => {
         return;
       }
 
-      const cliente = await clientService.getOrCreateClient({
+      const cliente = await clientService.upsertClient({
         telefono: booking.client.phone.trim(),
         nombre: booking.client.firstName.trim(),
         apellido: booking.client.lastName.trim(),

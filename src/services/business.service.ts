@@ -6,6 +6,7 @@ import type {
   ApiNegocio,
   ApiServicio,
   ApiEmpleado,
+  ApiHorario,
 } from "@/types/api";
 
 export interface CreateBusinessResponse {
@@ -72,6 +73,19 @@ export const businessService = {
         );
       }
 
+      throw error;
+    }
+  },
+
+  getBusinessSchedules: async (businessId: string | number): Promise<ApiHorario[]> => {
+    const id = String(businessId);
+
+    try {
+      return await apiClient.get<ApiHorario[]>(`/horarios/${id}`);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404) {
+        return apiClient.get<ApiHorario[]>("/horarios", { id_negocio: id });
+      }
       throw error;
     }
   },

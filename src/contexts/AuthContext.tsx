@@ -11,10 +11,13 @@ interface User {
   role?: string;
 }
 
-
+type AuthResult =
+  | { success: true; user: User }
+  | { success: false; error: string };
 
 function normalizeUser(raw: Record<string, unknown>): User {
   const idRaw = raw.id_us ?? raw.id;
+  const roleRaw = raw.role ?? raw.rol ?? raw.role_us;
 
   return {
     id: idRaw != null ? String(idRaw) : undefined,
@@ -23,10 +26,10 @@ function normalizeUser(raw: Record<string, unknown>): User {
       raw.usuario_us != null
         ? String(raw.usuario_us)
         : raw.name != null
-        ? String(raw.name)
-        : undefined,
+          ? String(raw.name)
+          : undefined,
     hasBusiness: Boolean(raw.has_business),
-    role: String(raw.role ?? ""), // 👈 AGREGAR ESTO
+    role: roleRaw != null ? String(roleRaw).toLowerCase() : undefined,
   };
 }
 
@@ -35,18 +38,18 @@ interface AuthContextType {
   isLoading: boolean;
   login: (
     email: string,
-    password: string
+    password: string,
   ) => Promise<{ success: boolean; user?: User; error?: string }>;
-  
+
   // ACTUALIZA ESTA LÍNEA:
   register: (
     usuario: string,
     email: string,
     password: string,
-    nombre: string,   // <--- Agregar
-    apellido: string  // <--- Agregar
-  ) => Promise<{ success: boolean; error?: string }>;
-  
+    nombre: string, // <--- Agregar
+    apellido: string, // <--- Agregar
+  ) => Promise<{ success: boolean; user?: User; error?: string }>;
+
   logout: () => void;
 }
 
@@ -62,7 +65,7 @@ function normalizeApiDetail(detail: unknown): string {
       .map((e) =>
         typeof e === "object" && e && "msg" in e
           ? String((e as { msg: string }).msg)
-          : JSON.stringify(e)
+          : JSON.stringify(e),
       )
       .join(", ");
   }
@@ -78,21 +81,19 @@ function loginBody(email: string, password: string) {
 
 async function applySessionFromToken(
   token: string,
-  setUser: (u: User | null) => void
+  setUser: (u: User | null) => void,
 ) {
   localStorage.setItem(TOKEN_KEY, token);
   apiClient.setToken(token);
 
   try {
     const userData = await authService.me();
-    
 
-    const user = normalizeUser(userData as Record<string, unknown>);
-    
+    const user = normalizeUser(userData as unknown as Record<string, unknown>);
 
     setUser(user);
     localStorage.setItem(USER_KEY, JSON.stringify(user));
-    console.log("SET USER:", user); 
+    console.log("SET USER:", user);
 
     return { success: true as const, user };
   } catch (error) {
@@ -104,9 +105,8 @@ async function applySessionFromToken(
     return {
       success: false as const,
       error:
-        normalizeApiDetail(
-          error instanceof Error ? error.message : error
-        ) || "No se pudo obtener el perfil",
+        normalizeApiDetail(error instanceof Error ? error.message : error) ||
+        "No se pudo obtener el perfil",
     };
   }
 }
@@ -128,7 +128,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const storedUser = localStorage.getItem(USER_KEY);
         if (storedUser) {
           setUser(
-            normalizeUser(JSON.parse(storedUser) as Record<string, unknown>)
+            normalizeUser(JSON.parse(storedUser) as Record<string, unknown>),
           );
         }
       } catch {
@@ -143,7 +143,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void initSession();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (
+    email: string,
+    password: string,
+  ): Promise<AuthResult> => {
     try {
       const data = await authService.login(loginBody(email, password));
 
@@ -153,10 +156,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, error: "Respuesta del servidor sin token" };
       }
 
-    const session = await applySessionFromToken(token, setUser);
-    setIsLoading(false);
+      const session = await applySessionFromToken(token, setUser);
+      setIsLoading(false);
 
-    return session; 
+      return session;
     } catch (error: any) {
       console.error(error);
       setIsLoading(false);
@@ -172,47 +175,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const register = async (
-  usuario: string,
-  email: string,
-  password: string,
-  nombre: string,   // <--- Recibir
-  apellido: string  // <--- Recibir
-) => {
-  try {
-    const data = await authService.register({
-      usuario_us: usuario.trim(),
-      email_us: email.trim(),
-      contrasena_us: password,
-      nombre_us: nombre.trim(),   // <--- Pasar al servicio
-      apellido_us: apellido.trim() // <--- Pasar al servicio
-    });
+    usuario: string,
+    email: string,
+    password: string,
+    nombre: string, // <--- Recibir
+    apellido: string, // <--- Recibir
+  ): Promise<AuthResult> => {
+    setIsLoading(true);
+    try {
+      const data = await authService.register({
+        usuario_us: usuario.trim(),
+        email_us: email.trim(),
+        contrasena_us: password,
+        nombre_us: nombre.trim(),
+        apellido_us: apellido.trim(),
+      });
 
-    const token = data.access_token as string | undefined;
+      const token = data.access_token as string | undefined;
 
-    if (!token) {
-      // Intentar login automático si el registro no devolvió token pero fue exitoso
-      const loginResult = await login(email, password);
-      if (!loginResult.success) {
-        return {
-          success: false,
-          error: "Cuenta creada pero no se pudo iniciar sesión automáticamente.",
-        };
+      if (!token) {
+        // Intentar login automático si el registro no devolvió token pero fue exitoso
+        const loginResult = await login(email, password);
+        if (!loginResult.success) {
+          return {
+            success: false,
+            error:
+              "Cuenta creada pero no se pudo iniciar sesión automáticamente.",
+          };
+        }
+        return { success: true, user: loginResult.user };
       }
-      return { success: true };
-    }
 
-    const session = await applySessionFromToken(token, setUser);
-    return session.success ? { success: true } : session;
-  } catch (error: any) {
-    console.error(error);
-    return {
-      success: false,
-      error: error?.response?.data?.detail || "Error al registrarse",
-    };
-  } finally {
-    setIsLoading(false);
-  }
-};
+      const session = await applySessionFromToken(token, setUser);
+      return session.success ? { success: true, user: session.user } : session;
+    } catch (error: any) {
+      console.error(error);
+      return {
+        success: false,
+        error: error?.response?.data?.detail || "Error al registrarse",
+      };
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const logout = () => {
     setUser(null);

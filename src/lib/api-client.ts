@@ -22,6 +22,7 @@ export interface RequestOptions {
   body?: Record<string, unknown> | object | FormData | null;
   params?: Record<string, string | number | boolean>;
   skipAuthRedirect?: boolean;
+  omitAuth?: boolean;
 }
 
 class ApiClient {
@@ -64,7 +65,8 @@ class ApiClient {
   // 🔹 Headers
   private buildHeaders(
     customHeaders?: Record<string, string>,
-    body?: RequestOptions["body"]
+    body?: RequestOptions["body"],
+    omitAuth = false
   ): Record<string, string> {
     const headers: Record<string, string> = {};
 
@@ -72,7 +74,7 @@ class ApiClient {
       headers["Content-Type"] = "application/json";
     }
 
-    if (this.token) {
+    if (this.token && !omitAuth) {
       headers["Authorization"] = `Bearer ${this.token}`;
     }
 
@@ -91,11 +93,12 @@ class ApiClient {
       body,
       params,
       skipAuthRedirect = false,
+      omitAuth = false,
     } = options;
 
     const url = this.buildUrl(endpoint, params, baseUrl);
 
-    const headers = this.buildHeaders(customHeaders, body);
+    const headers = this.buildHeaders(customHeaders, body, omitAuth);
 
     const config: RequestInit = {
       method,
@@ -189,7 +192,8 @@ class ApiClient {
     endpoint: string,
     body?: object | FormData | null,
     headers?: Record<string, string>,
-    skipAuthRedirect = false
+    skipAuthRedirect = false,
+    omitAuth = false
   ): Promise<T> {
     return this.request<T>(
       endpoint,
@@ -198,6 +202,7 @@ class ApiClient {
         body,
         headers,
         skipAuthRedirect,
+        omitAuth,
       },
       baseUrl
     );

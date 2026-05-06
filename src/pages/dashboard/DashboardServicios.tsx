@@ -6,19 +6,25 @@ import { Plus, Edit, Power, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { businessService } from "@/services/business.service";
 import type { ApiServicio } from "@/types/api";
+import { useDashboardBusiness } from "@/contexts/DashboardBusinessContext";
 
 const DashboardServicios = () => {
   const [services, setServices] = useState<ApiServicio[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  // El id del negocio (luego vendrá de un contexto de usuario)
-  const businessId = "1";
+  const { business, isLoadingBusiness } = useDashboardBusiness();
+  const businessId = business?.id_negocio;
 
   useEffect(() => {
     const loadServices = async () => {
+      if (!businessId) {
+        setServices([]);
+        setIsLoading(false);
+        return;
+      }
+
       try {
         setIsLoading(true);
-        const data = await businessService.getBusinessServices(businessId);
+        const data = await businessService.getBusinessServices(String(businessId));
         setServices(data);
       } catch (error) {
         console.error(error);
@@ -31,10 +37,18 @@ const DashboardServicios = () => {
     loadServices();
   }, [businessId]);
 
-  if (isLoading) {
+  if (isLoading || isLoadingBusiness) {
     return (
       <div className="flex h-48 items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!businessId) {
+    return (
+      <div className="rounded-lg border border-dashed p-8 text-center">
+        <p className="text-muted-foreground">No encontramos un negocio vinculado a tu usuario.</p>
       </div>
     );
   }

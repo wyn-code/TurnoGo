@@ -11,7 +11,7 @@ interface EditBusinessModalProps {
   business: ApiNegocio | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSave: (updated: ApiNegocio) => void;
+  onSave: (updated: ApiNegocio) => Promise<void>;
 }
 
 const getFormFromBusiness = (business: ApiNegocio | null) => ({
@@ -29,12 +29,12 @@ export function EditBusinessModal({ business, open, onOpenChange, onSave }: Edit
 
   if (!business) return null;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.nombre.trim() || !form.wsp.trim()) {
       toast.error("Nombre del negocio y WhatsApp son obligatorios");
       return;
     }
-    onSave({ ...business, ...form });
+    await onSave({ ...business, ...form });
     onOpenChange(false);
     toast.success("Negocio actualizado correctamente");
   };

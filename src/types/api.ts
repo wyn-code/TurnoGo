@@ -55,6 +55,14 @@ export interface ApiTurno {
   fecha_hora_fin: string;
 }
 
+export interface ApiHorario {
+  id_horario?: number;
+  id_negocio?: number;
+  dia_semana: number;
+  hora_apertura: string;
+  hora_cierre: string;
+}
+
 
 export interface BookingData {
   serviceId: string;

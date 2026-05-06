@@ -1,10 +1,13 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import type { WeekSchedule } from "@/types/api";
+import { useDashboardBusiness } from "@/contexts/DashboardBusinessContext";
+import { businessService } from "@/services/business.service";
+import { Loader2 } from "lucide-react";
 
 const DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"] as const;
 
@@ -18,6 +21,47 @@ const defaultSchedule: WeekSchedule = Object.fromEntries(
 
 const DashboardHorarios = () => {
   const [schedule, setSchedule] = useState<WeekSchedule>(defaultSchedule);
+  const [isLoading, setIsLoading] = useState(true);
+  const { business, isLoadingBusiness } = useDashboardBusiness();
+  const businessId = business?.id_negocio;
+
+  useEffect(() => {
+    const loadSchedules = async () => {
+      if (!businessId) {
+        setSchedule(defaultSchedule);
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        const apiSchedules = await businessService.getBusinessSchedules(businessId);
+        if (!apiSchedules.length) {
+          setSchedule(defaultSchedule);
+          return;
+        }
+
+        const mapped = { ...defaultSchedule };
+        apiSchedules.forEach((item) => {
+          const dayName = DAYS[item.dia_semana];
+          if (!dayName) return;
+          mapped[dayName] = {
+            open: true,
+            start: item.hora_apertura.slice(0, 5),
+            end: item.hora_cierre.slice(0, 5),
+          };
+        });
+        setSchedule(mapped);
+      } catch (error) {
+        console.error(error);
+        toast.error("No se pudieron cargar los horarios del negocio");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    void loadSchedules();
+  }, [businessId]);
 
   const update = <K extends DayField>(day: Day, field: K, value: DaySchedule[K]) => {
     setSchedule((prev) => ({
@@ -28,6 +72,22 @@ const DashboardHorarios = () => {
       },
     }));
   };
+
+  if (isLoading || isLoadingBusiness) {
+    return (
+      <div className="flex h-48 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!businessId) {
+    return (
+      <div className="rounded-lg border border-dashed p-8 text-center">
+        <p className="text-muted-foreground">No encontramos un negocio vinculado a tu usuario.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Pencil, Trash2, ExternalLink, Search, ShieldCheck, LogOut } from "lucide-react";
 import { negocioService } from "../services/negocio.service";
+import { toast } from "sonner";
 
 const AdminPanel = () => {
   const { user, logout, isLoading } = useAuth();
@@ -53,13 +54,45 @@ useEffect(() => {
     );
   });
 
-  const handleSave = (updated: ApiNegocio) => {
-    setBusinesses((prev) => prev.map((b) => (b.id_negocio === updated.id_negocio ? updated : b)));
+  const handleSave = async (updated: ApiNegocio) => {
+    try {
+      const saved = await negocioService.update(updated.id_negocio, updated);
+      setBusinesses((prev) =>
+        prev.map((b) => (b.id_negocio === saved.id_negocio ? saved : b))
+      );
+    } catch (error) {
+      console.error("Error actualizando negocio:", error);
+      toast.error("No se pudo actualizar el negocio");
+      throw error;
+    }
   };
 
   const handleDelete = (id: number) => {
     setBusinesses((prev) => prev.filter((b) => b.id_negocio !== id));
     setDeleteBusiness(null);
+  };
+
+  const handleToggleStatus = async (business: ApiNegocio) => {
+    const nextActivo = !business.activo;
+
+    try {
+      const updated = await negocioService.update(business.id_negocio, {
+        activo: nextActivo,
+      });
+
+      setBusinesses((prev) =>
+        prev.map((b) => (b.id_negocio === updated.id_negocio ? updated : b))
+      );
+
+      toast.success(
+        nextActivo
+          ? "Negocio autorizado y habilitado"
+          : "Negocio desautorizado"
+      );
+    } catch (error) {
+      console.error("Error cambiando estado del negocio:", error);
+      toast.error("No se pudo cambiar el estado del negocio");
+    }
   };
 
   return (
@@ -163,6 +196,14 @@ useEffect(() => {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex items-center justify-end gap-1">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleToggleStatus(b)}
+                          title={b.activo ? "Desautorizar" : "Autorizar"}
+                        >
+                          {b.activo ? "Desautorizar" : "Autorizar"}
+                        </Button>
                         <Button variant="ghost" size="icon" onClick={() => setEditBusiness(b)} title="Editar">
                           <Pencil className="h-4 w-4" />
                         </Button>

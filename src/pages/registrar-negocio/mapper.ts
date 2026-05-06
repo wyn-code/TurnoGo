@@ -2,12 +2,13 @@ import type { FormData } from "./schema";
 import type { CreateCompleteBusinessRequest } from "@/services/business.service";
 
 export const toCreateCompleteBusinessRequest = (
-  form: FormData
+  form: FormData,
+  userId: number
 ): CreateCompleteBusinessRequest => {
   return {
     nombre: form.nombre,
     id_categoria: Number(form.id_categoria), 
-    usuario_id: 1, 
+    usuario_id: userId, 
     wsp: form.wsp,
     telefono: form.telefono || null,
     direccion: form.direccion,

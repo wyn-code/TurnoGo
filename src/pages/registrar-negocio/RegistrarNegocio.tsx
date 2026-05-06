@@ -24,8 +24,10 @@ import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
 import BookingStepper from "@/components/booking/BookingStepper";
 import { Card, CardContent } from "@/components/ui/card";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function RegistrarNegocioPage() {
+  const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [submitted, setSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -99,8 +101,13 @@ export default function RegistrarNegocioPage() {
   const onSubmit = form.handleSubmit(async (data) => {
     try {
       setIsLoading(true);
+      const userId = Number(user?.id);
 
-      const payload = toCreateCompleteBusinessRequest(data);
+      if (!Number.isFinite(userId) || userId <= 0) {
+        throw new Error("No se pudo identificar al usuario autenticado.");
+      }
+
+      const payload = toCreateCompleteBusinessRequest(data, userId);
       const horarios = formatScheduleForBackend(data.horarios);
 
       const negocioCreado = await businessService.createCompleteBusiness(payload);

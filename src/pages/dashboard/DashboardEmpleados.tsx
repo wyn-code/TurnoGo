@@ -3,20 +3,26 @@ import { useEffect, useState } from "react";
 import { businessService } from "@/services/business.service"; 
 import type { ApiEmpleado } from "@/types/api"; 
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
+import { useDashboardBusiness } from "@/contexts/DashboardBusinessContext";
 
 const DashboardEmpleados = () => {
   const [employees, setEmployees] = useState<ApiEmpleado[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
-  // El businessId lo podrías sacar de un context de Auth o de la URL
-  const businessId = "1"; 
+  const { business, isLoadingBusiness } = useDashboardBusiness();
+  const businessId = business?.id_negocio;
 
   useEffect(() => {
     const loadEmployees = async () => {
+      if (!businessId) {
+        setEmployees([]);
+        setIsLoading(false);
+        return;
+      }
+
       try {
         setIsLoading(true);
-        // Usamos el método que ya tenés en tu api.ts / service
-        const data = await businessService.getBusinessProfessionals(businessId);
+        const data = await businessService.getBusinessProfessionals(String(businessId));
         setEmployees(data);
       } catch (error) {
         console.error(error);
@@ -29,7 +35,17 @@ const DashboardEmpleados = () => {
     loadEmployees();
   }, [businessId]);
 
-  if (isLoading) return <p>Cargando profesionales...</p>;
+  if (isLoading || isLoadingBusiness) {
+    return (
+      <div className="flex h-48 items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!businessId) {
+    return <p>No encontramos un negocio vinculado a tu usuario.</p>;
+  }
 
   return (
     <div className="grid gap-4">

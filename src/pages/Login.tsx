@@ -37,7 +37,7 @@ const Login = () => {
     if (result.success && result.user) {
       const role = result.user.role?.toLowerCase();
       if (role === "admin") navigate("/admin", { replace: true });
-      else if (role === "duenio") navigate("/dashboard", { replace: true });
+      else if (role === "duenio" || role === "dueño") navigate("/dashboard", { replace: true });
       else navigate("/", { replace: true });
     } else {
       setServerError(result.error || "Error al iniciar sesión.");

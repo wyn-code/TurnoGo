@@ -2,6 +2,7 @@ import type { FormData } from "../schema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 type Props = {
   data: FormData;
@@ -9,6 +10,9 @@ type Props = {
 };
 
 export default function SuccessView({ data, navigate }: Props) {
+  const { user } = useAuth();
+  const dashboardPath = user?.role?.toLowerCase() === "admin" ? "/admin" : "/dashboard";
+
   return (
     <main className="min-h-screen bg-background">
       <div className="mx-auto max-w-2xl px-4 py-10 sm:px-6">
@@ -34,7 +38,14 @@ export default function SuccessView({ data, navigate }: Props) {
               <p className="text-sm">Dirección: {data.direccion}</p>
             </div>
 
-            <Button onClick={() => navigate("/")}>Volver al inicio</Button>
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+              <Button onClick={() => navigate(dashboardPath)}>
+                Ir a su dashboard
+              </Button>
+              <Button variant="outline" onClick={() => navigate("/")}>
+                Volver al inicio
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
