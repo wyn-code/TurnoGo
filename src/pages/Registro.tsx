@@ -11,19 +11,36 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
+import TermsAndConditionsDialog from "@/components/legal/TermsAndConditionsDialog";
 import { UserPlus, AlertCircle, Eye, EyeOff } from "lucide-react";
 
-const schema = z.object({
-  nombre: z.string().min(2, "Ingresá tu nombre"),
-  apellido: z.string().min(2, "Ingresá tu apellido"),
-  usuario: z.string().min(3, "Mínimo 3 caracteres").max(30, "Máximo 30 caracteres"),
-  email: z.string().email("Ingresá un email válido"),
-  password: z.string().min(6, "Mínimo 6 caracteres"),
-  confirmPassword: z.string(),
-}).refine((d) => d.password === d.confirmPassword, {
-  message: "Las contraseñas no coinciden",
-  path: ["confirmPassword"],
-});
+const schema = z
+  .object({
+    nombre: z.string().min(2, "Ingresá tu nombre"),
+    apellido: z.string().min(2, "Ingresá tu apellido"),
+    usuario: z
+      .string()
+      .min(3, "Mínimo 3 caracteres")
+      .max(30, "Máximo 30 caracteres"),
+    email: z.string().email("Ingresá un email válido"),
+    password: z
+      .string()
+      .min(12, "La contraseña debe tener al menos 12 caracteres")
+      .max(16, "La contraseña debe tener máximo 16 caracteres")
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.#_-])[A-Za-z\d@$!%*?&.#_-]{12,16}$/,
+        "Debe incluir mayúsculas, minúsculas, números y un carácter especial",
+      ),
+    confirmPassword: z.string(),
+    acceptedTerms: z.boolean().refine((v) => v, {
+      message: "Debés aceptar los Términos y Condiciones",
+    }),
+  })
+  .refine((d) => d.password === d.confirmPassword, {
+    message: "Las contraseñas no coinciden",
+    path: ["confirmPassword"],
+  });
 
 type FormData = z.infer<typeof schema>;
 
@@ -35,18 +52,43 @@ const Registro = () => {
   const [serverError, setServerError] = useState("");
   const [showPassword, setShowPassword] = useState(false); // Estado para el ojo
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
-    resolver: zodResolver(schema),
-  });
+  const {
+  register,
+  handleSubmit,
+  watch,
+  setValue,
+  formState: { errors, isSubmitting },
+} = useForm<FormData>({
+  resolver: zodResolver(schema),
+  defaultValues: {
+    acceptedTerms: false,
+  },
+});
+
+const passwordValue = watch("password", "");
+
+const passwordChecks = {
+  length:
+    passwordValue.length >= 12 &&
+    passwordValue.length <= 16,
+
+  uppercase: /[A-Z]/.test(passwordValue),
+
+  lowercase: /[a-z]/.test(passwordValue),
+
+  number: /\d/.test(passwordValue),
+
+  special: /[@$!%*?&.#_-]/.test(passwordValue),
+};
 
   const onSubmit = async (data: FormData) => {
     setServerError("");
     const result = await authRegister(
-      data.usuario, 
-      data.email, 
-      data.password, 
-      data.nombre, 
-      data.apellido
+      data.usuario,
+      data.email,
+      data.password,
+      data.nombre,
+      data.apellido,
     );
     if (result.success) {
       navigate("/registrar-negocio", { replace: true });
@@ -64,8 +106,12 @@ const Registro = () => {
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-accent">
               <UserPlus className="h-6 w-6 text-primary" />
             </div>
-            <h1 className="text-2xl font-bold text-foreground">Creá tu cuenta</h1>
-            <p className="text-sm text-muted-foreground">¿Querés registrar tu negocio?</p>
+            <h1 className="text-2xl font-bold text-foreground">
+              Creá tu cuenta
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              ¿Querés registrar tu negocio?
+            </p>
           </CardHeader>
           <CardContent className="space-y-4 pt-4">
             {serverError && (
@@ -78,34 +124,61 @@ const Registro = () => {
                 <div className="space-y-2">
                   <Label>Nombre</Label>
                   <Input {...register("nombre")} placeholder="Juan" />
-                  {errors.nombre && <p className="text-xs text-destructive">{errors.nombre.message}</p>}
+                  {errors.nombre && (
+                    <p className="text-xs text-destructive">
+                      {errors.nombre.message}
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label>Apellido</Label>
                   <Input {...register("apellido")} placeholder="Pérez" />
-                  {errors.apellido && <p className="text-xs text-destructive">{errors.apellido.message}</p>}
+                  {errors.apellido && (
+                    <p className="text-xs text-destructive">
+                      {errors.apellido.message}
+                    </p>
+                  )}
                 </div>
               </div>
 
               <div className="space-y-2">
                 <Label>Nombre de usuario</Label>
                 <Input {...register("usuario")} placeholder="tu_usuario" />
-                {errors.usuario && <p className="text-sm text-destructive">{errors.usuario.message}</p>}
+                {errors.usuario && (
+                  <p className="text-sm text-destructive">
+                    {errors.usuario.message}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
                 <Label>Email</Label>
-                <Input {...register("email")} type="email" placeholder="tu@email.com" />
-                {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
+                <Input
+                  {...register("email")}
+                  type="email"
+                  placeholder="tu@email.com"
+                />
+                {errors.email && (
+                  <p className="text-sm text-destructive">
+                    {errors.email.message}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
                 <Label>Contraseña</Label>
                 <div className="relative">
-                  <Input 
-                    {...register("password")} 
-                    type={showPassword ? "text" : "password"} 
-                    placeholder="Mínimo 6 caracteres" 
+                  <Input
+                    {...register("password")}
+                    type={showPassword ? "text" : "password"}
+                    placeholder="12-16 caracteres"
+                    className={
+                      passwordValue.length > 0
+                        ? Object.values(passwordChecks).every(Boolean)
+                          ? "border-green-500 focus-visible:ring-green-500"
+                          : "border-red-500 focus-visible:ring-red-500"
+                        : ""
+                    }
                   />
                   <button
                     type="button"
@@ -115,16 +188,71 @@ const Registro = () => {
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
-                {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
+                {errors.password && (
+                  <p className="text-sm text-destructive">
+                    {errors.password.message}
+                  </p>
+                )}
+                <div className="space-y-1 text-xs">
+                  <p
+                    className={
+                      passwordChecks.length
+                        ? "text-green-500"
+                        : "text-muted-foreground"
+                    }
+                  >
+                    ✓ Entre 12 y 16 caracteres
+                  </p>
+
+                  <p
+                    className={
+                      passwordChecks.uppercase
+                        ? "text-green-500"
+                        : "text-muted-foreground"
+                    }
+                  >
+                    ✓ Al menos una mayúscula
+                  </p>
+
+                  <p
+                    className={
+                      passwordChecks.lowercase
+                        ? "text-green-500"
+                        : "text-muted-foreground"
+                    }
+                  >
+                    ✓ Al menos una minúscula
+                  </p>
+
+                  <p
+                    className={
+                      passwordChecks.number
+                        ? "text-green-500"
+                        : "text-muted-foreground"
+                    }
+                  >
+                    ✓ Al menos un número
+                  </p>
+
+                  <p
+                    className={
+                      passwordChecks.special
+                        ? "text-green-500"
+                        : "text-muted-foreground"
+                    }
+                  >
+                    ✓ Al menos un carácter especial
+                  </p>
+                </div>
               </div>
 
               <div className="space-y-2">
                 <Label>Confirmar contraseña</Label>
                 <div className="relative">
-                  <Input 
-                    {...register("confirmPassword")} 
-                    type={showPassword ? "text" : "password"} 
-                    placeholder="Repetí tu contraseña" 
+                  <Input
+                    {...register("confirmPassword")}
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Repetí tu contraseña"
                   />
                   <button
                     type="button"
@@ -134,7 +262,48 @@ const Registro = () => {
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
-                {errors.confirmPassword && <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>}
+                {errors.confirmPassword && (
+                  <p className="text-sm text-destructive">
+                    {errors.confirmPassword.message}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-start gap-3 rounded-md border border-border p-3">
+                  <Checkbox
+                    id="acceptedTerms"
+                    checked={watch("acceptedTerms")}
+                    onCheckedChange={(checked) => {
+                      setValue("acceptedTerms", checked === true, {
+                        shouldValidate: true,
+                      });
+                    }}
+                  />
+                  <Label
+                    htmlFor="acceptedTerms"
+                    className="text-sm font-normal leading-5 cursor-pointer"
+                  >
+                    Acepto los{" "}
+                    <TermsAndConditionsDialog
+                      trigger={
+                        <button
+                          type="button"
+                          onClick={(event) => event.stopPropagation()}
+                          className="text-primary underline underline-offset-4"
+                        >
+                          Términos y Condiciones de Uso
+                        </button>
+                      }
+                    />
+                    .
+                  </Label>
+                </div>
+                {errors.acceptedTerms && (
+                  <p className="text-sm text-destructive">
+                    {errors.acceptedTerms.message}
+                  </p>
+                )}
               </div>
 
               <Button type="submit" className="w-full" disabled={isSubmitting}>
@@ -143,7 +312,11 @@ const Registro = () => {
             </form>
             <p className="text-center text-sm text-muted-foreground">
               ¿Ya tenés cuenta?{" "}
-              <Link to="/login" state={{ from }} className="font-medium text-primary hover:underline">
+              <Link
+                to="/login"
+                state={{ from }}
+                className="font-medium text-primary hover:underline"
+              >
                 Iniciá sesión
               </Link>
             </p>

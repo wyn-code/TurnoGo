@@ -160,18 +160,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false);
 
       return session;
-    } catch (error: any) {
-      console.error(error);
-      setIsLoading(false);
+      } catch (error: any) {
+        console.error("LOGIN ERROR:", error);
+console.error("RESPONSE:", error?.response);
+console.error("DATA:", error?.response?.data);
+console.error("DETAIL:", error?.response?.data?.detail);
 
-      return {
-        success: false,
-        error:
-          error?.response?.data?.detail ||
-          error?.message ||
-          "Error al iniciar sesión",
-      };
-    }
+        setIsLoading(false);
+
+        return {
+          success: false,
+          error: normalizeApiDetail(
+            error?.response?.data?.detail ||
+            error?.message ||
+            error
+          ),
+        };
+      }
   };
 
   const register = async (

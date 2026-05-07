@@ -1,3 +1,5 @@
+import TermsAndConditionsDialog from "@/components/legal/TermsAndConditionsDialog";
+
 const Footer = () => (
   <footer className="border-t border-border bg-card">
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -7,7 +9,16 @@ const Footer = () => (
           <a href="#" className="transition-colors hover:text-foreground">Explorar</a>
           <a href="#" className="transition-colors hover:text-foreground">Para negocios</a>
           <a href="#" className="transition-colors hover:text-foreground">Contacto</a>
-          <a href="#" className="transition-colors hover:text-foreground">Términos</a>
+          <TermsAndConditionsDialog
+            trigger={
+              <button
+                type="button"
+                className="transition-colors hover:text-foreground"
+              >
+                Términos
+              </button>
+            }
+          />
         </div>
       </div>
       <p className="mt-6 text-center text-xs text-muted-foreground">
