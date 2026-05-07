@@ -2,7 +2,6 @@ import { useState, useRef } from "react";
 import { Upload, X } from "lucide-react";
 import { Button } from "./button";
 import { Card } from "./card";
-import apiClient from "@/lib/api-client";
 import { toast } from "sonner";
 
 interface ImageUploadProps {
@@ -32,20 +31,28 @@ export const ImageUpload = ({ value, onChange, cloudName, uploadPreset }: ImageU
     formData.append("upload_preset", uploadPreset);
 
     try {
-      const data = await apiClient.postWithBase<{ secure_url?: string; error?: { message?: string } }>(
-        `https://api.cloudinary.com/v1_1/${cloudName}`,
-        "/image/upload",
-        formData,
-        undefined,
-        true,
+      const response = await fetch(
+        `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
+        {
+          method: "POST",
+          body: formData,
+        }
       );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error("Cloudinary upload failed", response.status, data);
+        toast.error(data.error?.message || data.message || "No se pudo subir la imagen");
+        return;
+      }
 
       if (data.secure_url) {
         onChange(data.secure_url);
         setPreview(data.secure_url);
       } else {
-        console.error("Cloudinary error:", data);
-        toast.error(data.error?.message || "No se pudo subir la imagen");
+        console.error("Cloudinary response no contenía secure_url", data);
+        toast.error("Error al subir la imagen");
       }
     } catch (error) {
       console.error("Error uploading image:", error);
