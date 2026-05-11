@@ -18,7 +18,13 @@ import ServiceCard from "@/components/business/ServiceCard";
 import ProfessionalCard from "@/components/business/ProfessionalCard";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import type { BookingData, ApiNegocio, ApiServicio, ApiEmpleado, ApiTurno } from "@/types/api";
+import type {
+  BookingData,
+  ApiNegocio,
+  ApiServicio,
+  ApiEmpleado,
+  ApiTurno,
+} from "@/types/api";
 import { ApiError } from "@/lib/api-client";
 
 const STEPS = [
@@ -43,23 +49,11 @@ const toLocalDateKey = (date: Date) => {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 };
 
-const buildDateTimeFromSlot = (date: Date, time: string) => {
-  const [hours, minutes] = time.split(":").map(Number);
-  const result = new Date(date);
-  result.setHours(hours, minutes, 0, 0);
-  return result;
-};
-
 const addMinutes = (date: Date, minutes: number) => {
   return new Date(date.getTime() + minutes * 60 * 1000);
 };
 
-const rangesOverlap = (
-  startA: Date,
-  endA: Date,
-  startB: Date,
-  endB: Date
-) => {
+const rangesOverlap = (startA: Date, endA: Date, startB: Date, endB: Date) => {
   return startA < endB && endA > startB;
 };
 
@@ -73,38 +67,84 @@ const buildLocalDateTimeString = (date: Date, time: string) => {
 const generateTimeSlots = (
   selectedDate: Date | null,
   occupiedAppointments: ApiTurno[],
-  durationMinutes: number
+  durationMinutes: number,
 ): TimeSlot[] => {
+  if (!selectedDate) return [];
+
   const slots: TimeSlot[] = [];
-  const startHour = 9;
-  const endHour = 18;
 
-  for (let hour = startHour; hour < endHour; hour++) {
-    for (const minute of [0, 30]) {
-      const time = `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`;
+  const now = new Date();
 
-      let available = true;
+  // Horario laboral
+  const openingHour = 9;
+  const closingHour = 18;
 
-      if (selectedDate) {
-        const slotStart = buildDateTimeFromSlot(selectedDate, time);
-        const slotEnd = addMinutes(slotStart, durationMinutes);
+  // Inicio del día laboral
+  const dayStart = new Date(selectedDate);
+  dayStart.setHours(openingHour, 0, 0, 0);
 
-        available = !occupiedAppointments.some((turno) => {
-          if (!turno.fecha_hora_fin) return false;
+  // Fin del día laboral
+  const dayEnd = new Date(selectedDate);
+  dayEnd.setHours(closingHour, 0, 0, 0);
 
-          const bookedStart = new Date(turno.fecha_hora_inicio);
-          const bookedEnd = new Date(turno.fecha_hora_fin);
+  // Cursor dinámico
+  let currentSlotStart = new Date(dayStart);
 
-          return rangesOverlap(slotStart, slotEnd, bookedStart, bookedEnd);
-        });
+  while (true) {
+    const currentSlotEnd = addMinutes(
+      currentSlotStart,
+      durationMinutes,
+    );
+
+    // Si el turno termina después del cierre, no mostrarlo
+    if (currentSlotEnd > dayEnd) {
+      break;
+    }
+
+    const hours = pad(currentSlotStart.getHours());
+    const minutes = pad(currentSlotStart.getMinutes());
+
+    const time = `${hours}:${minutes}`;
+
+    // Bloquear horarios pasados
+    const isPast = currentSlotStart <= now;
+
+    // Verificar solapamientos
+    const isOccupied = occupiedAppointments.some((turno) => {
+      if (
+        !turno.fecha_hora_inicio ||
+        !turno.fecha_hora_fin
+      ) {
+        return false;
       }
 
-      slots.push({
-        id: time,
-        time,
-        available,
-      });
-    }
+      const bookedStart = new Date(
+        turno.fecha_hora_inicio,
+      );
+
+      const bookedEnd = new Date(
+        turno.fecha_hora_fin,
+      );
+
+      return rangesOverlap(
+        currentSlotStart,
+        currentSlotEnd,
+        bookedStart,
+        bookedEnd,
+      );
+    });
+
+    slots.push({
+      id: time,
+      time,
+      available: !isPast && !isOccupied,
+    });
+
+    // Avanza dinámicamente según duración real
+    currentSlotStart = addMinutes(
+      currentSlotStart,
+      durationMinutes,
+    );
   }
 
   return slots;
@@ -136,7 +176,9 @@ const Reservar = () => {
     },
   });
 
-  const [occupiedAppointments, setOccupiedAppointments] = useState<ApiTurno[]>([]);
+  const [occupiedAppointments, setOccupiedAppointments] = useState<ApiTurno[]>(
+    [],
+  );
   const [occupiedDays, setOccupiedDays] = useState<Set<string>>(new Set());
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -174,20 +216,40 @@ const Reservar = () => {
   }, [slug]);
 
   const selectedService = services.find(
-    (service) => String(service.id_servicio) === String(booking.serviceId)
+    (service) => String(service.id_servicio) === String(booking.serviceId),
   );
 
   const selectedProfessional = professionals.find(
     (professional) =>
-      String(professional.id_empleado) === String(booking.professionalId)
+      String(professional.id_empleado) === String(booking.professionalId),
   );
 
   const serviceDuration = selectedService?.duracion_min ?? 30;
 
-  const timeSlots = useMemo(
-    () => generateTimeSlots(booking.date, occupiedAppointments, serviceDuration),
-    [booking.date, occupiedAppointments, serviceDuration]
+    const timeSlots = useMemo(
+    () =>
+      generateTimeSlots(
+        booking.date,
+        occupiedAppointments,
+        serviceDuration,
+      ),
+    [
+      booking.date,
+      occupiedAppointments,
+      serviceDuration,
+    ],
   );
+  const availableSlots = timeSlots.filter(
+    (slot) => slot.available,
+  );
+
+  const effectiveSelectedTime =
+    booking.timeSlot ||
+    (
+      availableSlots.length === 1
+        ? availableSlots[0].time
+        : ""
+    );
 
   const refreshOccupiedAppointments = useCallback(async () => {
     if (!business || !booking.date) {
@@ -208,7 +270,9 @@ const Reservar = () => {
         id_negocio: String(business.id_negocio),
         desde: from.toISOString(),
         hasta: to.toISOString(),
-        ...(booking.professionalId && { id_empleado: String(booking.professionalId) }),
+        ...(booking.professionalId && {
+          id_empleado: String(booking.professionalId),
+        }),
       });
 
       setOccupiedAppointments(response);
@@ -228,24 +292,27 @@ const Reservar = () => {
       }
 
       try {
-        const referenceDate = baseDate ?? visibleMonth ?? booking.date ?? new Date();
+        const referenceDate =
+          baseDate ?? visibleMonth ?? booking.date ?? new Date();
 
         const monthStart = new Date(
           referenceDate.getFullYear(),
           referenceDate.getMonth(),
-          1
+          1,
         );
         const monthEnd = new Date(
           referenceDate.getFullYear(),
           referenceDate.getMonth() + 1,
-          1
+          1,
         );
 
         const response = await appointmentService.getAppointmentsByRange({
           id_negocio: String(business.id_negocio),
           desde: monthStart.toISOString(),
           hasta: monthEnd.toISOString(),
-          ...(booking.professionalId && { id_empleado: String(booking.professionalId) }),
+          ...(booking.professionalId && {
+            id_empleado: String(booking.professionalId),
+          }),
         });
 
         const blockedDays = new Set<string>();
@@ -266,7 +333,11 @@ const Reservar = () => {
           const currentDay = new Date(day);
           const dayKey = toLocalDateKey(currentDay);
           const dayAppointments = appointmentsByDay.get(dayKey) ?? [];
-          const slots = generateTimeSlots(currentDay, dayAppointments, serviceDuration);
+          const slots = generateTimeSlots(
+            currentDay,
+            dayAppointments,
+            serviceDuration,
+          );
           const hasAvailable = slots.some((slot) => slot.available);
 
           if (!hasAvailable) {
@@ -280,16 +351,34 @@ const Reservar = () => {
         setOccupiedDays(new Set());
       }
     },
-    [business, booking.professionalId, booking.date, visibleMonth, serviceDuration]
+    [
+      business,
+      booking.professionalId,
+      booking.date,
+      visibleMonth,
+      serviceDuration,
+    ],
   );
 
-  useEffect(() => {
-    refreshOccupiedAppointments();
-  }, [refreshOccupiedAppointments]);
+useEffect(() => {
+  const loadAppointments = async () => {
+    await refreshOccupiedAppointments();
+  };
 
-  useEffect(() => {
-    refreshOccupiedDays(visibleMonth);
-  }, [refreshOccupiedDays, visibleMonth, booking.professionalId]);
+  loadAppointments();
+}, [refreshOccupiedAppointments]);
+
+useEffect(() => {
+  const loadOccupiedDays = async () => {
+    await refreshOccupiedDays(visibleMonth);
+  };
+
+  loadOccupiedDays();
+}, [
+  refreshOccupiedDays,
+  visibleMonth,
+  booking.professionalId,
+]);
 
   const canNext = (): boolean => {
     switch (step) {
@@ -300,7 +389,11 @@ const Reservar = () => {
       case 3:
         return !!booking.date;
       case 4:
-        return !!booking.timeSlot;
+        return timeSlots.some(
+          (slot) =>
+            slot.time === effectiveSelectedTime &&
+            slot.available,
+        );
       case 5:
         return !!(
           booking.client.firstName &&
@@ -317,7 +410,12 @@ const Reservar = () => {
     try {
       setSubmitError(null);
 
-      if (!business || !booking.date || !booking.timeSlot || !booking.serviceId) {
+      if (
+        !business ||
+        !booking.date ||
+        !effectiveSelectedTime ||
+        !booking.serviceId
+      ){
         setSubmitError("Faltan datos para confirmar la reserva");
         return;
       }
@@ -344,7 +442,10 @@ const Reservar = () => {
         id_empleado: booking.professionalId
           ? Number(booking.professionalId)
           : null,
-        fecha_hora_inicio: buildLocalDateTimeString(booking.date, booking.timeSlot),
+        fecha_hora_inicio: buildLocalDateTimeString(
+        booking.date,
+        effectiveSelectedTime,
+      ),
       };
 
       await appointmentService.createAppointment(payload);
@@ -358,7 +459,9 @@ const Reservar = () => {
 
       if (error instanceof ApiError) {
         if (error.status === 409) {
-          setSubmitError("Ese horario ya fue reservado. Elegí otro horario disponible.");
+          setSubmitError(
+            "Ese horario ya fue reservado. Elegí otro horario disponible.",
+          );
 
           setBooking((current) => ({
             ...current,
@@ -401,7 +504,9 @@ const Reservar = () => {
       <div className="min-h-screen bg-background">
         <Navbar />
         <div className="mx-auto max-w-7xl px-4 py-20 text-center">
-          <h1 className="text-2xl font-bold text-foreground">Negocio no encontrado</h1>
+          <h1 className="text-2xl font-bold text-foreground">
+            Negocio no encontrado
+          </h1>
           <Button asChild className="mt-4">
             <Link to="/negocios">Ver todos los negocios</Link>
           </Button>
@@ -420,7 +525,7 @@ const Reservar = () => {
             service={selectedService}
             professional={selectedProfessional}
             date={booking.date}
-            time={booking.timeSlot}
+            time={effectiveSelectedTime}
             client={booking.client}
             businessName={business.nombre}
             confirmed
@@ -445,7 +550,9 @@ const Reservar = () => {
           </Link>
         </div>
 
-        <h1 className="mb-6 text-2xl font-bold text-foreground">Reservar turno</h1>
+        <h1 className="mb-6 text-2xl font-bold text-foreground">
+          Reservar turno
+        </h1>
 
         <div className="mb-8">
           <BookingStepper currentStep={step} steps={STEPS} />
@@ -460,12 +567,16 @@ const Reservar = () => {
         <div className="min-h-[300px]">
           {step === 1 && (
             <div className="space-y-3">
-              <h2 className="text-lg font-semibold text-foreground">Elegí un servicio</h2>
+              <h2 className="text-lg font-semibold text-foreground">
+                Elegí un servicio
+              </h2>
               {services.map((service) => (
                 <ServiceCard
                   key={service.id_servicio}
                   service={service}
-                  selected={String(booking.serviceId) === String(service.id_servicio)}
+                  selected={
+                    String(booking.serviceId) === String(service.id_servicio)
+                  }
                   onSelect={() => {
                     setSubmitError(null);
                     setBooking((current) => ({
@@ -482,7 +593,9 @@ const Reservar = () => {
 
           {step === 2 && (
             <div className="space-y-3">
-              <h2 className="text-lg font-semibold text-foreground">Elegí un profesional</h2>
+              <h2 className="text-lg font-semibold text-foreground">
+                Elegí un profesional
+              </h2>
               {professionals.map((professional) => (
                 <ProfessionalCard
                   key={professional.id_empleado}
@@ -537,12 +650,15 @@ const Reservar = () => {
                       today.setHours(0, 0, 0, 0);
 
                       const isPast = date < today;
-                      const isFullyBooked = occupiedDays.has(toLocalDateKey(date));
+                      const isFullyBooked = occupiedDays.has(
+                        toLocalDateKey(date),
+                      );
 
                       return isPast || isFullyBooked;
                     }}
                     modifiers={{
-                      fullyBooked: (date) => occupiedDays.has(toLocalDateKey(date)),
+                      fullyBooked: (date) =>
+                        occupiedDays.has(toLocalDateKey(date)),
                     }}
                     modifiersClassNames={{
                       fullyBooked:
@@ -556,7 +672,9 @@ const Reservar = () => {
                 <div className="mt-7 text-center">
                   {booking.date ? (
                     <p className="text-[16px] font-medium capitalize text-violet-600">
-                      {format(booking.date, "EEEE, d 'de' MMMM, yyyy", { locale: es })}
+                      {format(booking.date, "EEEE, d 'de' MMMM, yyyy", {
+                        locale: es,
+                      })}
                     </p>
                   ) : (
                     <p className="text-sm text-muted-foreground">
@@ -580,81 +698,77 @@ const Reservar = () => {
                 </p>
               ) : (
                 <>
-                  {(() => {
-                    const availableSlots = timeSlots.filter((s) => s.available);
+                {(() => {
 
-                    // 👉 AUTOSELECT si hay uno solo
-                    if (availableSlots.length === 1 && !booking.timeSlot) {
-                      setBooking((current) => ({
-                        ...current,
-                        timeSlot: availableSlots[0].time,
-                      }));
-                    }
+                  const morning = timeSlots.filter(
+                    (slot) => Number(slot.time.split(":" )[0]) < 12,
+                  );
 
-                    const morning = timeSlots.filter(
-                      (slot) => Number(slot.time.split(":")[0]) < 12
-                    );
+                  const afternoon = timeSlots.filter(
+                    (slot) => Number(slot.time.split(":" )[0]) >= 12,
+                  );
 
-                    const afternoon = timeSlots.filter(
-                      (slot) => Number(slot.time.split(":")[0]) >= 12
-                    );
-
-                    const renderGroup = (label: string, slots: TimeSlot[]) => {
-                      if (!slots.length) return null;
-
-                      return (
-                        <div>
-                          <p className="mb-2 text-sm font-medium text-muted-foreground">
-                            {label}
-                          </p>
-
-                          <div className="flex flex-wrap gap-2">
-                            {slots.map((slot) => (
-                              <button
-                                key={slot.id}
-                                disabled={!slot.available}
-                                onClick={() => {
-                                  setSubmitError(null);
-                                  setBooking((current) => ({
-                                    ...current,
-                                    timeSlot: slot.time,
-                                  }));
-                                }}
-                                className={cn(
-                                  "px-4 py-2 rounded-full text-sm font-medium border transition-all",
-                                  booking.timeSlot === slot.time
-                                    ? "bg-primary text-primary-foreground border-primary"
-                                    : slot.available
-                                    ? "bg-muted hover:bg-muted/70 border-border"
-                                    : "bg-muted opacity-40 cursor-not-allowed border-border"
-                                )}
-                              >
-                                {slot.time}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    };
+                  const renderGroup = (
+                    label: string,
+                    slots: TimeSlot[],
+                  ) => {
+                    if (!slots.length) return null;
 
                     return (
-                      <>
-                        {renderGroup("Mañana", morning)}
-                        {renderGroup("Tarde", afternoon)}
+                      <div>
+                        <p className="mb-2 text-sm font-medium text-muted-foreground">
+                          {label}
+                        </p>
 
-                        {availableSlots.length === 0 && (
-                          <div className="text-center py-6">
-                            <p className="text-sm text-muted-foreground">
-                              No hay horarios disponibles para este día.
-                            </p>
-                            <p className="text-sm text-muted-foreground mt-1">
-                              Probá seleccionando otra fecha.
-                            </p>
-                          </div>
-                        )}
-                      </>
+                        <div className="flex flex-wrap gap-2">
+                          {slots.map((slot) => (
+                            <button
+                              key={slot.id}
+                              disabled={!slot.available}
+                              onClick={() => {
+                                setSubmitError(null);
+
+                                setBooking((current) => ({
+                                  ...current,
+                                  timeSlot: slot.time,
+                                }));
+                              }}
+                              className={cn(
+                                "px-4 py-2 rounded-full text-sm font-medium border transition-all",
+                                effectiveSelectedTime === slot.time
+                                  ? "bg-primary text-primary-foreground border-primary"
+                                  : slot.available
+                                    ? "bg-muted hover:bg-muted/70 border-border"
+                                    : "bg-muted opacity-40 cursor-not-allowed border-border",
+                              )}
+                            >
+                              {slot.time}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     );
-                  })()}
+                  };
+
+                  return (
+                    <>
+                      {renderGroup("Mañana", morning)}
+                      {renderGroup("Tarde", afternoon)}
+
+                      {availableSlots.length === 0 && (
+                        <div className="text-center py-6">
+                          <p className="text-sm text-muted-foreground">
+                            No hay horarios disponibles para este día.
+                          </p>
+
+                          <p className="text-sm text-muted-foreground mt-1">
+                            Probá seleccionando otra fecha.
+                          </p>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
                 </>
               )}
             </div>
@@ -672,19 +786,24 @@ const Reservar = () => {
             />
           )}
 
-          {step === 6 && selectedService && selectedProfessional && booking.date && (
-            <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-foreground">Confirmá tu turno</h2>
-              <BookingSummary
-                service={selectedService}
-                professional={selectedProfessional}
-                date={booking.date}
-                time={booking.timeSlot}
-                client={booking.client}
-                businessName={business.nombre}
-              />
-            </div>
-          )}
+          {step === 6 &&
+            selectedService &&
+            selectedProfessional &&
+            booking.date && (
+              <div className="space-y-4">
+                <h2 className="text-lg font-semibold text-foreground">
+                  Confirmá tu turno
+                </h2>
+                <BookingSummary
+                  service={selectedService}
+                  professional={selectedProfessional}
+                  date={booking.date}
+                  time={effectiveSelectedTime}
+                  client={booking.client}
+                  businessName={business.nombre}
+                />
+              </div>
+            )}
         </div>
 
         <div className="mt-8 flex justify-between gap-4">
