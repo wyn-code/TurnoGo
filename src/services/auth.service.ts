@@ -1,6 +1,9 @@
 import apiClient from "@/lib/api-client";
 import { AUTH_API_ROOT } from "@/lib/api-config";
 
+const TOKEN_KEY = "turnexo_token";
+const USER_KEY = "turnexo_user";
+
 export interface LoginRequest {
   email_us: string;
   contrasena_us: string;
@@ -31,7 +34,13 @@ export interface AuthUserResponse {
 }
 
 export const authService = {
-  login: async (data: LoginRequest): Promise<AuthTokenResponse> => {
+  // =========================
+  // API
+  // =========================
+
+  login: async (
+    data: LoginRequest
+  ): Promise<AuthTokenResponse> => {
     return apiClient.postWithBase<AuthTokenResponse>(
       AUTH_API_ROOT,
       "/login",
@@ -42,7 +51,9 @@ export const authService = {
     );
   },
 
-  register: async (data: RegisterRequest): Promise<AuthTokenResponse> => {
+  register: async (
+    data: RegisterRequest
+  ): Promise<AuthTokenResponse> => {
     return apiClient.postWithBase<AuthTokenResponse>(
       AUTH_API_ROOT,
       "/register",
@@ -60,7 +71,66 @@ export const authService = {
   },
 
   me: async (): Promise<AuthUserResponse> => {
-    return apiClient.getWithBase<AuthUserResponse>(AUTH_API_ROOT, "/me");
+    return apiClient.getWithBase<AuthUserResponse>(
+      AUTH_API_ROOT,
+      "/me"
+    );
+  },
+
+  // =========================
+  // TOKEN
+  // =========================
+
+  saveToken(token: string) {
+    localStorage.setItem(TOKEN_KEY, token);
+  },
+
+  getToken(): string | null {
+    return localStorage.getItem(TOKEN_KEY);
+  },
+
+  removeToken() {
+    localStorage.removeItem(TOKEN_KEY);
+  },
+
+  // =========================
+  // USER
+  // =========================
+
+  saveUser(user: AuthUserResponse) {
+    localStorage.setItem(
+      USER_KEY,
+      JSON.stringify(user)
+    );
+  },
+
+  getUser(): AuthUserResponse | null {
+    const user = localStorage.getItem(USER_KEY);
+
+    if (!user) return null;
+
+    try {
+      return JSON.parse(user);
+    } catch {
+      return null;
+    }
+  },
+
+  removeUser() {
+    localStorage.removeItem(USER_KEY);
+  },
+
+  // =========================
+  // SESSION
+  // =========================
+
+  clearSession() {
+    localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(USER_KEY);
+  },
+
+  isAuthenticated(): boolean {
+    return !!this.getToken();
   },
 };
 

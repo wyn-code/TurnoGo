@@ -1,5 +1,12 @@
-import { createContext, useContext, useState, useEffect } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+} from "react";
+
 import type { ReactNode } from "react";
+
 import apiClient from "@/lib/api-client";
 import { authService } from "@/services/auth.service";
 
@@ -15,40 +22,27 @@ type AuthResult =
   | { success: true; user: User }
   | { success: false; error: string };
 
-function normalizeUser(raw: Record<string, unknown>): User {
-  const idRaw = raw.id_us ?? raw.id;
-  const roleRaw = raw.role ?? raw.rol ?? raw.role_us;
-
-  return {
-    id: idRaw != null ? String(idRaw) : undefined,
-    email: String(raw.email_us ?? raw.email ?? ""),
-    name:
-      raw.usuario_us != null
-        ? String(raw.usuario_us)
-        : raw.name != null
-          ? String(raw.name)
-          : undefined,
-    hasBusiness: Boolean(raw.has_business),
-    role: roleRaw != null ? String(roleRaw).toLowerCase() : undefined,
-  };
-}
-
 interface AuthContextType {
   user: User | null;
+
+  token: string | null;
+
+  isAuthenticated: boolean;
+
   isLoading: boolean;
+
   login: (
     email: string,
     password: string,
-  ) => Promise<{ success: boolean; user?: User; error?: string }>;
+  ) => Promise<AuthResult>;
 
-  // ACTUALIZA ESTA LÍNEA:
   register: (
     usuario: string,
     email: string,
     password: string,
-    nombre: string, // <--- Agregar
-    apellido: string, // <--- Agregar
-  ) => Promise<{ success: boolean; user?: User; error?: string }>;
+    nombre: string,
+    apellido: string,
+  ) => Promise<AuthResult>;
 
   logout: () => void;
 }
@@ -56,85 +50,208 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | null>(null);
 
 const USER_KEY = "turnexo_user";
-const TOKEN_KEY = "auth_token";
+const TOKEN_KEY = "turnexo_token";
+
+function normalizeUser(raw: Record<string, unknown>): User {
+  const idRaw = raw.id_us ?? raw.id;
+
+  const roleRaw =
+    raw.role ??
+    raw.rol ??
+    raw.role_us;
+
+  return {
+    id: idRaw != null ? String(idRaw) : undefined,
+
+    email: String(
+      raw.email_us ??
+      raw.email ??
+      ""
+    ),
+
+    name:
+      raw.usuario_us != null
+        ? String(raw.usuario_us)
+        : raw.name != null
+          ? String(raw.name)
+          : undefined,
+
+    hasBusiness: Boolean(raw.has_business),
+
+    role:
+      roleRaw != null
+        ? String(roleRaw).toLowerCase()
+        : undefined,
+  };
+}
 
 function normalizeApiDetail(detail: unknown): string {
-  if (typeof detail === "string") return detail;
+  if (typeof detail === "string") {
+    return detail;
+  }
+
   if (Array.isArray(detail)) {
     return detail
       .map((e) =>
-        typeof e === "object" && e && "msg" in e
+        typeof e === "object" &&
+        e &&
+        "msg" in e
           ? String((e as { msg: string }).msg)
           : JSON.stringify(e),
       )
       .join(", ");
   }
-  if (detail && typeof detail === "object" && "msg" in detail) {
-    return String((detail as { msg: string }).msg);
+
+  if (
+    detail &&
+    typeof detail === "object" &&
+    "msg" in detail
+  ) {
+    return String(
+      (detail as { msg: string }).msg
+    );
   }
+
   return "Error al procesar la solicitud";
 }
 
-function loginBody(email: string, password: string) {
-  return { email_us: email.trim(), contrasena_us: password };
+function loginBody(
+  email: string,
+  password: string,
+) {
+  return {
+    email_us: email.trim(),
+    contrasena_us: password,
+  };
 }
 
 async function applySessionFromToken(
   token: string,
   setUser: (u: User | null) => void,
-) {
-  localStorage.setItem(TOKEN_KEY, token);
+  setToken: (t: string | null) => void,
+): Promise<AuthResult> {
+  localStorage.setItem(
+    TOKEN_KEY,
+    token,
+  );
+
+  setToken(token);
+
   apiClient.setToken(token);
 
   try {
     const userData = await authService.me();
 
-    const user = normalizeUser(userData as unknown as Record<string, unknown>);
+    const user = normalizeUser(
+      userData as unknown as Record<
+        string,
+        unknown
+      >,
+    );
 
     setUser(user);
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
-    console.log("SET USER:", user);
 
-    return { success: true as const, user };
-  } catch (error) {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
-    apiClient.clearToken();
-    setUser(null);
+    localStorage.setItem(
+      USER_KEY,
+      JSON.stringify(user),
+    );
 
     return {
-      success: false as const,
+      success: true,
+      user,
+    };
+  } catch (error) {
+    localStorage.removeItem(TOKEN_KEY);
+
+    localStorage.removeItem(USER_KEY);
+
+    apiClient.clearToken();
+
+    setUser(null);
+
+    setToken(null);
+
+    return {
+      success: false,
       error:
-        normalizeApiDetail(error instanceof Error ? error.message : error) ||
-        "No se pudo obtener el perfil",
+        normalizeApiDetail(
+          error instanceof Error
+            ? error.message
+            : error,
+        ) || "No se pudo obtener el perfil",
     };
   }
 }
 
-export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+export function AuthProvider({
+  children,
+}: {
+  children: ReactNode;
+}) {
+  const [user, setUser] =
+    useState<User | null>(null);
+
+  const [token, setToken] =
+    useState<string | null>(null);
+
+  const [isLoading, setIsLoading] =
+    useState(true);
 
   useEffect(() => {
     const initSession = async () => {
       try {
-        const token = localStorage.getItem(TOKEN_KEY);
+        const storedToken =
+          localStorage.getItem(
+            TOKEN_KEY,
+          );
 
-        if (token) {
-          await applySessionFromToken(token, setUser);
+        if (storedToken) {
+          const session =
+            await applySessionFromToken(
+              storedToken,
+              setUser,
+              setToken,
+            );
+
+          if (!session.success) {
+            setUser(null);
+            setToken(null);
+          }
+
           return;
         }
 
-        const storedUser = localStorage.getItem(USER_KEY);
+        const storedUser =
+          localStorage.getItem(
+            USER_KEY,
+          );
+
         if (storedUser) {
           setUser(
-            normalizeUser(JSON.parse(storedUser) as Record<string, unknown>),
+            normalizeUser(
+              JSON.parse(
+                storedUser,
+              ) as Record<
+                string,
+                unknown
+              >,
+            ),
           );
         }
       } catch {
-        localStorage.removeItem(USER_KEY);
-        localStorage.removeItem(TOKEN_KEY);
+        localStorage.removeItem(
+          USER_KEY,
+        );
+
+        localStorage.removeItem(
+          TOKEN_KEY,
+        );
+
         apiClient.clearToken();
+
+        setUser(null);
+
+        setToken(null);
       } finally {
         setIsLoading(false);
       }
@@ -147,99 +264,163 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     email: string,
     password: string,
   ): Promise<AuthResult> => {
-    try {
-      const data = await authService.login(loginBody(email, password));
+    setIsLoading(true);
 
-      const token = data.access_token as string | undefined;
+    try {
+      const data =
+        await authService.login(
+          loginBody(
+            email,
+            password,
+          ),
+        );
+
+      const token =
+        data.access_token;
 
       if (!token) {
-        return { success: false, error: "Respuesta del servidor sin token" };
-      }
-
-      const session = await applySessionFromToken(token, setUser);
-      setIsLoading(false);
-
-      return session;
-      } catch (error: any) {
-        console.error("LOGIN ERROR:", error);
-console.error("RESPONSE:", error?.response);
-console.error("DATA:", error?.response?.data);
-console.error("DETAIL:", error?.response?.data?.detail);
-
-        setIsLoading(false);
-
         return {
           success: false,
-          error: normalizeApiDetail(
-            error?.response?.data?.detail ||
-            error?.message ||
-            error
-          ),
+          error:
+            "Respuesta del servidor sin token",
         };
       }
-  };
 
-  const register = async (
-    usuario: string,
-    email: string,
-    password: string,
-    nombre: string, // <--- Recibir
-    apellido: string, // <--- Recibir
-  ): Promise<AuthResult> => {
-    setIsLoading(true);
-    try {
-      const data = await authService.register({
-        usuario_us: usuario.trim(),
-        email_us: email.trim(),
-        contrasena_us: password,
-        nombre_us: nombre.trim(),
-        apellido_us: apellido.trim(),
-      });
-
-      const token = data.access_token as string | undefined;
-
-      if (!token) {
-        // Intentar login automático si el registro no devolvió token pero fue exitoso
-        const loginResult = await login(email, password);
-        if (!loginResult.success) {
-          return {
-            success: false,
-            error:
-              "Cuenta creada pero no se pudo iniciar sesión automáticamente.",
-          };
-        }
-        return { success: true, user: loginResult.user };
-      }
-
-      const session = await applySessionFromToken(token, setUser);
-      return session.success ? { success: true, user: session.user } : session;
+      return await applySessionFromToken(
+        token,
+        setUser,
+        setToken,
+      );
     } catch (error: any) {
-      console.error(error);
+      console.error(
+        "LOGIN ERROR:",
+        error,
+      );
+
       return {
         success: false,
-        error: error?.response?.data?.detail || "Error al registrarse",
+        error: normalizeApiDetail(
+          error?.response?.data
+            ?.detail ||
+            error?.message ||
+            error,
+        ),
       };
     } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem(USER_KEY);
-    localStorage.removeItem(TOKEN_KEY);
-    apiClient.clearToken();
+  const register = async (
+    usuario: string,
+    email: string,
+    password: string,
+    nombre: string,
+    apellido: string,
+  ): Promise<AuthResult> => {
+    setIsLoading(true);
+
+    try {
+      const data =
+        await authService.register({
+          usuario_us:
+            usuario.trim(),
+
+          email_us:
+            email.trim(),
+
+          contrasena_us:
+            password,
+
+          nombre_us:
+            nombre.trim(),
+
+          apellido_us:
+            apellido.trim(),
+        });
+
+      const token =
+        data.access_token;
+
+      // Si backend no devuelve token
+      // intentamos login automático
+
+      if (!token) {
+        return await login(
+          email,
+          password,
+        );
+      }
+
+      return await applySessionFromToken(
+        token,
+        setUser,
+        setToken,
+      );
+    } catch (error: any) {
+      console.error(
+        "REGISTER ERROR:",
+        error,
+      );
+
+      return {
+        success: false,
+        error: normalizeApiDetail(
+          error?.response?.data
+            ?.detail ||
+            error?.message ||
+            error,
+        ),
+      };
+    } finally {
+      setIsLoading(false);
+    }
   };
 
+const logout = () => {
+  setUser(null);
+
+  setToken(null);
+
+  localStorage.removeItem(USER_KEY);
+
+  localStorage.removeItem(TOKEN_KEY);
+
+  apiClient.clearToken();
+};
+
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, register, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+
+        isAuthenticated:
+          !!user && !!token,
+
+        isLoading,
+
+        login,
+
+        register,
+
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
 }
 
 export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
+  const ctx =
+    useContext(AuthContext);
+
+  if (!ctx) {
+    throw new Error(
+      "useAuth must be used within AuthProvider",
+    );
+  }
+
   return ctx;
 }
