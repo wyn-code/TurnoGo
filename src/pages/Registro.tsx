@@ -201,7 +201,7 @@ const passwordChecks = {
                         : "text-muted-foreground"
                     }
                   >
-                    ✓ Entre 12 y 16 caracteres
+                    ✓ Entre 10 y 20 caracteres
                   </p>
 
                   <p
@@ -234,15 +234,7 @@ const passwordChecks = {
                     ✓ Al menos un número
                   </p>
 
-                  <p
-                    className={
-                      passwordChecks.special
-                        ? "text-green-500"
-                        : "text-muted-foreground"
-                    }
-                  >
-                    ✓ Al menos un carácter especial
-                  </p>
+      
                 </div>
               </div>
 

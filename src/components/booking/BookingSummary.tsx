@@ -11,7 +11,8 @@ interface BookingSummaryProps {
   professional: ApiEmpleado;
   date: Date;
   time: string;
-  client: { firstName: string; lastName: string; email: string };
+  // Agregamos 'phone' al tipado del cliente
+  client: { firstName: string; lastName: string; email: string; phone: string };
   businessName: string;
   confirmed?: boolean;
 }
@@ -34,9 +35,16 @@ const BookingSummary = ({
           <div className="flex flex-col items-center gap-2 text-center">
             <CheckCircle size={48} className="text-primary" />
             <h3 className="text-xl font-bold text-foreground">¡Turno confirmado!</h3>
-            <p className="text-sm text-muted-foreground">
-              Te enviamos los detalles a {client.email}
-            </p>
+            
+            {/* NUEVO: Mensaje dividido para Email y WhatsApp */}
+            <div className="text-sm text-muted-foreground mt-1 space-y-1">
+              <p>
+                Te enviamos el comprobante a <span className="font-medium text-foreground">{client.email}</span>
+              </p>
+              <p>
+                y un mensaje de WhatsApp al <span className="font-medium text-foreground">{client.phone}</span>
+              </p>
+            </div>
           </div>
         )}
 
