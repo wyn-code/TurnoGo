@@ -38,7 +38,20 @@ const BookingForm = ({ data, onChange }: BookingFormProps) => {
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor="phone">Teléfono *</Label>
-          <Input id="phone" type="tel" placeholder="+54 11 1234-5678" value={data.phone} onChange={(e) => update("phone", e.target.value)} required />
+          <Input
+            id="phone"
+            name="phone"
+            type="tel"
+            // NUEVO: Agregamos placeholder para guiar el formato
+            placeholder="Ej: +54 9 11 1234 5678" 
+            value={data.phone}
+            onChange={(e) => onChange({ ...data, phone: e.target.value })}
+            required
+          />
+          {/* NUEVO: Texto de ayuda */}
+          <p className="text-[13px] text-muted-foreground">
+            A este número te enviaremos el recordatorio por WhatsApp.
+          </p>
         </div>
         <div className="space-y-2">
           <Label htmlFor="email">Email *</Label>
