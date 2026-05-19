@@ -27,9 +27,9 @@ import type {
 } from "@/types/api";
 import { ApiError } from "@/lib/api-client";
 
+// --- CAMBIO: Se redujeron los pasos, fusionando Servicio y Profesional ---
 const STEPS = [
   "Servicio",
-  "Profesional",
   "Fecha",
   "Horario",
   "Datos",
@@ -72,7 +72,6 @@ const generateTimeSlots = (
   if (!selectedDate) return [];
 
   const slots: TimeSlot[] = [];
-
   const now = new Date();
 
   // Horario laboral
@@ -91,19 +90,13 @@ const generateTimeSlots = (
   let currentSlotStart = new Date(dayStart);
 
   while (true) {
-    const currentSlotEnd = addMinutes(
-      currentSlotStart,
-      durationMinutes,
-    );
+    const currentSlotEnd = addMinutes(currentSlotStart, durationMinutes);
 
     // Si el turno termina después del cierre, no mostrarlo
-    if (currentSlotEnd > dayEnd) {
-      break;
-    }
+    if (currentSlotEnd > dayEnd) break;
 
     const hours = pad(currentSlotStart.getHours());
     const minutes = pad(currentSlotStart.getMinutes());
-
     const time = `${hours}:${minutes}`;
 
     // Bloquear horarios pasados
@@ -111,20 +104,10 @@ const generateTimeSlots = (
 
     // Verificar solapamientos
     const isOccupied = occupiedAppointments.some((turno) => {
-      if (
-        !turno.fecha_hora_inicio ||
-        !turno.fecha_hora_fin
-      ) {
-        return false;
-      }
+      if (!turno.fecha_hora_inicio || !turno.fecha_hora_fin) return false;
 
-      const bookedStart = new Date(
-        turno.fecha_hora_inicio,
-      );
-
-      const bookedEnd = new Date(
-        turno.fecha_hora_fin,
-      );
+      const bookedStart = new Date(turno.fecha_hora_inicio);
+      const bookedEnd = new Date(turno.fecha_hora_fin);
 
       return rangesOverlap(
         currentSlotStart,
@@ -141,10 +124,7 @@ const generateTimeSlots = (
     });
 
     // Avanza dinámicamente según duración real
-    currentSlotStart = addMinutes(
-      currentSlotStart,
-      durationMinutes,
-    );
+    currentSlotStart = addMinutes(currentSlotStart, durationMinutes);
   }
 
   return slots;
@@ -176,9 +156,7 @@ const Reservar = () => {
     },
   });
 
-  const [occupiedAppointments, setOccupiedAppointments] = useState<ApiTurno[]>(
-    [],
-  );
+  const [occupiedAppointments, setOccupiedAppointments] = useState<ApiTurno[]>([]);
   const [occupiedDays, setOccupiedDays] = useState<Set<string>>(new Set());
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -187,9 +165,7 @@ const Reservar = () => {
   useEffect(() => {
     const loadBookingData = async () => {
       try {
-        if (!slug) {
-          throw new Error("Slug no recibido");
-        }
+        if (!slug) throw new Error("Slug no recibido");
 
         setIsLoading(true);
         setError(null);
@@ -226,30 +202,20 @@ const Reservar = () => {
 
   const serviceDuration = selectedService?.duracion_min ?? 30;
 
-    const timeSlots = useMemo(
+  const timeSlots = useMemo(
     () =>
       generateTimeSlots(
         booking.date,
         occupiedAppointments,
         serviceDuration,
       ),
-    [
-      booking.date,
-      occupiedAppointments,
-      serviceDuration,
-    ],
+    [booking.date, occupiedAppointments, serviceDuration],
   );
-  const availableSlots = timeSlots.filter(
-    (slot) => slot.available,
-  );
+  const availableSlots = timeSlots.filter((slot) => slot.available);
 
   const effectiveSelectedTime =
     booking.timeSlot ||
-    (
-      availableSlots.length === 1
-        ? availableSlots[0].time
-        : ""
-    );
+    (availableSlots.length === 1 ? availableSlots[0].time : "");
 
   const refreshOccupiedAppointments = useCallback(async () => {
     if (!business || !booking.date) {
@@ -259,7 +225,6 @@ const Reservar = () => {
 
     try {
       setIsLoadingSlots(true);
-
       const from = new Date(booking.date);
       from.setHours(0, 0, 0, 0);
 
@@ -292,19 +257,9 @@ const Reservar = () => {
       }
 
       try {
-        const referenceDate =
-          baseDate ?? visibleMonth ?? booking.date ?? new Date();
-
-        const monthStart = new Date(
-          referenceDate.getFullYear(),
-          referenceDate.getMonth(),
-          1,
-        );
-        const monthEnd = new Date(
-          referenceDate.getFullYear(),
-          referenceDate.getMonth() + 1,
-          1,
-        );
+        const referenceDate = baseDate ?? visibleMonth ?? booking.date ?? new Date();
+        const monthStart = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 1);
+        const monthEnd = new Date(referenceDate.getFullYear(), referenceDate.getMonth() + 1, 1);
 
         const response = await appointmentService.getAppointmentsByRange({
           id_negocio: String(business.id_negocio),
@@ -325,19 +280,11 @@ const Reservar = () => {
           appointmentsByDay.set(dayKey, [...current, turno]);
         });
 
-        for (
-          let day = new Date(monthStart);
-          day < monthEnd;
-          day.setDate(day.getDate() + 1)
-        ) {
+        for (let day = new Date(monthStart); day < monthEnd; day.setDate(day.getDate() + 1)) {
           const currentDay = new Date(day);
           const dayKey = toLocalDateKey(currentDay);
           const dayAppointments = appointmentsByDay.get(dayKey) ?? [];
-          const slots = generateTimeSlots(
-            currentDay,
-            dayAppointments,
-            serviceDuration,
-          );
+          const slots = generateTimeSlots(currentDay, dayAppointments, serviceDuration);
           const hasAvailable = slots.some((slot) => slot.available);
 
           if (!hasAvailable) {
@@ -351,50 +298,36 @@ const Reservar = () => {
         setOccupiedDays(new Set());
       }
     },
-    [
-      business,
-      booking.professionalId,
-      booking.date,
-      visibleMonth,
-      serviceDuration,
-    ],
+    [business, booking.professionalId, booking.date, visibleMonth, serviceDuration],
   );
 
-useEffect(() => {
-  const loadAppointments = async () => {
-    await refreshOccupiedAppointments();
-  };
+  useEffect(() => {
+    const loadAppointments = async () => {
+      await refreshOccupiedAppointments();
+    };
+    loadAppointments();
+  }, [refreshOccupiedAppointments]);
 
-  loadAppointments();
-}, [refreshOccupiedAppointments]);
+  useEffect(() => {
+    const loadOccupiedDays = async () => {
+      await refreshOccupiedDays(visibleMonth);
+    };
+    loadOccupiedDays();
+  }, [refreshOccupiedDays, visibleMonth, booking.professionalId]);
 
-useEffect(() => {
-  const loadOccupiedDays = async () => {
-    await refreshOccupiedDays(visibleMonth);
-  };
-
-  loadOccupiedDays();
-}, [
-  refreshOccupiedDays,
-  visibleMonth,
-  booking.professionalId,
-]);
-
+  // --- CAMBIO: Ajuste de validación de pasos ---
   const canNext = (): boolean => {
     switch (step) {
       case 1:
-        return !!booking.serviceId;
-      case 2:
-        return !!booking.professionalId;
-      case 3:
+        // El paso 1 ahora requiere tanto servicio como profesional
+        return !!booking.serviceId && !!booking.professionalId;
+      case 2: // Fecha
         return !!booking.date;
-      case 4:
+      case 3: // Horario
         return timeSlots.some(
-          (slot) =>
-            slot.time === effectiveSelectedTime &&
-            slot.available,
+          (slot) => slot.time === effectiveSelectedTime && slot.available,
         );
-      case 5:
+      case 4: // Datos
         return !!(
           booking.client.firstName &&
           booking.client.lastName &&
@@ -410,21 +343,12 @@ useEffect(() => {
     try {
       setSubmitError(null);
 
-      if (
-        !business ||
-        !booking.date ||
-        !effectiveSelectedTime ||
-        !booking.serviceId
-      ){
+      if (!business || !booking.date || !effectiveSelectedTime || !booking.serviceId) {
         setSubmitError("Faltan datos para confirmar la reserva");
         return;
       }
 
-      if (
-        !booking.client.firstName.trim() ||
-        !booking.client.lastName.trim() ||
-        !booking.client.phone.trim()
-      ) {
+      if (!booking.client.firstName.trim() || !booking.client.lastName.trim() || !booking.client.phone.trim()) {
         setSubmitError("Faltan datos del cliente");
         return;
       }
@@ -439,41 +363,28 @@ useEffect(() => {
         id_negocio: Number(business.id_negocio),
         id_cliente: Number(cliente.id_cliente),
         id_servicio: Number(booking.serviceId),
-        id_empleado: booking.professionalId
-          ? Number(booking.professionalId)
-          : null,
-        fecha_hora_inicio: buildLocalDateTimeString(
-        booking.date,
-        effectiveSelectedTime,
-      ),
+        id_empleado: booking.professionalId ? Number(booking.professionalId) : null,
+        fecha_hora_inicio: buildLocalDateTimeString(booking.date, effectiveSelectedTime),
       };
 
       await appointmentService.createAppointment(payload);
-
       await refreshOccupiedAppointments();
       await refreshOccupiedDays(booking.date);
 
-      setStep(7);
+      // --- CAMBIO: Completado ahora es el paso 6 ---
+      setStep(6);
     } catch (error: unknown) {
       console.error(error);
 
       if (error instanceof ApiError) {
         if (error.status === 409) {
-          setSubmitError(
-            "Ese horario ya fue reservado. Elegí otro horario disponible.",
-          );
-
-          setBooking((current) => ({
-            ...current,
-            timeSlot: "",
-          }));
-
+          setSubmitError("Ese horario ya fue reservado. Elegí otro horario disponible.");
+          setBooking((current) => ({ ...current, timeSlot: "" }));
           await refreshOccupiedAppointments();
           await refreshOccupiedDays(booking.date ?? visibleMonth);
-          setStep(4);
+          setStep(3); // Regresa al paso de Horario
           return;
         }
-
         setSubmitError(error.detail || error.message);
         return;
       }
@@ -504,9 +415,7 @@ useEffect(() => {
       <div className="min-h-screen bg-background">
         <Navbar />
         <div className="mx-auto max-w-7xl px-4 py-20 text-center">
-          <h1 className="text-2xl font-bold text-foreground">
-            Negocio no encontrado
-          </h1>
+          <h1 className="text-2xl font-bold text-foreground">Negocio no encontrado</h1>
           <Button asChild className="mt-4">
             <Link to="/negocios">Ver todos los negocios</Link>
           </Button>
@@ -516,7 +425,8 @@ useEffect(() => {
     );
   }
 
-  if (step === 7 && selectedService && selectedProfessional && booking.date) {
+  // --- CAMBIO: Completado ahora es el paso 6 ---
+  if (step === 6 && selectedService && selectedProfessional && booking.date) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
@@ -550,9 +460,7 @@ useEffect(() => {
           </Link>
         </div>
 
-        <h1 className="mb-6 text-2xl font-bold text-foreground">
-          Reservar turno
-        </h1>
+        <h1 className="mb-6 text-2xl font-bold text-foreground">Reservar turno</h1>
 
         <div className="mb-8">
           <BookingStepper currentStep={step} steps={STEPS} />
@@ -565,59 +473,64 @@ useEffect(() => {
         )}
 
         <div className="min-h-[300px]">
+          {/* --- CAMBIO: Paso 1 ahora engloba Servicio y Profesional --- */}
           {step === 1 && (
-            <div className="space-y-3">
-              <h2 className="text-lg font-semibold text-foreground">
-                Elegí un servicio
-              </h2>
-              {services.map((service) => (
-                <ServiceCard
-                  key={service.id_servicio}
-                  service={service}
-                  selected={
-                    String(booking.serviceId) === String(service.id_servicio)
-                  }
-                  onSelect={() => {
-                    setSubmitError(null);
-                    setBooking((current) => ({
-                      ...current,
-                      serviceId: String(service.id_servicio),
-                      timeSlot: "",
-                    }));
-                  }}
-                  showBookButton={false}
-                />
-              ))}
+            <div className="space-y-8">
+              <div className="space-y-3">
+                <h2 className="text-lg font-semibold text-foreground">
+                  Elegí un servicio
+                </h2>
+                {services.map((service) => (
+                  <ServiceCard
+                    key={service.id_servicio}
+                    service={service}
+                    selected={
+                      String(booking.serviceId) === String(service.id_servicio)
+                    }
+                    onSelect={() => {
+                      setSubmitError(null);
+                      setBooking((current) => ({
+                        ...current,
+                        serviceId: String(service.id_servicio),
+                        timeSlot: "",
+                      }));
+                    }}
+                    showBookButton={false}
+                  />
+                ))}
+              </div>
+
+              {/* El bloque de profesionales solo aparece si ya se eligió un servicio */}
+              {booking.serviceId && (
+                <div className="space-y-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  <h2 className="text-lg font-semibold text-foreground">
+                    Elegí un profesional
+                  </h2>
+                  {professionals.map((professional) => (
+                    <ProfessionalCard
+                      key={professional.id_empleado}
+                      professional={professional}
+                      selected={
+                        String(booking.professionalId) ===
+                        String(professional.id_empleado)
+                      }
+                      onSelect={(selectedProfessional) => {
+                        setSubmitError(null);
+                        setBooking((current) => ({
+                          ...current,
+                          professionalId: String(selectedProfessional.id_empleado),
+                          timeSlot: "",
+                        }));
+                      }}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
+          {/* --- CAMBIO: Los demás pasos bajaron un número en el índice --- */}
           {step === 2 && (
-            <div className="space-y-3">
-              <h2 className="text-lg font-semibold text-foreground">
-                Elegí un profesional
-              </h2>
-              {professionals.map((professional) => (
-                <ProfessionalCard
-                  key={professional.id_empleado}
-                  professional={professional}
-                  selected={
-                    String(booking.professionalId) ===
-                    String(professional.id_empleado)
-                  }
-                  onSelect={(selectedProfessional) => {
-                    setSubmitError(null);
-                    setBooking((current) => ({
-                      ...current,
-                      professionalId: String(selectedProfessional.id_empleado),
-                      timeSlot: "",
-                    }));
-                  }}
-                />
-              ))}
-            </div>
-          )}
-
-          {step === 3 && (
             <div className="space-y-4">
               <div>
                 <h2 className="text-[18px] font-semibold leading-none text-foreground">
@@ -634,9 +547,7 @@ useEffect(() => {
                     mode="single"
                     selected={booking.date ?? undefined}
                     month={visibleMonth}
-                    onMonthChange={(month) => {
-                      setVisibleMonth(month);
-                    }}
+                    onMonthChange={(month) => setVisibleMonth(month)}
                     onSelect={(date) => {
                       setSubmitError(null);
                       setBooking((current) => ({
@@ -648,17 +559,12 @@ useEffect(() => {
                     disabled={(date) => {
                       const today = new Date();
                       today.setHours(0, 0, 0, 0);
-
                       const isPast = date < today;
-                      const isFullyBooked = occupiedDays.has(
-                        toLocalDateKey(date),
-                      );
-
+                      const isFullyBooked = occupiedDays.has(toLocalDateKey(date));
                       return isPast || isFullyBooked;
                     }}
                     modifiers={{
-                      fullyBooked: (date) =>
-                        occupiedDays.has(toLocalDateKey(date)),
+                      fullyBooked: (date) => occupiedDays.has(toLocalDateKey(date)),
                     }}
                     modifiersClassNames={{
                       fullyBooked:
@@ -686,7 +592,7 @@ useEffect(() => {
             </div>
           )}
 
-          {step === 4 && (
+          {step === 3 && (
             <div className="space-y-5">
               <h2 className="text-lg font-semibold text-foreground">
                 Elegí un horario
@@ -698,95 +604,85 @@ useEffect(() => {
                 </p>
               ) : (
                 <>
-                {(() => {
+                  {(() => {
+                    const morning = timeSlots.filter(
+                      (slot) => Number(slot.time.split(":")[0]) < 12,
+                    );
 
-                  const morning = timeSlots.filter(
-                    (slot) => Number(slot.time.split(":" )[0]) < 12,
-                  );
+                    const afternoon = timeSlots.filter(
+                      (slot) => Number(slot.time.split(":")[0]) >= 12,
+                    );
 
-                  const afternoon = timeSlots.filter(
-                    (slot) => Number(slot.time.split(":" )[0]) >= 12,
-                  );
+                    const renderGroup = (label: string, slots: TimeSlot[]) => {
+                      if (!slots.length) return null;
 
-                  const renderGroup = (
-                    label: string,
-                    slots: TimeSlot[],
-                  ) => {
-                    if (!slots.length) return null;
+                      return (
+                        <div>
+                          <p className="mb-2 text-sm font-medium text-muted-foreground">
+                            {label}
+                          </p>
+                          <div className="flex flex-wrap gap-2">
+                            {slots.map((slot) => (
+                              <button
+                                key={slot.id}
+                                disabled={!slot.available}
+                                onClick={() => {
+                                  setSubmitError(null);
+                                  setBooking((current) => ({
+                                    ...current,
+                                    timeSlot: slot.time,
+                                  }));
+                                }}
+                                className={cn(
+                                  "px-4 py-2 rounded-full text-sm font-medium border transition-all",
+                                  effectiveSelectedTime === slot.time
+                                    ? "bg-primary text-primary-foreground border-primary"
+                                    : slot.available
+                                      ? "bg-muted hover:bg-muted/70 border-border"
+                                      : "bg-muted opacity-40 cursor-not-allowed border-border",
+                                )}
+                              >
+                                {slot.time}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    };
 
                     return (
-                      <div>
-                        <p className="mb-2 text-sm font-medium text-muted-foreground">
-                          {label}
-                        </p>
+                      <>
+                        {renderGroup("Mañana", morning)}
+                        {renderGroup("Tarde", afternoon)}
 
-                        <div className="flex flex-wrap gap-2">
-                          {slots.map((slot) => (
-                            <button
-                              key={slot.id}
-                              disabled={!slot.available}
-                              onClick={() => {
-                                setSubmitError(null);
-
-                                setBooking((current) => ({
-                                  ...current,
-                                  timeSlot: slot.time,
-                                }));
-                              }}
-                              className={cn(
-                                "px-4 py-2 rounded-full text-sm font-medium border transition-all",
-                                effectiveSelectedTime === slot.time
-                                  ? "bg-primary text-primary-foreground border-primary"
-                                  : slot.available
-                                    ? "bg-muted hover:bg-muted/70 border-border"
-                                    : "bg-muted opacity-40 cursor-not-allowed border-border",
-                              )}
-                            >
-                              {slot.time}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
+                        {availableSlots.length === 0 && (
+                          <div className="text-center py-6">
+                            <p className="text-sm text-muted-foreground">
+                              No hay horarios disponibles para este día.
+                            </p>
+                            <p className="text-sm text-muted-foreground mt-1">
+                              Probá seleccionando otra fecha.
+                            </p>
+                          </div>
+                        )}
+                      </>
                     );
-                  };
-
-                  return (
-                    <>
-                      {renderGroup("Mañana", morning)}
-                      {renderGroup("Tarde", afternoon)}
-
-                      {availableSlots.length === 0 && (
-                        <div className="text-center py-6">
-                          <p className="text-sm text-muted-foreground">
-                            No hay horarios disponibles para este día.
-                          </p>
-
-                          <p className="text-sm text-muted-foreground mt-1">
-                            Probá seleccionando otra fecha.
-                          </p>
-                        </div>
-                      )}
-                    </>
-                  );
-                })()}
+                  })()}
                 </>
               )}
             </div>
           )}
 
-          {step === 5 && (
+          {step === 4 && (
             <BookingForm
               data={booking.client}
               onChange={(client) =>
-                setBooking((current) => ({
-                  ...current,
-                  client,
-                }))
+                setBooking((current) => ({ ...current, client }))
               }
             />
           )}
 
-         {step === 6 &&
+          {step === 5 &&
             selectedService &&
             selectedProfessional &&
             booking.date && (
@@ -802,10 +698,9 @@ useEffect(() => {
                   client={booking.client}
                   businessName={business.nombre}
                 />
-                {/* NUEVO: Aviso de notificaciones */}
                 <div className="rounded-lg bg-muted/50 p-4 mt-4 border border-border">
                   <p className="text-sm text-muted-foreground flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/prac/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
                     Al confirmar, recibirás los detalles de tu reserva por Email y WhatsApp.
                   </p>
                 </div>
@@ -822,7 +717,8 @@ useEffect(() => {
             Atrás
           </Button>
 
-          {step < 6 ? (
+          {/* --- CAMBIO: Lógica de botones ajustada al nuevo índice de pasos --- */}
+          {step < 5 ? (
             <Button
               onClick={() => setStep((current) => current + 1)}
               disabled={!canNext()}
