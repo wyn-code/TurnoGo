@@ -16,6 +16,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
+// IMPORTANTE: Asegúrate de que la ruta coincida con donde guardaste el componente
+import { BusinessCardSkeleton } from "@/components/marketplace/BusinessCard"; 
+
 const Negocios = () => {
   const [search, setSearch] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
@@ -97,29 +100,7 @@ const Negocios = () => {
     return result;
   }, [businesses, search, selectedCategory, selectedCity, cities]);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-          <p>Cargando negocios...</p>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-          <p>{error}</p>
-        </main>
-        <Footer />
-      </div>
-    );
-  }
+  // Se eliminó el "if (isLoading)" temprano para evitar Layout Shift
 
   return (
     <div className="min-h-screen bg-background">
@@ -135,6 +116,7 @@ const Negocios = () => {
           </p>
         </div>
 
+        {/* Buscador y Filtro de Ciudad */}
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center">
           <div className="flex-1">
             <SearchBar value={search} onChange={setSearch} />
@@ -143,6 +125,7 @@ const Negocios = () => {
           <Select
             value={selectedCity ?? "all"}
             onValueChange={(value) => setSelectedCity(value === "all" ? null : value)}
+            disabled={isLoading} // Deshabilitamos mientras carga
           >
             <SelectTrigger className="w-full sm:w-48">
               <SelectValue placeholder="Ciudad" />
@@ -158,21 +141,40 @@ const Negocios = () => {
           </Select>
         </div>
 
+        {/* Filtro de Categorías */}
         <div className="mb-8">
           <CategoryFilter
             categories={categories}
             selected={selectedCategory}
             onSelect={setSelectedCategory}
+            // Podrías pasarle un disabled={isLoading} si tu componente lo soporta
           />
         </div>
 
-        <p className="mb-4 text-sm text-muted-foreground">
-          {filteredBusinesses.length} negocio
-          {filteredBusinesses.length !== 1 && "s"} encontrado
-          {filteredBusinesses.length !== 1 && "s"}
-        </p>
+        {/* --- LÓGICA DE CARGA Y SKELETONS --- */}
+        {error ? (
+          <div className="py-12 text-center">
+            <p className="text-lg font-medium text-destructive">{error}</p>
+          </div>
+        ) : isLoading ? (
+          // Grilla de Skeletons (Asegúrate de que las clases de la grilla coincidan con tu BusinessGrid)
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <BusinessCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : (
+          // Grilla Real
+          <>
+            <p className="mb-4 text-sm font-medium text-muted-foreground">
+              {filteredBusinesses.length} negocio
+              {filteredBusinesses.length !== 1 && "s"} encontrado
+              {filteredBusinesses.length !== 1 && "s"}
+            </p>
 
-        <BusinessGrid businesses={filteredBusinesses} categories={categories} />
+            <BusinessGrid businesses={filteredBusinesses} categories={categories} />
+          </>
+        )}
       </main>
 
       <Footer />
