@@ -22,7 +22,7 @@ const AdminPanel = () => {
 useEffect(() => {
   const fetchNegocios = async () => {
     try {
-      const data = await negocioService.getAll();
+      const data = await negocioService.getAllAdmin();
       console.log("NEGOCIOS BACK:", data);
       setBusinesses(data);  
     } catch (error) {
