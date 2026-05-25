@@ -1,10 +1,10 @@
-import { useEffect, useState } from "react";
-import { Routes, Route } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
+import { Routes, Route, useLocation } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import { useAuth } from "@/contexts/AuthContext";
-import { negocioService } from "@/services/negocio.service";
+import { businessService } from "@/services/business.service";
 import type { ApiNegocio } from "@/types/api";
 import { DashboardBusinessProvider } from "@/contexts/DashboardBusinessContext";
 import DashboardResumen from "./dashboard/DashboardResumen";
@@ -27,39 +27,40 @@ const sectionTitles: Record<string, string> = {
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const location = useLocation();
   const [business, setBusiness] = useState<ApiNegocio | null>(null);
   const [isLoadingBusiness, setIsLoadingBusiness] = useState(true);
 
-  const path = window.location.pathname.split("/dashboard/")[1] || "";
+  const loadBusiness = useCallback(async () => {
+    if (!user?.id) {
+      setBusiness(null);
+      setIsLoadingBusiness(false);
+      return;
+    }
+
+    try {
+      setIsLoadingBusiness(true);
+      const negocios = await businessService.getAllBusinesses();
+      const linkedBusiness =
+        negocios.find((n) => String(n.usuario_id) === String(user.id)) ?? null;
+      setBusiness(linkedBusiness);
+    } catch (error) {
+      console.error("Error cargando negocio del usuario:", error);
+      setBusiness(null);
+    } finally {
+      setIsLoadingBusiness(false);
+    }
+  }, [user?.id]);
+
+  const path = location.pathname.replace(/^\/dashboard\/?/, "");
   const title = sectionTitles[path] || "Dashboard";
 
   useEffect(() => {
-    const loadBusiness = async () => {
-      if (!user?.id) {
-        setBusiness(null);
-        setIsLoadingBusiness(false);
-        return;
-      }
-
-      try {
-        setIsLoadingBusiness(true);
-        const negocios = await negocioService.getAll();
-        const linkedBusiness =
-          negocios.find((n) => String(n.usuario_id) === String(user.id)) ?? null;
-        setBusiness(linkedBusiness);
-      } catch (error) {
-        console.error("Error cargando negocio del usuario:", error);
-        setBusiness(null);
-      } finally {
-        setIsLoadingBusiness(false);
-      }
-    };
-
     void loadBusiness();
-  }, [user?.id]);
+  }, [loadBusiness]);
 
   return (
-    <DashboardBusinessProvider value={{ business, isLoadingBusiness }}>
+    <DashboardBusinessProvider value={{ business, isLoadingBusiness, refreshBusiness: loadBusiness }}>
       <SidebarProvider>
         <div className="min-h-screen flex w-full">
           <DashboardSidebar />

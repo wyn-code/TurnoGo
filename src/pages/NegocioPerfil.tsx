@@ -9,6 +9,8 @@ import ProfessionalCard from "@/components/business/ProfessionalCard";
 import { Button } from "@/components/ui/button";
 
 import { businessService } from "@/services/business.service";
+import { servicioService } from "@/services/servicio.service";
+import { empleadoService } from "@/services/empleado.service";
 import type { ApiNegocio, ApiEmpleado, ApiServicio } from "@/types/api";
 
 const NegocioPerfil = () => {
@@ -35,8 +37,8 @@ const NegocioPerfil = () => {
         setBusiness(businessData);
 
         const [servicesData, professionalsData] = await Promise.all([
-          businessService.getBusinessServices(businessData.id_negocio),
-          businessService.getBusinessProfessionals(businessData.id_negocio),
+          servicioService.getByBusiness(businessData.id_negocio),
+          empleadoService.getByBusiness(businessData.id_negocio),
         ]);
 
         setServices(servicesData);

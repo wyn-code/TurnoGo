@@ -5,6 +5,8 @@ import { es } from "date-fns/locale";
 
 import { appointmentService } from "@/services/appointment.service";
 import { businessService } from "@/services/business.service";
+import { servicioService } from "@/services/servicio.service";
+import { empleadoService } from "@/services/empleado.service";
 import { clientService } from "@/services/cliente.service";
 
 import { cn } from "@/lib/utils";
@@ -174,8 +176,8 @@ const Reservar = () => {
         setBusiness(businessData);
 
         const [servicesData, professionalsData] = await Promise.all([
-          businessService.getBusinessServices(businessData.id_negocio),
-          businessService.getBusinessProfessionals(businessData.id_negocio),
+          servicioService.getByBusiness(businessData.id_negocio),
+          empleadoService.getByBusiness(businessData.id_negocio),
         ]);
 
         setServices(servicesData);

@@ -1,4 +1,6 @@
-const API_BASE_URL = "http://localhost:8000/api";
+import { API_BASE_URL as CONFIG_API_BASE_URL } from "@/lib/api-config";
+
+const API_BASE_URL = CONFIG_API_BASE_URL;
 
 export type ApiErrorResponse = {
   detail: string;
@@ -132,7 +134,12 @@ class ApiClient {
         return {} as T;
       }
 
-      return await response.json();
+      const text = await response.text();
+      if (!text.trim()) {
+        return {} as T;
+      }
+
+      return JSON.parse(text) as T;
     } catch (error) {
       console.error(`API ERROR [${method} ${endpoint}]:`, error);
       throw error;

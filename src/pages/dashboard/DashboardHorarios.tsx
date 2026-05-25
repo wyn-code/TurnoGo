@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+/* eslint-disable react-hooks/set-state-in-effect */
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,71 +7,92 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import type { WeekSchedule } from "@/types/api";
 import { useDashboardBusiness } from "@/contexts/DashboardBusinessContext";
-import { businessService } from "@/services/business.service";
 import { Loader2 } from "lucide-react";
+import { useHorarios } from "@/hooks/queries/useHorariosQuery";
+import { useUpdateHorarios } from "@/hooks/mutations/useUpdateHorarios";
+import {
+  WEEK_DAYS,
+  defaultWeekSchedule,
+  mapHorariosToWeekSchedule,
+  mapWeekScheduleToPayload,
+  type WeekDay,
+} from "@/lib/schedule-utils";
 
-const DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"] as const;
-
-type Day = (typeof DAYS)[number];
-type DaySchedule = WeekSchedule[Day];
+type DaySchedule = WeekSchedule[WeekDay];
 type DayField = keyof DaySchedule;
 
-const defaultSchedule: WeekSchedule = Object.fromEntries(
-  DAYS.map((d) => [d, { open: d !== "Domingo", start: "09:00", end: "18:00" }])
-) as WeekSchedule;
-
 const DashboardHorarios = () => {
-  const [schedule, setSchedule] = useState<WeekSchedule>(defaultSchedule);
-  const [isLoading, setIsLoading] = useState(true);
   const { business, isLoadingBusiness } = useDashboardBusiness();
-  const businessId = business?.id_negocio;
+  const businessId = business?.id_negocio ? String(business.id_negocio) : null;
+
+  const { data: apiHorarios = [], isLoading, error } = useHorarios(businessId);
+  const updateMutation = useUpdateHorarios();
+
+  const [schedule, setSchedule] = useState<WeekSchedule>(defaultWeekSchedule);
 
   useEffect(() => {
-    const loadSchedules = async () => {
-      if (!businessId) {
-        setSchedule(defaultSchedule);
-        setIsLoading(false);
-        return;
-      }
+    if (apiHorarios) {
+      setSchedule(mapHorariosToWeekSchedule(apiHorarios));
+    }}, [JSON.stringify(apiHorarios)]);
 
-      try {
-        setIsLoading(true);
-        const apiSchedules = await businessService.getBusinessSchedules(businessId);
-        if (!apiSchedules.length) {
-          setSchedule(defaultSchedule);
-          return;
-        }
-
-        const mapped = { ...defaultSchedule };
-        apiSchedules.forEach((item) => {
-          const dayName = DAYS[item.dia_semana];
-          if (!dayName) return;
-          mapped[dayName] = {
-            open: true,
-            start: item.hora_apertura.slice(0, 5),
-            end: item.hora_cierre.slice(0, 5),
-          };
-        });
-        setSchedule(mapped);
-      } catch (error) {
-        console.error(error);
-        toast.error("No se pudieron cargar los horarios del negocio");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    void loadSchedules();
-  }, [businessId]);
-
-  const update = <K extends DayField>(day: Day, field: K, value: DaySchedule[K]) => {
+  const update = <K extends DayField>(
+    day: WeekDay,
+    field: K,
+    value: DaySchedule[K],
+  ) => {
     setSchedule((prev) => ({
       ...prev,
-      [day]: {
-        ...prev[day],
-        [field]: value,
-      },
+      [day]: { ...prev[day], [field]: value },
     }));
+  };
+
+  const isValidTimeRange = (start: string, end: string): boolean => {
+    const [sHour, sMin] = start.split(":").map(Number);
+    const [eHour, eMin] = end.split(":").map(Number);
+
+    if (isNaN(sHour) || isNaN(sMin) || isNaN(eHour) || isNaN(eMin)) {
+      return false;
+    }
+
+    if (sHour > 23 || sMin > 59 || eHour > 23 || eMin > 59) {
+      return false;
+    }
+
+    return sHour * 60 + sMin < eHour * 60 + eMin;
+  };
+
+  const handleSave = async () => {
+    if (!businessId) return toast.error("No hay negocio vinculado");
+
+    const hasOpenDay = WEEK_DAYS.some((day) => schedule[day].open);
+    if (!hasOpenDay) {
+      return toast.error("Debe haber al menos un día abierto");
+    }
+
+    for (const day of WEEK_DAYS) {
+      if (!schedule[day].open) continue;
+
+      const { start, end } = schedule[day];
+      if (!isValidTimeRange(start, end)) {
+        return toast.error(
+          `Horario inválido en ${day}. La apertura debe ser anterior al cierre.`,
+        );
+      }
+    }
+
+    try {
+      const payload = mapWeekScheduleToPayload(schedule);
+
+      await updateMutation.mutateAsync({
+        businessId: Number(businessId),
+        horarios: payload,
+        hasExisting: apiHorarios.length > 0,
+      });
+
+      toast.success("Horarios guardados correctamente");
+    } catch {
+      // El hook ya muestra el error del API
+    }
   };
 
   if (isLoading || isLoadingBusiness) {
@@ -81,10 +103,22 @@ const DashboardHorarios = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="rounded-lg border border-destructive p-8 text-center">
+        <p className="text-destructive">
+          Error cargando horarios: {error.message}
+        </p>
+      </div>
+    );
+  }
+
   if (!businessId) {
     return (
       <div className="rounded-lg border border-dashed p-8 text-center">
-        <p className="text-muted-foreground">No encontramos un negocio vinculado a tu usuario.</p>
+        <p className="text-muted-foreground">
+          No encontramos un negocio vinculado a tu usuario.
+        </p>
       </div>
     );
   }
@@ -92,22 +126,38 @@ const DashboardHorarios = () => {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-semibold text-foreground">Horarios de atención</h2>
-        <Button size="sm" onClick={() => toast.success("Horarios guardados (mock)")}>
-          Guardar cambios
+        <div>
+          <h2 className="text-lg font-semibold text-foreground">
+            Horarios de atención
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Los días cerrados no se ofrecen para reservas.
+          </p>
+        </div>
+        <Button
+          size="sm"
+          onClick={handleSave}
+          disabled={updateMutation.isPending}
+        >
+          {updateMutation.isPending ? "Guardando..." : "Guardar cambios"}
         </Button>
       </div>
 
       <Card>
-        <CardContent className="p-5 space-y-3">
-          {DAYS.map((day) => (
-            <div key={day} className="flex items-center gap-3 rounded-lg border border-border p-3">
+        <CardContent className="space-y-3 p-5">
+          {WEEK_DAYS.map((day) => (
+            <div
+              key={day}
+              className="flex items-center gap-3 rounded-lg border border-border p-3"
+            >
               <Switch
                 checked={schedule[day].open}
                 onCheckedChange={(v) => update(day, "open", v)}
               />
 
-              <span className="w-24 text-sm font-medium text-foreground">{day}</span>
+              <span className="w-24 text-sm font-medium text-foreground">
+                {day}
+              </span>
 
               {schedule[day].open ? (
                 <div className="flex items-center gap-2 text-sm">

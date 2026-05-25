@@ -4,6 +4,7 @@ import type { ApiNegocio } from "@/types/api";
 export interface DashboardBusinessContextValue {
   business: ApiNegocio | null;
   isLoadingBusiness: boolean;
+  refreshBusiness: () => Promise<void>;
 }
 
 const DashboardBusinessContext = createContext<DashboardBusinessContextValue | null>(null);

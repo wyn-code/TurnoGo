@@ -67,9 +67,19 @@ useEffect(() => {
     }
   };
 
-  const handleDelete = (id: number) => {
-    setBusinesses((prev) => prev.filter((b) => b.id_negocio !== id));
-    setDeleteBusiness(null);
+  const handleDelete = async (id: number) => {
+    try {
+      await negocioService.delete(id);
+
+      setBusinesses((prev) => prev.filter((b) => b.id_negocio !== id));
+
+      toast.success("Negocio eliminado correctamente");
+    } catch (error) {
+      console.error("Error eliminando negocio:", error);
+      toast.error("No se pudo eliminar el negocio");
+    } finally {
+      setDeleteBusiness(null);
+    }
   };
 
   const handleToggleStatus = async (business: ApiNegocio) => {

@@ -1,76 +1,102 @@
-import { CalendarDays, Users, Briefcase, Clock } from "lucide-react";
+import { useMemo } from "react";
+import { CalendarDays, Users, Briefcase, Clock, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useDashboardBusiness } from "@/contexts/DashboardBusinessContext";
-import { useEffect, useMemo, useState } from "react";
-import { businessService } from "@/services/business.service";
-import { appointmentService } from "@/services/appointment.service";
+import { useServices } from "@/hooks/queries/useServicesQuery";
+import { useEmployees } from "@/hooks/queries/useEmployeesQuery";
+import { useHorarios } from "@/hooks/queries/useHorariosQuery";
+import {
+  useAppointments,
+  getDayRange,
+} from "@/hooks/queries/useAppointmentsQuery";
+import { countOpenDays } from "@/lib/schedule-utils";
 import type { ApiTurno } from "@/types/api";
-import { Loader2 } from "lucide-react";
+
+function formatAppointmentTime(appointment: ApiTurno): string {
+  const start = new Date(appointment.fecha_hora_inicio);
+  return start.toLocaleTimeString("es-AR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+function getAppointmentLabel(appointment: ApiTurno): string {
+  const serviceName = appointment.servicio?.nombre_servicio;
+  const clientName = [appointment.cliente?.nombre, appointment.cliente?.apellido]
+    .filter(Boolean)
+    .join(" ");
+
+  if (serviceName && clientName) {
+    return `${serviceName} · ${clientName}`;
+  }
+
+  return serviceName || clientName || `Turno #${appointment.id_turno}`;
+}
 
 const DashboardResumen = () => {
   const { business, isLoadingBusiness } = useDashboardBusiness();
-  const [servicesCount, setServicesCount] = useState(0);
-  const [employeesCount, setEmployeesCount] = useState(0);
-  const [schedulesCount, setSchedulesCount] = useState(0);
-  const [todayAppointments, setTodayAppointments] = useState<ApiTurno[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const businessId = business?.id_negocio ?? null;
+  const businessIdStr = businessId ? String(businessId) : null;
 
-  const businessId = business?.id_negocio;
+  const todayRange = useMemo(() => getDayRange(new Date()), []);
 
-  useEffect(() => {
-    const loadSummary = async () => {
-      if (!businessId) {
-        setServicesCount(0);
-        setEmployeesCount(0);
-        setSchedulesCount(0);
-        setTodayAppointments([]);
-        setIsLoading(false);
-        return;
-      }
+  const { data: services = [], isLoading: loadingServices } =
+    useServices(businessIdStr);
+  const { data: employees = [], isLoading: loadingEmployees } =
+    useEmployees(businessIdStr);
+  const { data: horarios = [], isLoading: loadingHorarios } =
+    useHorarios(businessIdStr);
+  const {
+    data: todayAppointments = [],
+    isLoading: loadingAppointments,
+    error: appointmentsError,
+  } = useAppointments(businessIdStr, todayRange);
 
-      try {
-        setIsLoading(true);
-        const now = new Date();
-        const dayStart = new Date(now);
-        dayStart.setHours(0, 0, 0, 0);
-        const dayEnd = new Date(now);
-        dayEnd.setHours(23, 59, 59, 999);
+  const isLoading =
+    isLoadingBusiness ||
+    loadingServices ||
+    loadingEmployees ||
+    loadingHorarios ||
+    loadingAppointments;
 
-        const [services, employees, schedules, appointments] = await Promise.all([
-          businessService.getBusinessServices(String(businessId)),
-          businessService.getBusinessProfessionals(String(businessId)),
-          businessService.getBusinessSchedules(String(businessId)),
-          appointmentService.getAppointmentsByRange({
-            id_negocio: businessId,
-            desde: dayStart.toISOString(),
-            hasta: dayEnd.toISOString(),
-          }),
-        ]);
-        setServicesCount(services.filter((s) => s.activo).length);
-        setEmployeesCount(employees.filter((e) => e.activo).length);
-        setSchedulesCount(schedules.length);
-        setTodayAppointments(appointments);
-      } catch (error) {
-        console.error(error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    void loadSummary();
-  }, [businessId]);
+  const openDaysCount = countOpenDays(horarios);
 
   const stats = useMemo(
     () => [
-      { label: "Turnos hoy", value: todayAppointments.length, icon: CalendarDays, color: "text-primary" },
-      { label: "Franja horaria", value: schedulesCount, icon: Clock, color: "text-primary" },
-      { label: "Empleados activos", value: employeesCount, icon: Users, color: "text-primary" },
-      { label: "Servicios activos", value: servicesCount, icon: Briefcase, color: "text-primary" },
+      {
+        label: "Turnos hoy",
+        value: todayAppointments.length,
+        icon: CalendarDays,
+        color: "text-primary",
+      },
+      {
+        label: "Días con horario",
+        value: openDaysCount,
+        icon: Clock,
+        color: "text-primary",
+      },
+      {
+        label: "Empleados activos",
+        value: employees.filter((e) => e.activo).length,
+        icon: Users,
+        color: "text-primary",
+      },
+      {
+        label: "Servicios activos",
+        value: services.length,
+        icon: Briefcase,
+        color: "text-primary",
+      },
     ],
-    [employeesCount, schedulesCount, servicesCount, todayAppointments.length]
+    [
+      employees,
+      openDaysCount,
+      services.length,
+      todayAppointments.length,
+    ],
   );
 
-  if (isLoading || isLoadingBusiness) {
+  if (isLoading) {
     return (
       <div className="flex h-48 items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -81,7 +107,9 @@ const DashboardResumen = () => {
   if (!businessId) {
     return (
       <div className="rounded-lg border border-dashed p-8 text-center">
-        <p className="text-muted-foreground">No encontramos un negocio vinculado a tu usuario.</p>
+        <p className="text-muted-foreground">
+          No encontramos un negocio vinculado a tu usuario.
+        </p>
       </div>
     );
   }
@@ -107,27 +135,47 @@ const DashboardResumen = () => {
       <Card>
         <CardContent className="p-5">
           <h3 className="mb-3 font-semibold text-foreground">Turnos de hoy</h3>
-          {todayAppointments.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No hay turnos para hoy.</p>
+
+          {appointmentsError ? (
+            <p className="text-sm text-destructive">
+              No se pudieron cargar los turnos de hoy.
+            </p>
+          ) : todayAppointments.length === 0 ? (
+            <p className="text-sm text-muted-foreground">
+              No hay turnos para hoy.
+            </p>
           ) : (
             <div className="space-y-2">
-              {todayAppointments.slice(0, 5).map((appointment) => {
-                const start = new Date(appointment.fecha_hora_inicio);
-                return (
+              {todayAppointments
+                .slice()
+                .sort(
+                  (a, b) =>
+                    new Date(a.fecha_hora_inicio).getTime() -
+                    new Date(b.fecha_hora_inicio).getTime(),
+                )
+                .slice(0, 8)
+                .map((appointment) => (
                   <div
                     key={appointment.id_turno}
                     className="flex items-center justify-between rounded-md border border-border px-3 py-2"
                   >
-                    <span className="text-sm text-foreground">Turno #{appointment.id_turno}</span>
-                    <span className="text-sm text-muted-foreground">
-                      {start.toLocaleTimeString("es-AR", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-foreground">
+                        {getAppointmentLabel(appointment)}
+                      </p>
+                      {appointment.estado?.nombre ||
+                      appointment.estado?.nombre_estado ? (
+                        <p className="text-xs text-muted-foreground">
+                          {appointment.estado.nombre ??
+                            appointment.estado.nombre_estado}
+                        </p>
+                      ) : null}
+                    </div>
+                    <span className="shrink-0 text-sm text-muted-foreground">
+                      {formatAppointmentTime(appointment)}
                     </span>
                   </div>
-                );
-              })}
+                ))}
             </div>
           )}
         </CardContent>

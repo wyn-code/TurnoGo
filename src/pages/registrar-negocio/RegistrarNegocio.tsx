@@ -6,7 +6,7 @@ import { ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 import businessService from "@/services/business.service";
-import type { BusinessSchedulePayload } from "@/services/business.service";
+import { horarioService, type BusinessSchedulePayload } from "@/services/horario.service";
 import { toCreateCompleteBusinessRequest } from "./mapper";
 import { schema, type FormData } from "./schema";
 import { defaultValues, fieldsPerStep, STEPS } from "./defaults";
@@ -118,7 +118,7 @@ export default function RegistrarNegocioPage() {
       }
 
       if (horarios.length > 0) {
-        await businessService.createHorarios(idNegocio, horarios);
+        await horarioService.createOrUpdate(idNegocio, horarios);
       }
 
       setSubmitted(true);

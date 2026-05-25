@@ -206,6 +206,8 @@ export function AuthProvider({
           );
 
         if (storedToken) {
+          apiClient.setToken(storedToken);
+
           const session =
             await applySessionFromToken(
               storedToken,
@@ -227,16 +229,7 @@ export function AuthProvider({
           );
 
         if (storedUser) {
-          setUser(
-            normalizeUser(
-              JSON.parse(
-                storedUser,
-              ) as Record<
-                string,
-                unknown
-              >,
-            ),
-          );
+          localStorage.removeItem(USER_KEY);
         }
       } catch {
         localStorage.removeItem(

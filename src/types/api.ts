@@ -50,9 +50,27 @@ export interface ApiTurno {
   id_cliente: number;
   id_servicio: number;
   id_estado: number;
-  id_empleado: number;
+  id_empleado: number | null;
   fecha_hora_inicio: string;
-  fecha_hora_fin: string;
+  fecha_hora_fin: string | null;
+  rechazado_motivo?: string | null;
+  cliente?: {
+    nombre?: string;
+    apellido?: string;
+    telefono?: string;
+  };
+  empleado?: {
+    nombre?: string;
+    apellido?: string;
+  } | null;
+  servicio?: {
+    nombre_servicio?: string;
+  };
+  estado?: {
+    id_estado?: number;
+    nombre?: string;
+    nombre_estado?: string;
+  };
 }
 
 export interface ApiHorario {

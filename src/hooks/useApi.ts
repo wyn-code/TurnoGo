@@ -1,5 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { businessService, type CreateCompleteBusinessRequest } from "@/services/business.service";
+import { servicioService } from "@/services/servicio.service";
+import { empleadoService } from "@/services/empleado.service";
 
 // Hook para crear un negocio
 export const useCreateBusiness = () => {
@@ -46,7 +49,7 @@ export const useBusinessBySlug = (slug: string) => {
 export const useBusinessServices = (businessId: string) => {
   return useQuery({
     queryKey: ["services", businessId],
-    queryFn: () => businessService.getBusinessServices(businessId),
+    queryFn: () => servicioService.getByBusiness(businessId),
     enabled: !!businessId,
   });
 };
@@ -55,7 +58,7 @@ export const useBusinessServices = (businessId: string) => {
 export const useBusinessProfessionals = (businessId: string) => {
   return useQuery({
     queryKey: ["professionals", businessId],
-    queryFn: () => businessService.getBusinessProfessionals(businessId),
+    queryFn: () => empleadoService.getByBusiness(businessId),
     enabled: !!businessId,
   });
 };
