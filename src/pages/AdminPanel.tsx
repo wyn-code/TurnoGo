@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Pencil, Trash2, ExternalLink, Search, ShieldCheck, LogOut } from "lucide-react";
-import { negocioService } from "../services/negocio.service";
+import { businessService } from "../services/business.service";
 import { toast } from "sonner";
 
 const AdminPanel = () => {
@@ -22,7 +22,7 @@ const AdminPanel = () => {
 useEffect(() => {
   const fetchNegocios = async () => {
     try {
-      const data = await negocioService.getAllAdmin();
+      const data = await businessService.getAllAdmin();
       console.log("NEGOCIOS BACK:", data);
       setBusinesses(data);  
     } catch (error) {
@@ -56,7 +56,7 @@ useEffect(() => {
 
   const handleSave = async (updated: ApiNegocio) => {
     try {
-      const saved = await negocioService.update(updated.id_negocio, updated);
+      const saved = await businessService.update(updated.id_negocio, updated);
       setBusinesses((prev) =>
         prev.map((b) => (b.id_negocio === saved.id_negocio ? saved : b))
       );
@@ -69,7 +69,7 @@ useEffect(() => {
 
   const handleDelete = async (id: number) => {
     try {
-      await negocioService.delete(id);
+      await businessService.delete(id);
 
       setBusinesses((prev) => prev.filter((b) => b.id_negocio !== id));
 
@@ -86,7 +86,7 @@ useEffect(() => {
     const nextActivo = !business.activo;
 
     try {
-      const updated = await negocioService.update(business.id_negocio, {
+      const updated = await businessService.update(business.id_negocio, {
         activo: nextActivo,
       });
 

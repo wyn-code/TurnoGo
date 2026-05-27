@@ -10,22 +10,11 @@ export const useCreateService = () => {
   return useMutation({
     mutationFn: (data: ServicioCreatePayload) => servicioService.create(data),
     onSuccess: (newService) => {
-      const businessKey = String(newService.id_negocio);
-
-      queryClient.setQueriesData<ApiServicio[]>(
-        { queryKey: ["services", businessKey] },
-        (old) => {
-          const list = old ?? [];
-          if (list.some((s) => s.id_servicio === newService.id_servicio)) {
-            return list;
-          }
-          return [...list, newService];
-        },
-      );
-
-      queryClient.invalidateQueries({
-        queryKey: ["services", businessKey],
-      });
+        const businessKey = String(newService.id_negocio);
+        queryClient.setQueriesData<ApiServicio[]>(
+          { queryKey: ["services", businessKey] },
+          (old) => [...(old ?? []), newService],
+        );
     },
     onError: (error) => {
       toast.error(getApiErrorMessage(error, "Error creando servicio"));

@@ -1,6 +1,4 @@
 import apiClient from "@/lib/api-client";
-
-// Importamos los tipos del backend en español
 import type { ApiCategory, ApiNegocio } from "@/types/api";
 
 export interface CreateBusinessResponse {
@@ -20,7 +18,6 @@ export interface CreateCompleteBusinessRequest {
   ig_url: string | null;
   logo: string | null;
   activo: boolean;
-
   servicios: {
     nombre_servicio: string;
     precio: number;
@@ -29,7 +26,6 @@ export interface CreateCompleteBusinessRequest {
     duracion_max: number;
     activo: boolean;
   }[];
-
   empleados: {
     nombre: string;
     apellido: string;
@@ -39,11 +35,23 @@ export interface CreateCompleteBusinessRequest {
 }
 
 export const businessService = {
-  // 🔹 Negocios
-  getAllBusinesses: async (
+  // PÚBLICO: solo activos
+  getAll: async (
     params?: Record<string, string | number | boolean>,
   ): Promise<ApiNegocio[]> => {
     return apiClient.get<ApiNegocio[]>("/negocios/", params);
+  },
+
+  // ADMIN: todos los negocios (activos e inactivos)
+  getAllAdmin: async (): Promise<ApiNegocio[]> => {
+    return apiClient.get<ApiNegocio[]>("/negocios/admin");
+  },
+
+  // Alias para compatibilidad
+  getAllBusinesses: async (
+    params?: Record<string, string | number | boolean>,
+  ): Promise<ApiNegocio[]> => {
+    return businessService.getAll(params);
   },
 
   getBusinessById: async (id: string | number): Promise<ApiNegocio> => {
@@ -51,32 +59,21 @@ export const businessService = {
   },
 
   getBusinessBySlug: async (slug: string): Promise<ApiNegocio> => {
-    const data = await apiClient.get<ApiNegocio[]>("/negocios/");
-
+    const data = await businessService.getAll();
     const found = data.find((b) => b.slug === slug);
-
-    if (!found) {
-      throw new Error("Negocio no encontrado");
-    }
-
+    if (!found) throw new Error("Negocio no encontrado");
     return found;
   },
 
-  // ✅ Crear negocio completo
   createCompleteBusiness: async (
     data: CreateCompleteBusinessRequest,
   ): Promise<CreateBusinessResponse> => {
     return apiClient.post<CreateBusinessResponse>("/negocios/complete", data);
   },
 
-  // 🔹 Categorías
   getCategories: async (): Promise<ApiCategory[]> =>
     apiClient.get<ApiCategory[]>("/categorias/"),
 
-  /**
-   * El PUT de FastAPI espera NegocioCreate completo (no un patch parcial).
-   * Fusiona el negocio actual con los campos editados en el dashboard.
-   */
   buildUpdatePayload: (
     business: ApiNegocio,
     changes: {
@@ -98,15 +95,12 @@ export const businessService = {
       id_categoria: business.id_categoria,
       wsp: (changes.wsp ?? business.wsp).trim(),
       telefono:
-        changes.telefono !== undefined
-          ? changes.telefono
-          : business.telefono,
+        changes.telefono !== undefined ? changes.telefono : business.telefono,
       direccion: (changes.direccion ?? business.direccion).trim(),
       ciudad: (changes.ciudad ?? business.ciudad).trim(),
       id_localidad: business.id_localidad,
       id_provincia: business.id_provincia,
-      ig_url:
-        changes.ig_url !== undefined ? changes.ig_url : business.ig_url,
+      ig_url: changes.ig_url !== undefined ? changes.ig_url : business.ig_url,
       logo: business.logo,
       activo: business.activo,
       usuario_id: usuarioId,
@@ -127,6 +121,19 @@ export const businessService = {
   ): Promise<ApiNegocio> => {
     const payload = businessService.buildUpdatePayload(business, changes);
     return apiClient.put<ApiNegocio>(`/negocios/${id}`, payload);
+  },
+
+  // Eliminación (logical delete - soft delete)
+  delete: async (id: number): Promise<void> => {
+    await apiClient.delete(`/negocios/${id}`);
+  },
+
+  // Actualización genérica (para admin)
+  update: async (
+    id: number,
+    data: Partial<ApiNegocio>,
+  ): Promise<ApiNegocio> => {
+    return apiClient.put<ApiNegocio>(`/negocios/${id}`, data);
   },
 };
 

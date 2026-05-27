@@ -31,9 +31,10 @@ const DashboardHorarios = () => {
   const [schedule, setSchedule] = useState<WeekSchedule>(defaultWeekSchedule);
 
   useEffect(() => {
-    if (apiHorarios) {
+    if (apiHorarios.length > 0) {
       setSchedule(mapHorariosToWeekSchedule(apiHorarios));
-    }}, [JSON.stringify(apiHorarios)]);
+    }
+  }, [apiHorarios]);
 
   const update = <K extends DayField>(
     day: WeekDay,

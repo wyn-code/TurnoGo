@@ -1,70 +1,45 @@
-/* eslint-disable react-hooks/set-state-in-effect */
-import { useEffect, useState } from "react";
-
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-
-import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
-
+import { Card, CardContent } from "@/components/ui/card";
 import { useDashboardBusiness } from "@/contexts/DashboardBusinessContext";
 import { useUpdateBusiness } from "@/hooks/mutations/useBusinessService";
-import type { ApiNegocio } from "@/types/api";
+import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
-type ConfigFormData = {
-  nombre: string;
-  telefono: string;
-  wsp: string;
-  ig_url: string;
-  direccion: string;
-  ciudad: string;
-};
-
-const getFormFromBusiness = (business: ApiNegocio | null): ConfigFormData => ({
-  nombre: business?.nombre ?? "",
-  telefono: business?.telefono ?? "",
-  wsp: business?.wsp ?? "",
-  ig_url: business?.ig_url ?? "",
-  direccion: business?.direccion ?? "",
-  ciudad: business?.ciudad ?? "",
+const configSchema = z.object({
+  nombre: z.string().min(3, "Mínimo 3 caracteres"),
+  telefono: z.string().regex(/^\+?[0-9\s\-()]*$/, "Teléfono inválido").nullable().optional(),
+  wsp: z.string().regex(/^\+?[0-9\s\-()]*$/, "WhatsApp inválido"),
+  ig_url: z.union([z.string().url("URL inválida"),z.literal(""),z.null(),]).optional(),
+  direccion: z.string().min(5, "Dirección requerida"),
+  ciudad: z.string().min(3, "Ciudad requerida"),
 });
 
-const DashboardConfiguracion = () => {
-  const { business, isLoadingBusiness, refreshBusiness } =
-    useDashboardBusiness();
+type ConfigFormData = z.infer<typeof configSchema>;
 
+const DashboardConfiguracion = () => {
+  const { business, isLoadingBusiness, refreshBusiness } = useDashboardBusiness();
   const { mutateAsync: updateBusiness, isPending } = useUpdateBusiness();
 
-  const [data, setData] = useState<ConfigFormData>(getFormFromBusiness(null));
+  const form = useForm<ConfigFormData>({
+    resolver: zodResolver(configSchema),
+    values: {
+      nombre: business?.nombre ?? "",
+      telefono: business?.telefono ?? "",
+      wsp: business?.wsp ?? "",
+      ig_url: business?.ig_url ?? "",
+      direccion: business?.direccion ?? "",
+      ciudad: business?.ciudad ?? "",
+    },
+  });
 
-  useEffect(() => {
-    if (!business) return;
-    setData(getFormFromBusiness(business));
-  }, [business]);
-
-  const update = (field: keyof ConfigFormData, value: string) => {
-    setData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleSave = async () => {
+  const onSubmit = async (data: ConfigFormData) => {
     if (!business) {
       return toast.error("No hay negocio seleccionado");
-    }
-
-    if (!data.nombre.trim() || !data.wsp.trim()) {
-      return toast.error("Nombre y WhatsApp son obligatorios");
-    }
-
-    if (!data.direccion.trim() || !data.ciudad.trim()) {
-      return toast.error("Dirección y ciudad son obligatorias");
-    }
-
-    if (business.usuario_id == null) {
-      return toast.error(
-        "Este negocio no tiene un usuario vinculado. Contactá soporte.",
-      );
     }
 
     try {
@@ -72,16 +47,17 @@ const DashboardConfiguracion = () => {
         business,
         changes: {
           nombre: data.nombre.trim(),
-          telefono: data.telefono.trim() || null,
+          telefono: data.telefono?.trim() || null,
           wsp: data.wsp.trim(),
-          ig_url: data.ig_url.trim() || null,
+          ig_url: data.ig_url?.trim() || null,
           direccion: data.direccion.trim(),
           ciudad: data.ciudad.trim(),
         },
       });
       await refreshBusiness();
+      toast.success("Configuración guardada");
     } catch {
-      // El hook ya muestra el toast de error
+      // El hook ya muestra el error
     }
   };
 
@@ -109,71 +85,104 @@ const DashboardConfiguracion = () => {
         <h2 className="text-lg font-semibold text-foreground">
           Configuración del negocio
         </h2>
-
-        <Button size="sm" onClick={handleSave} disabled={isPending}>
+        <Button size="sm" type="submit" form="config-form" disabled={isPending}>
           {isPending ? "Guardando..." : "Guardar"}
         </Button>
       </div>
 
       <Card>
         <CardContent className="space-y-4 p-5">
-          <div className="space-y-2">
-            <Label>Nombre del negocio</Label>
-            <Input
-              value={data.nombre}
-              onChange={(e) => update("nombre", e.target.value)}
-              placeholder="Ej: Barbería Don Carlos"
-            />
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label>Teléfono</Label>
-              <Input
-                value={data.telefono}
-                onChange={(e) => update("telefono", e.target.value)}
-                placeholder="+54 11 4567-8901"
+          <Form {...form}>
+            <form id="config-form" onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="nombre"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nombre del negocio</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ej: Barbería Don Carlos" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
 
-            <div className="space-y-2">
-              <Label>WhatsApp *</Label>
-              <Input
-                value={data.wsp}
-                onChange={(e) => update("wsp", e.target.value)}
-                placeholder="+5491145678901"
+              <div className="grid gap-4 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="telefono"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Teléfono</FormLabel>
+                      <FormControl>
+                        <Input placeholder="+54 11 4567-8901" {...field} value={field.value ?? ""} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="wsp"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>WhatsApp *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="+5491145678901" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name="ig_url"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Instagram</FormLabel>
+                      <FormControl>
+                      <Input placeholder="https://instagram.com/tunegocio" {...field} value={field.value ?? ""} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label>Instagram</Label>
-            <Input
-              value={data.ig_url}
-              onChange={(e) => update("ig_url", e.target.value)}
-              placeholder="@tunegocio"
-            />
-          </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <FormField
+                  control={form.control}
+                  name="direccion"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Dirección *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Calle Principal 123" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label>Dirección *</Label>
-              <Input
-                value={data.direccion}
-                onChange={(e) => update("direccion", e.target.value)}
-                placeholder="Calle Principal 123"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Ciudad *</Label>
-              <Input
-                value={data.ciudad}
-                onChange={(e) => update("ciudad", e.target.value)}
-                placeholder="Buenos Aires"
-              />
-            </div>
-          </div>
+                <FormField
+                  control={form.control}
+                  name="ciudad"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Ciudad *</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Buenos Aires" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            </form>
+          </Form>
         </CardContent>
       </Card>
     </div>

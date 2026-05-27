@@ -79,12 +79,16 @@ const DashboardServicios = () => {
     );
   };
 
-  const handleStatusClick = (service: ApiServicio) => {
+  const handleStatusClick = async (service: ApiServicio) => {
     if (service.activo) {
       setServiceToDeactivate(service);
-      return;
+    } else {
+      try {
+        await runToggle(service);
+      } catch {
+        toast.error("Error al reactivar");
+      }
     }
-    void runToggle(service).catch(() => {});
   };
 
   const confirmDeactivate = async () => {
