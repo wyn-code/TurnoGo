@@ -22,13 +22,31 @@ export const horarioService = {
   ): Promise<ApiHorario[]> => {
     const id = String(businessId);
 
+    const handle404 = (error: unknown) => {
+      if (error instanceof ApiError && error.status === 404) {
+        return true;
+      }
+      return false;
+    };
+
     try {
       return await apiClient.get<ApiHorario[]>(`/horarios/${id}`);
     } catch (error) {
-      if (error instanceof ApiError && error.status === 404) {
-        return apiClient.get<ApiHorario[]>("/horarios", { id_negocio: id });
+      if (!handle404(error)) {
+        throw error;
       }
-      throw error;
+
+      try {
+        const fallbackResponse = await apiClient.get<ApiHorario[]>("/horarios", {
+          id_negocio: id,
+        });
+        return fallbackResponse;
+      } catch (fallbackError) {
+        if (handle404(fallbackError)) {
+          return [];
+        }
+        throw fallbackError;
+      }
     }
   },
 

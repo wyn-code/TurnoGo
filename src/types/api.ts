@@ -22,6 +22,7 @@ export interface ApiNegocio {
   creado_at: string;
   usuario_id: number | null;
   slug: string;
+  horarios?: ApiHorario[];
 }
 
 export interface ApiServicio {

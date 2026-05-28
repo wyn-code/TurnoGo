@@ -7,6 +7,7 @@ import { appointmentService } from "@/services/appointment.service";
 import { businessService } from "@/services/business.service";
 import { servicioService } from "@/services/servicio.service";
 import { empleadoService } from "@/services/empleado.service";
+import { horarioService } from "@/services/horario.service";
 import { clientService } from "@/services/cliente.service";
 
 import { cn } from "@/lib/utils";
@@ -63,50 +64,69 @@ const buildLocalDateTimeString = (date: Date, time: string) => {
   const year = date.getFullYear();
   const month = pad(date.getMonth() + 1);
   const day = pad(date.getDate());
-  return `${year}-${month}-${day}T${time}:00`;
+  const [hours, minutes] = time.split(":");
+
+  const localDate = new Date(
+    date.getFullYear(),
+    date.getMonth(),
+    date.getDate(),
+    Number(hours),
+    Number(minutes),
+    0,
+  );
+
+  const offsetMin = localDate.getTimezoneOffset();
+  const sign = offsetMin <= 0 ? "+" : "-";
+  const absOffset = Math.abs(offsetMin);
+  const offsetHours = pad(Math.floor(absOffset / 60));
+  const offsetMins = pad(absOffset % 60);
+
+  return `${year}-${month}-${day}T${hours}:${minutes}:00${sign}${offsetHours}:${offsetMins}`;
 };
+
+const SLOT_INTERVAL = 30;
 
 const generateTimeSlots = (
   selectedDate: Date | null,
   occupiedAppointments: ApiTurno[],
   durationMinutes: number,
+  // 🛠️ Si no viene nada (undefined), le clavamos un horario por defecto para que genere slots
+  businessHours = { open: true, start: "09:00", end: "18:00" },
 ): TimeSlot[] => {
   if (!selectedDate) return [];
+
+  // Ahora esto nunca va a ser undefined, a menos que open sea false explícitamente
+  if (!businessHours?.open) return [];
 
   const slots: TimeSlot[] = [];
   const now = new Date();
 
-  // Horario laboral
-  const openingHour = 9;
-  const closingHour = 18;
+  const [startHour, startMinute] = businessHours.start.split(":").map(Number);
+  const [endHour, endMinute] = businessHours.end.split(":").map(Number);
 
-  // Inicio del día laboral
   const dayStart = new Date(selectedDate);
-  dayStart.setHours(openingHour, 0, 0, 0);
+  dayStart.setHours(startHour, startMinute, 0, 0);
 
-  // Fin del día laboral
   const dayEnd = new Date(selectedDate);
-  dayEnd.setHours(closingHour, 0, 0, 0);
+  dayEnd.setHours(endHour, endMinute, 0, 0);
 
-  // Cursor dinámico
   let currentSlotStart = new Date(dayStart);
 
   while (true) {
     const currentSlotEnd = addMinutes(currentSlotStart, durationMinutes);
 
-    // Si el turno termina después del cierre, no mostrarlo
     if (currentSlotEnd > dayEnd) break;
 
     const hours = pad(currentSlotStart.getHours());
     const minutes = pad(currentSlotStart.getMinutes());
     const time = `${hours}:${minutes}`;
 
-    // Bloquear horarios pasados
     const isPast = currentSlotStart <= now;
 
-    // Verificar solapamientos
     const isOccupied = occupiedAppointments.some((turno) => {
-      if (!turno.fecha_hora_inicio || !turno.fecha_hora_fin) return false;
+      if (!turno.fecha_hora_inicio || !turno.fecha_hora_fin) {
+        return false;
+      }
 
       const bookedStart = new Date(turno.fecha_hora_inicio);
       const bookedEnd = new Date(turno.fecha_hora_fin);
@@ -125,8 +145,7 @@ const generateTimeSlots = (
       available: !isPast && !isOccupied,
     });
 
-    // Avanza dinámicamente según duración real
-    currentSlotStart = addMinutes(currentSlotStart, durationMinutes);
+    currentSlotStart = addMinutes(currentSlotStart, SLOT_INTERVAL);
   }
 
   return slots;
@@ -158,7 +177,9 @@ const Reservar = () => {
     },
   });
 
-  const [occupiedAppointments, setOccupiedAppointments] = useState<ApiTurno[]>([]);
+  const [occupiedAppointments, setOccupiedAppointments] = useState<ApiTurno[]>(
+    [],
+  );
   const [occupiedDays, setOccupiedDays] = useState<Set<string>>(new Set());
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -173,12 +194,25 @@ const Reservar = () => {
         setError(null);
 
         const businessData = await businessService.getBusinessBySlug(slug);
-        setBusiness(businessData);
+        const [servicesData, professionalsData, horariosData] =
+          await Promise.all([
+            servicioService.getByBusiness(businessData.id_negocio),
+            empleadoService.getByBusiness(businessData.id_negocio),
+            horarioService
+              .getByBusiness(businessData.id_negocio)
+              .catch((err) => {
+                console.warn(
+                  "El negocio no tiene horarios configurados en la base de datos",
+                  err,
+                );
+                return [];
+              }),
+          ]);
 
-        const [servicesData, professionalsData] = await Promise.all([
-          servicioService.getByBusiness(businessData.id_negocio),
-          empleadoService.getByBusiness(businessData.id_negocio),
-        ]);
+        setBusiness({
+          ...businessData,
+          horarios: horariosData,
+        });
 
         setServices(servicesData);
         setProfessionals(professionalsData);
@@ -193,6 +227,29 @@ const Reservar = () => {
     loadBookingData();
   }, [slug]);
 
+  const getBusinessHoursForDate = (
+    business: ApiNegocio | null,
+    date: Date | null,
+  ) => {
+    if (!business || !date || !business.horarios) {
+      return undefined;
+    }
+
+    const jsDayIndex = date.getDay();
+    const apiDay = jsDayIndex === 0 ? 6 : jsDayIndex - 1;
+    const horario = business.horarios.find((h) => h.dia_semana === apiDay);
+
+    if (!horario) {
+      return undefined;
+    }
+
+    return {
+      open: true,
+      start: horario.hora_apertura,
+      end: horario.hora_cierre,
+    };
+  };
+
   const selectedService = services.find(
     (service) => String(service.id_servicio) === String(booking.serviceId),
   );
@@ -204,20 +261,21 @@ const Reservar = () => {
 
   const serviceDuration = selectedService?.duracion_min ?? 30;
 
+  const businessHours = getBusinessHoursForDate(business, booking.date);
+
   const timeSlots = useMemo(
     () =>
       generateTimeSlots(
         booking.date,
         occupiedAppointments,
         serviceDuration,
+        businessHours,
       ),
-    [booking.date, occupiedAppointments, serviceDuration],
+    [booking.date, occupiedAppointments, serviceDuration, businessHours],
   );
   const availableSlots = timeSlots.filter((slot) => slot.available);
 
-  const effectiveSelectedTime =
-    booking.timeSlot ||
-    (availableSlots.length === 1 ? availableSlots[0].time : "");
+  const effectiveSelectedTime = booking.timeSlot;
 
   const refreshOccupiedAppointments = useCallback(async () => {
     if (!business || !booking.date) {
@@ -259,9 +317,18 @@ const Reservar = () => {
       }
 
       try {
-        const referenceDate = baseDate ?? visibleMonth ?? booking.date ?? new Date();
-        const monthStart = new Date(referenceDate.getFullYear(), referenceDate.getMonth(), 1);
-        const monthEnd = new Date(referenceDate.getFullYear(), referenceDate.getMonth() + 1, 1);
+        const referenceDate =
+          baseDate ?? visibleMonth ?? booking.date ?? new Date();
+        const monthStart = new Date(
+          referenceDate.getFullYear(),
+          referenceDate.getMonth(),
+          1,
+        );
+        const monthEnd = new Date(
+          referenceDate.getFullYear(),
+          referenceDate.getMonth() + 1,
+          1,
+        );
 
         const response = await appointmentService.getAppointmentsByRange({
           id_negocio: String(business.id_negocio),
@@ -282,11 +349,25 @@ const Reservar = () => {
           appointmentsByDay.set(dayKey, [...current, turno]);
         });
 
-        for (let day = new Date(monthStart); day < monthEnd; day.setDate(day.getDate() + 1)) {
+        for (
+          let day = new Date(monthStart);
+          day < monthEnd;
+          day.setDate(day.getDate() + 1)
+        ) {
           const currentDay = new Date(day);
           const dayKey = toLocalDateKey(currentDay);
           const dayAppointments = appointmentsByDay.get(dayKey) ?? [];
-          const slots = generateTimeSlots(currentDay, dayAppointments, serviceDuration);
+          const currentBusinessHours = getBusinessHoursForDate(
+            business,
+            currentDay,
+          );
+
+          const slots = generateTimeSlots(
+            currentDay,
+            dayAppointments,
+            serviceDuration,
+            currentBusinessHours,
+          );
           const hasAvailable = slots.some((slot) => slot.available);
 
           if (!hasAvailable) {
@@ -300,7 +381,13 @@ const Reservar = () => {
         setOccupiedDays(new Set());
       }
     },
-    [business, booking.professionalId, booking.date, visibleMonth, serviceDuration],
+    [
+      business,
+      booking.professionalId,
+      booking.date,
+      visibleMonth,
+      serviceDuration,
+    ],
   );
 
   useEffect(() => {
@@ -345,12 +432,21 @@ const Reservar = () => {
     try {
       setSubmitError(null);
 
-      if (!business || !booking.date || !effectiveSelectedTime || !booking.serviceId) {
+      if (
+        !business ||
+        !booking.date ||
+        !effectiveSelectedTime ||
+        !booking.serviceId
+      ) {
         setSubmitError("Faltan datos para confirmar la reserva");
         return;
       }
 
-      if (!booking.client.firstName.trim() || !booking.client.lastName.trim() || !booking.client.phone.trim()) {
+      if (
+        !booking.client.firstName.trim() ||
+        !booking.client.lastName.trim() ||
+        !booking.client.phone.trim()
+      ) {
         setSubmitError("Faltan datos del cliente");
         return;
       }
@@ -365,8 +461,13 @@ const Reservar = () => {
         id_negocio: Number(business.id_negocio),
         id_cliente: Number(cliente.id_cliente),
         id_servicio: Number(booking.serviceId),
-        id_empleado: booking.professionalId ? Number(booking.professionalId) : null,
-        fecha_hora_inicio: buildLocalDateTimeString(booking.date, effectiveSelectedTime),
+        id_empleado: booking.professionalId
+          ? Number(booking.professionalId)
+          : null,
+        fecha_hora_inicio: buildLocalDateTimeString(
+          booking.date,
+          effectiveSelectedTime,
+        ),
       };
 
       await appointmentService.createAppointment(payload);
@@ -380,7 +481,9 @@ const Reservar = () => {
 
       if (error instanceof ApiError) {
         if (error.status === 409) {
-          setSubmitError("Ese horario ya fue reservado. Elegí otro horario disponible.");
+          setSubmitError(
+            "Ese horario ya fue reservado. Elegí otro horario disponible.",
+          );
           setBooking((current) => ({ ...current, timeSlot: "" }));
           await refreshOccupiedAppointments();
           await refreshOccupiedDays(booking.date ?? visibleMonth);
@@ -417,7 +520,9 @@ const Reservar = () => {
       <div className="min-h-screen bg-background">
         <Navbar />
         <div className="mx-auto max-w-7xl px-4 py-20 text-center">
-          <h1 className="text-2xl font-bold text-foreground">Negocio no encontrado</h1>
+          <h1 className="text-2xl font-bold text-foreground">
+            Negocio no encontrado
+          </h1>
           <Button asChild className="mt-4">
             <Link to="/negocios">Ver todos los negocios</Link>
           </Button>
@@ -462,7 +567,9 @@ const Reservar = () => {
           </Link>
         </div>
 
-        <h1 className="mb-6 text-2xl font-bold text-foreground">Reservar turno</h1>
+        <h1 className="mb-6 text-2xl font-bold text-foreground">
+          Reservar turno
+        </h1>
 
         <div className="mb-8">
           <BookingStepper currentStep={step} steps={STEPS} />
@@ -520,7 +627,9 @@ const Reservar = () => {
                         setSubmitError(null);
                         setBooking((current) => ({
                           ...current,
-                          professionalId: String(selectedProfessional.id_empleado),
+                          professionalId: String(
+                            selectedProfessional.id_empleado,
+                          ),
                           timeSlot: "",
                         }));
                       }}
@@ -562,11 +671,14 @@ const Reservar = () => {
                       const today = new Date();
                       today.setHours(0, 0, 0, 0);
                       const isPast = date < today;
-                      const isFullyBooked = occupiedDays.has(toLocalDateKey(date));
+                      const isFullyBooked = occupiedDays.has(
+                        toLocalDateKey(date),
+                      );
                       return isPast || isFullyBooked;
                     }}
                     modifiers={{
-                      fullyBooked: (date) => occupiedDays.has(toLocalDateKey(date)),
+                      fullyBooked: (date) =>
+                        occupiedDays.has(toLocalDateKey(date)),
                     }}
                     modifiersClassNames={{
                       fullyBooked:
@@ -702,8 +814,22 @@ const Reservar = () => {
                 />
                 <div className="rounded-lg bg-muted/50 p-4 mt-4 border border-border">
                   <p className="text-sm text-muted-foreground flex items-center gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-500"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                    Al confirmar, recibirás los detalles de tu reserva por Email y WhatsApp.
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="text-green-500"
+                    >
+                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                    </svg>
+                    Al confirmar, recibirás los detalles de tu reserva por Email
+                    y WhatsApp.
                   </p>
                 </div>
               </div>
