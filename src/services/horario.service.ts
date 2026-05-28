@@ -1,4 +1,4 @@
-import apiClient, { ApiError } from "@/lib/api-client";
+import apiClient from "@/lib/api-client";
 import type { ApiHorario } from "@/types/api";
 
 export interface BusinessSchedulePayload {
@@ -21,33 +21,7 @@ export const horarioService = {
     businessId: string | number
   ): Promise<ApiHorario[]> => {
     const id = String(businessId);
-
-    const handle404 = (error: unknown) => {
-      if (error instanceof ApiError && error.status === 404) {
-        return true;
-      }
-      return false;
-    };
-
-    try {
-      return await apiClient.get<ApiHorario[]>(`/horarios/${id}`);
-    } catch (error) {
-      if (!handle404(error)) {
-        throw error;
-      }
-
-      try {
-        const fallbackResponse = await apiClient.get<ApiHorario[]>("/horarios", {
-          id_negocio: id,
-        });
-        return fallbackResponse;
-      } catch (fallbackError) {
-        if (handle404(fallbackError)) {
-          return [];
-        }
-        throw fallbackError;
-      }
-    }
+    return apiClient.get<ApiHorario[]>(`/horarios/${id}`);
   },
 
   /**
