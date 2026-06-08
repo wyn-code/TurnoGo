@@ -22,6 +22,10 @@ export interface ApiNegocio {
   creado_at: string;
   usuario_id: number | null;
   slug: string;
+
+  latitud: number | null;
+  longitud: number | null;
+  
   horarios?: ApiHorario[];
 }
 
@@ -75,13 +79,12 @@ export interface ApiTurno {
 }
 
 export interface ApiHorario {
-  id_horario?: number;
+  id_horarios_negocio?: number;
   id_negocio?: number;
   dia_semana: number;
   hora_apertura: string;
   hora_cierre: string;
 }
-
 
 export interface BookingData {
   serviceId: string;
@@ -145,6 +148,13 @@ export interface TimeSlot {
   available: boolean;
 }
 
+
+export interface NegocioMapa {
+  id_negocio: number;
+  nombre: string;
+  latitud: number;
+  longitud: number;
+}
 // Aliases de compatibilidad para transición gradual
 export type ApiBusiness = ApiNegocio;
 export type ApiService = ApiServicio;

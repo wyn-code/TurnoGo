@@ -17,6 +17,7 @@ import Dashboard from "./pages/Dashboard.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import AdminPanel from "./pages/AdminPanel.tsx";
 import { AdminRoute } from "./components/admin/AdminRoute.tsx";
+import "mapbox-gl/dist/mapbox-gl.css";
 const queryClient = new QueryClient();
 
 const ROUTES_WITHOUT_PAGE_ANIMATION = new Set(["/login", "/registro"]);

@@ -1,5 +1,10 @@
 import apiClient from "@/lib/api-client";
-import type { ApiCategory, ApiNegocio } from "@/types/api";
+import type { ApiCategory, ApiNegocio, NegocioMapa } from "@/types/api";
+
+
+export const obtenerNegociosMapa = async (): Promise<NegocioMapa[]> => {
+  return apiClient.get<NegocioMapa[]>("/negocios/mapa");
+};
 
 export interface CreateBusinessResponse {
   id_negocio: number;
@@ -59,10 +64,7 @@ export const businessService = {
   },
 
   getBusinessBySlug: async (slug: string): Promise<ApiNegocio> => {
-    const data = await businessService.getAll();
-    const found = data.find((b) => b.slug === slug);
-    if (!found) throw new Error("Negocio no encontrado");
-    return found;
+    return apiClient.get<ApiNegocio>(`/negocios/slug/${slug}`);
   },
 
   createCompleteBusiness: async (
