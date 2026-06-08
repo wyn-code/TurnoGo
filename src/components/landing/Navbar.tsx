@@ -119,7 +119,7 @@ const {
             text-foreground
           "
         >
-          Turnexo
+          TurnGo
         </Link>
 
         {/* DESKTOP */}
