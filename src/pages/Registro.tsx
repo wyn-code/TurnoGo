@@ -90,6 +90,8 @@ const passwordChecks = {
       data.nombre,
       data.apellido,
     );
+
+    console.log(result);
     if (result.success) {
       navigate("/registrar-negocio", { replace: true });
     } else {

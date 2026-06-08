@@ -17,7 +17,8 @@ import Dashboard from "./pages/Dashboard.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import AdminPanel from "./pages/AdminPanel.tsx";
 import { AdminRoute } from "./components/admin/AdminRoute.tsx";
-import "mapbox-gl/dist/mapbox-gl.css";
+import OlvideContrasena from "./pages/OlvideContrasena.tsx";
+import RestablecerContrasena from "./pages/RestablecerContrasena.tsx";
 const queryClient = new QueryClient();
 
 const ROUTES_WITHOUT_PAGE_ANIMATION = new Set(["/login", "/registro"]);
@@ -36,6 +37,8 @@ const AppRoutes = () => {
       <Route path="/reservar/:slug" element={<Reservar />} />
       <Route path="/login" element={<Login />} />
       <Route path="/registro" element={<Registro />} />
+      <Route path="/olvide-contrasena" element={<OlvideContrasena />} />
+      <Route path="/restablecer-contrasena" element={<RestablecerContrasena />} />
 
       {/* Rutas protegidas — solo dueños de negocio */}
       <Route path="/registrar-negocio" element={<ProtectedRoute><RegistrarNegocio /></ProtectedRoute>} />

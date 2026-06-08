@@ -359,6 +359,11 @@ if (!result.success) {
                     }
                   </p>
                 )}
+                <div className="text-right">
+                  <Link to="/olvide-contrasena" className="text-sm font-medium text-primary hover:underline">
+                    ¿Has olvidado la contraseña?
+                  </Link>
+                </div>
               </div>
 
               {/* SUBMIT */}

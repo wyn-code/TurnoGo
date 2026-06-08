@@ -24,11 +24,8 @@ type AuthResult =
 
 interface AuthContextType {
   user: User | null;
-
   token: string | null;
-
   isAuthenticated: boolean;
-
   isLoading: boolean;
 
   login: (
@@ -43,6 +40,22 @@ interface AuthContextType {
     nombre: string,
     apellido: string,
   ) => Promise<AuthResult>;
+
+  requestPasswordReset: (
+    email: string,
+  ) => Promise<{
+    success: boolean;
+    error?: string;
+  }>;
+
+  resetPassword: (
+    token: string,
+    password: string,
+    confirmPassword: string,
+  ) => Promise<{
+    success: boolean;
+    error?: string;
+  }>;
 
   logout: () => void;
 }
@@ -370,6 +383,56 @@ export function AuthProvider({
     }
   };
 
+  const requestPasswordReset = async (
+  email: string,
+) => {
+  try {
+    await authService.requestPasswordReset(
+      email,
+    );
+
+    return {
+      success: true,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: normalizeApiDetail(
+        error?.response?.data?.detail ||
+        error?.message ||
+        error,
+      ),
+    };
+  }
+};
+
+const resetPassword = async (
+  token: string,
+  password: string,
+  confirmPassword: string,
+) => {
+  try {
+    await authService.resetPassword(
+      token,
+      password,
+      confirmPassword,
+    );
+
+    return {
+      success: true,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: normalizeApiDetail(
+        error?.response?.data?.detail ||
+        error?.message ||
+        error,
+      ),
+    };
+  }
+};
+
 const logout = () => {
   setUser(null);
 
@@ -384,22 +447,21 @@ const logout = () => {
 
   return (
     <AuthContext.Provider
-      value={{
-        user,
-        token,
+  value={{
+    user,
+    token,
+    isAuthenticated: !!user && !!token,
+    isLoading,
 
-        isAuthenticated:
-          !!user && !!token,
+    login,
+    register,
 
-        isLoading,
+    requestPasswordReset,
+    resetPassword,
 
-        login,
-
-        register,
-
-        logout,
-      }}
-    >
+    logout,
+  }}
+>
       {children}
     </AuthContext.Provider>
   );

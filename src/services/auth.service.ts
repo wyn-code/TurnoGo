@@ -21,6 +21,16 @@ export interface RegisterRequest {
   rol_us?: string;
 }
 
+export interface ForgotPasswordRequest {
+  email_us: string;
+}
+
+export interface ResetPasswordRequest {
+  token: string;
+  new_password: string;
+  confirm_password: string;
+}
+
 export interface AuthTokenResponse {
   access_token: string;
   token_type: string;
@@ -74,6 +84,57 @@ export const authService = {
     return apiClient.getWithBase<AuthUserResponse>(
       AUTH_API_ROOT,
       "/me"
+    );
+  },
+
+  // =========================
+  // RECUPERAR CONTRASEÑA
+  // =========================
+
+  requestPasswordReset: async (
+    email: string
+  ) => {
+    return apiClient.postWithBase(
+      AUTH_API_ROOT,
+      "/forgot-password",
+      {
+        email_us: email,
+      },
+      undefined,
+      true,
+      true,
+    );
+  },
+
+  resetPassword: async (
+    token: string,
+    newPassword: string,
+    confirmPassword: string,
+  ) => {
+    return apiClient.postWithBase(
+      AUTH_API_ROOT,
+      "/reset-password",
+      {
+        token,
+        new_password: newPassword,
+        confirm_password: confirmPassword,
+      },
+      undefined,
+      true,
+      true,
+    );
+  },
+
+  // =========================
+  // VERIFICAR EMAIL
+  // =========================
+
+  verifyEmail: async (
+    token: string
+  ) => {
+    return apiClient.getWithBase(
+      AUTH_API_ROOT,
+      `/verify-email/${token}`
     );
   },
 
