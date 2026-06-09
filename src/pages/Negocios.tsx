@@ -99,9 +99,7 @@ const Negocios = () => {
 
     return result;
   }, [businesses, search, selectedCategory, selectedCity, cities]);
-
-  // Se eliminó el "if (isLoading)" temprano para evitar Layout Shift
-
+  
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
