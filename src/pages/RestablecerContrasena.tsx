@@ -51,7 +51,7 @@ const RestablecerContrasena = () => {
       setServerError("El enlace no es válido o expiró. Solicitá uno nuevo.");
       return;
     }
-    const result = await resetPassword(email, data.password);
+    const result = await resetPassword(email, data.password, data.confirmPassword);
     if (result.success) {
       setSuccess(true);
       setTimeout(() => navigate("/login"), 2000);
