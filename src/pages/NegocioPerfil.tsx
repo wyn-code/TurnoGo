@@ -38,8 +38,6 @@ const NegocioPerfil = () => {
 
         const businessData = await businessService.getBusinessBySlug(slug);
 
-        console.log("NEGOCIO:", businessData);
-
         setBusiness(businessData);
 
         const [servicesData, professionalsData] = await Promise.all([
