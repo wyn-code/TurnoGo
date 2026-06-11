@@ -19,6 +19,7 @@ import AdminPanel from "./pages/AdminPanel.tsx";
 import { AdminRoute } from "./components/admin/AdminRoute.tsx";
 import OlvideContrasena from "./pages/OlvideContrasena.tsx";
 import RestablecerContrasena from "./pages/RestablecerContrasena.tsx";
+import 'mapbox-gl/dist/mapbox-gl.css';
 const queryClient = new QueryClient();
 
 const ROUTES_WITHOUT_PAGE_ANIMATION = new Set(["/login", "/registro"]);
