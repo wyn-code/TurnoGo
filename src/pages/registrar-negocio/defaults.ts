@@ -15,6 +15,7 @@ export const defaultValues: FormData = {
   ciudad: "",
   id_localidad: null,
   id_provincia: 0,
+  imagenes: [],
 
   servicios: [
     {
@@ -71,7 +72,7 @@ export const defaultValues: FormData = {
 
 export const fieldsPerStep = [
   ["nombre", "id_categoria", "descripcion"],
-  ["logo"],
+  ["imagenes", "logo"],
   ["wsp", "telefono", "ig_url", "url_fb"],
   ["direccion", "ciudad", "id_localidad", "id_provincia"],
   ["servicios"],

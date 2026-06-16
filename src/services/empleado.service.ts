@@ -63,7 +63,7 @@ export const empleadoService = {
     data: Partial<ApiEmpleado>
   ): Promise<ApiEmpleado> => {
     // Normalizar datos que se actualizan
-    const payload: Record<string, any> = {};
+    const payload: Record<string, string | boolean> = {};
 
     if (data.nombre !== undefined) {
       payload.nombre = String(data.nombre).trim();

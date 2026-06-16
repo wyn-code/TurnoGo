@@ -4,7 +4,6 @@ export const schema = z.object({
   nombre: z.string().min(2, "El nombre es muy corto"),
   id_categoria: z.coerce.number().min(1, "Seleccioná una categoría"), 
   descripcion: z.string().min(5, "Descripción demasiado corta"),
-  logo: z.string().min(1, "La imagen es obligatoria"),
   wsp: z.string().min(6, "WhatsApp inválido"),
   telefono: z.string().optional().nullable(),
   ig_url: z.string().optional().nullable(),
@@ -13,6 +12,8 @@ export const schema = z.object({
   ciudad: z.string().min(2, "Ciudad inválida"),
   id_localidad: z.coerce.number().optional().nullable(),
   id_provincia: z.coerce.number().min(1, "Seleccioná una provincia"), 
+  logo: z.string().min(1, "La imagen es obligatoria"),
+  imagenes: z.array(z.string().url()).default([]),
 
   servicios: z.array(z.object({
     nombre_servicio: z.string().min(2),
