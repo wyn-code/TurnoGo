@@ -15,9 +15,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 
-// IMPORTANTE: Asegúrate de que la ruta coincida con donde guardaste el componente
-import { BusinessCardSkeleton } from "@/components/marketplace/BusinessCard"; 
+
 
 const Negocios = () => {
   const [search, setSearch] = useState("");
@@ -149,30 +149,33 @@ const Negocios = () => {
           />
         </div>
 
-        {/* --- LÓGICA DE CARGA Y SKELETONS --- */}
-        {error ? (
-          <div className="py-12 text-center">
-            <p className="text-lg font-medium text-destructive">{error}</p>
-          </div>
-        ) : isLoading ? (
-          // Grilla de Skeletons (Asegúrate de que las clases de la grilla coincidan con tu BusinessGrid)
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <BusinessCardSkeleton key={i} />
-            ))}
-          </div>
-        ) : (
-          // Grilla Real
-          <>
-            <p className="mb-4 text-sm font-medium text-muted-foreground">
-              {filteredBusinesses.length} negocio
-              {filteredBusinesses.length !== 1 && "s"} encontrado
-              {filteredBusinesses.length !== 1 && "s"}
-            </p>
-
-            <BusinessGrid businesses={filteredBusinesses} categories={categories} />
-          </>
-        )}
+      {/* --- LÓGICA DE CARGA Y SKELETONS --- */}
+      {error ? (
+        <div className="py-12 text-center">
+          <p className="text-lg font-medium text-destructive">{error}</p>
+        </div>
+      ) : isLoading ? (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="rounded-2xl border bg-card p-4 space-y-3">
+              <Skeleton className="h-40 w-full rounded-xl" />
+              <Skeleton className="h-4 w-20 rounded-full" />
+              <Skeleton className="h-5 w-3/4 rounded-md" />
+              <Skeleton className="h-4 w-1/2 rounded-md" />
+              <Skeleton className="h-9 w-full rounded-xl mt-2" />
+            </div>
+          ))}
+        </div>
+      ) : (
+        <>
+          <p className="mb-4 text-sm font-medium text-muted-foreground">
+            {filteredBusinesses.length} negocio
+            {filteredBusinesses.length !== 1 && "s"} encontrado
+            {filteredBusinesses.length !== 1 && "s"}
+          </p>
+          <BusinessGrid businesses={filteredBusinesses} categories={categories} />
+        </>
+      )}
       </main>
 
       <Footer />

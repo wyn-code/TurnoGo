@@ -23,6 +23,8 @@ export interface CreateCompleteBusinessRequest {
   ig_url: string | null;
   logo: string | null;
   activo: boolean;
+  imagenes: string[];
+  descripcion: string;
   servicios: {
     nombre_servicio: string;
     precio: number;

@@ -31,6 +31,7 @@ const Dashboard = () => {
   const [business, setBusiness] = useState<ApiNegocio | null>(null);
   const [isLoadingBusiness, setIsLoadingBusiness] = useState(true);
 
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const loadBusiness = useCallback(async () => {
     if (!user?.id) {
       setBusiness(null);
@@ -56,11 +57,14 @@ const Dashboard = () => {
   const title = sectionTitles[path] || "Dashboard";
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void loadBusiness();
   }, [loadBusiness]);
 
   return (
-    <DashboardBusinessProvider value={{ business, isLoadingBusiness, refreshBusiness: loadBusiness }}>
+    <DashboardBusinessProvider
+      value={{ business, isLoadingBusiness, refreshBusiness: loadBusiness }}
+    >
       <SidebarProvider>
         <div className="min-h-screen flex w-full">
           <DashboardSidebar />
@@ -73,8 +77,14 @@ const Dashboard = () => {
                 <Route path="servicios" element={<DashboardServicios />} />
                 <Route path="empleados" element={<DashboardEmpleados />} />
                 <Route path="horarios" element={<DashboardHorarios />} />
-                <Route path="configuracion" element={<DashboardConfiguracion />} />
-                <Route path="personalizacion" element={<DashboardPersonalizacion />} />
+                <Route
+                  path="configuracion"
+                  element={<DashboardConfiguracion />}
+                />
+                <Route
+                  path="personalizacion"
+                  element={<DashboardPersonalizacion />}
+                />
               </Routes>
             </main>
           </div>

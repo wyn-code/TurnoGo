@@ -3,7 +3,8 @@ import { useBusinesses } from "@/hooks/useApi";
 import { businessService } from "@/services/business.service";
 import type { ApiCategory } from "@/types/api";
 // IMPORTANTE: Asegurate de importar el Skeleton desde el mismo archivo que tu BusinessCard
-import BusinessCard, { BusinessCardSkeleton } from "../marketplace/BusinessCard";
+import BusinessCard from "@/components/marketplace/BusinessCard";
+import { Skeleton } from "../ui/skeleton";
 
 const RecommendedBusinesses = () => {
   const { data: businesses, isLoading: loadingBiz } = useBusinesses({ limit: 10 });
@@ -52,7 +53,7 @@ const RecommendedBusinesses = () => {
           {isLoading ? (
             // Mostramos 3 Skeletons para simular una fila completa cargando
             Array.from({ length: 3 }).map((_, i) => (
-              <BusinessCardSkeleton key={i} />
+              <Skeleton key={i} />
             ))
           ) : displayBusinesses.length > 0 ? (
             // Mostramos los negocios reales

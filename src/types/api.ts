@@ -23,11 +23,20 @@ export interface ApiNegocio {
   usuario_id: number | null;
   slug: string;
 
+  descripcion?: string;
+
+  imagenes?: {
+    id_imagen: number;
+    url: string;
+    es_portada: boolean;
+    orden: number;
+  }[];
+
   latitud: number | null;
   longitud: number | null;
-  
+    
   horarios?: ApiHorario[];
-}
+  }
 
 export interface ApiServicio {
   id_servicio: number;

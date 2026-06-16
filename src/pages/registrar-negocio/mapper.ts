@@ -18,6 +18,8 @@ export const toCreateCompleteBusinessRequest = (
     ig_url: form.ig_url || null,
     logo: form.logo || null,
     activo: true,
+    descripcion: form.descripcion,
+    imagenes: form.imagenes || [],
 
     servicios: form.servicios.map((s) => ({
       nombre_servicio: s.nombre_servicio,
