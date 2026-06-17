@@ -19,12 +19,11 @@ import AdminPanel from "./pages/AdminPanel.tsx";
 import { AdminRoute } from "./components/admin/AdminRoute.tsx";
 import OlvideContrasena from "./pages/OlvideContrasena.tsx";
 import RestablecerContrasena from "./pages/RestablecerContrasena.tsx";
-<<<<<<< HEAD
+
 import 'mapbox-gl/dist/mapbox-gl.css';
-=======
 import VerifyEmailPage from "./pages/VerifyEmailPage.tsx";
 
->>>>>>> ade7998 (muchos cambios en el login y verificacion de usuarios)
+
 const queryClient = new QueryClient();
 
 const ROUTES_WITHOUT_PAGE_ANIMATION = new Set(["/login", "/registro"]);
