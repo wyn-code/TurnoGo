@@ -39,6 +39,8 @@ import {
   AlertCircle,
 } from "lucide-react";
 
+import { SocialAuthButtons } from "@/components/auth/SocialAuthButtons";
+
 const schema = z.object({
   email: z
     .string()
@@ -380,6 +382,8 @@ if (!result.success) {
                   : "Iniciar sesión"}
               </Button>
             </form>
+
+            <SocialAuthButtons />
 
             {/* REGISTER */}
 

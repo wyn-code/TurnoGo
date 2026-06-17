@@ -22,6 +22,10 @@ type AuthResult =
   | { success: true; user: User }
   | { success: false; error: string };
 
+type RegisterResult =
+  | { success: true }
+  | { success: false; error: string };
+
 interface AuthContextType {
   user: User | null;
   token: string | null;
@@ -33,13 +37,13 @@ interface AuthContextType {
     password: string,
   ) => Promise<AuthResult>;
 
-  register: (
-    usuario: string,
-    email: string,
-    password: string,
-    nombre: string,
-    apellido: string,
-  ) => Promise<AuthResult>;
+register: (
+  usuario: string,
+  email: string,
+  password: string,
+  nombre: string,
+  apellido: string,
+) => Promise<RegisterResult>;
 
   requestPasswordReset: (
     email: string,
@@ -317,71 +321,36 @@ export function AuthProvider({
     }
   };
 
-  const register = async (
-    usuario: string,
-    email: string,
-    password: string,
-    nombre: string,
-    apellido: string,
-  ): Promise<AuthResult> => {
-    setIsLoading(true);
+const register = async (
+  usuario: string,
+  email: string,
+  password: string,
+  nombre: string,
+  apellido: string,
+): Promise<RegisterResult> => {
+  try {
+    await authService.register({
+      usuario_us: usuario.trim(),
+      email_us: email.trim(),
+      contrasena_us: password,
+      nombre_us: nombre.trim(),
+      apellido_us: apellido.trim(),
+    });
 
-    try {
-      const data =
-        await authService.register({
-          usuario_us:
-            usuario.trim(),
-
-          email_us:
-            email.trim(),
-
-          contrasena_us:
-            password,
-
-          nombre_us:
-            nombre.trim(),
-
-          apellido_us:
-            apellido.trim(),
-        });
-
-      const token =
-        data.access_token;
-
-      // Si backend no devuelve token
-      // intentamos login automático
-
-      if (!token) {
-        return await login(
-          email,
-          password,
-        );
-      }
-
-      return await applySessionFromToken(
-        token,
-        setUser,
-        setToken,
-      );
-    } catch (error: any) {
-      console.error(
-        "REGISTER ERROR:",
+    return {
+      success: true,
+    };
+  } catch (error: any) {
+    return {
+      success: false,
+      error: normalizeApiDetail(
+        error?.response?.data?.detail ||
+        error?.message ||
         error,
-      );
-
-      return {
-        success: false,
-        error: normalizeApiDetail(
-          error?.response?.data
-            ?.detail ||
-            error?.message ||
-            error,
-        ),
-      };
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      ),
+    };
+  }
+};
 
   const requestPasswordReset = async (
   email: string,

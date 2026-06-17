@@ -14,6 +14,16 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import TermsAndConditionsDialog from "@/components/legal/TermsAndConditionsDialog";
 import { UserPlus, AlertCircle, Eye, EyeOff } from "lucide-react";
+import { SocialAuthButtons } from "@/components/auth/SocialAuthButtons";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
 
 const schema = z
   .object({
@@ -45,12 +55,14 @@ const schema = z
 type FormData = z.infer<typeof schema>;
 
 const Registro = () => {
+  const { toast } = useToast();
   const { register: authRegister } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: string })?.from || "/dashboard";
   const [serverError, setServerError] = useState("");
   const [showPassword, setShowPassword] = useState(false); // Estado para el ojo
+  const [showVerifyModal, setShowVerifyModal] = useState(false);
 
   const {
   register,
@@ -81,23 +93,24 @@ const passwordChecks = {
   special: /[@$!%*?&.#_-]/.test(passwordValue),
 };
 
-  const onSubmit = async (data: FormData) => {
-    setServerError("");
-    const result = await authRegister(
-      data.usuario,
-      data.email,
-      data.password,
-      data.nombre,
-      data.apellido,
-    );
+const onSubmit = async (data: FormData) => {
+  setServerError("");
 
-    console.log(result);
-    if (result.success) {
-      navigate("/registrar-negocio", { replace: true });
-    } else {
-      setServerError(result.error || "Error al registrarse.");
-    }
-  };
+  const result = await authRegister(
+    data.usuario,
+    data.email,
+    data.password,
+    data.nombre,
+    data.apellido,
+  );
+
+  if (result.success) {
+    setShowVerifyModal(true);
+    return;
+  }
+
+  setServerError(result.error);
+};
 
   return (
     <div className="min-h-screen bg-background">
@@ -304,6 +317,9 @@ const passwordChecks = {
                 {isSubmitting ? "Creando cuenta..." : "Crear cuenta"}
               </Button>
             </form>
+
+            <SocialAuthButtons />
+
             <p className="text-center text-sm text-muted-foreground">
               ¿Ya tenés cuenta?{" "}
               <Link
@@ -317,6 +333,32 @@ const passwordChecks = {
           </CardContent>
         </Card>
       </main>
+      <Dialog
+  open={showVerifyModal}
+  onOpenChange={setShowVerifyModal}
+>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>
+        Revisá tu correo
+      </DialogTitle>
+
+      <DialogDescription>
+        Tu cuenta fue creada correctamente.
+
+        Te enviamos un email de verificación.
+        Hacé clic en el enlace para activar tu cuenta.
+      </DialogDescription>
+    </DialogHeader>
+
+    <Button
+      className="w-full"
+      onClick={() => navigate("/")}
+    >
+      Ir al inicio
+    </Button>
+  </DialogContent>
+</Dialog>
       <Footer />
     </div>
   );

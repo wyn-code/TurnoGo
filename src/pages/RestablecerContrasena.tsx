@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -30,36 +30,44 @@ type FormData = z.infer<typeof schema>;
 const RestablecerContrasena = () => {
   const { resetPassword } = useAuth();
   const navigate = useNavigate();
+  const { token } = useParams();
   const [serverError, setServerError] = useState("");
   const [success, setSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [email, setEmail] = useState<string | null>(null);
 
-  useEffect(() => {
-    const stored = localStorage.getItem("turnexo_reset_email");
-    setEmail(stored);
-  }, []);
+
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormData>({
     resolver: zodResolver(schema),
   });
 
   const onSubmit = async (data: FormData) => {
-    setServerError("");
-    if (!email) {
-      setServerError("El enlace no es válido o expiró. Solicitá uno nuevo.");
-      return;
-    }
-    const result = await resetPassword(email, data.password, data.confirmPassword);
-    if (result.success) {
-      setSuccess(true);
-      setTimeout(() => navigate("/login"), 2000);
-    } else {
-      setServerError(result.error || "No pudimos restablecer tu contraseña.");
-    }
-  };
+  setServerError("");
 
+  if (!token) {
+    setServerError(
+      "El enlace no es válido o expiró. Solicitá uno nuevo."
+    );
+    return;
+  }
+
+  const result = await resetPassword(
+    token,
+    data.password,
+    data.confirmPassword
+  );
+
+  if (result.success) {
+    setSuccess(true);
+    setTimeout(() => navigate("/login"), 2000);
+  } else {
+    setServerError(
+      result.error ||
+      "No pudimos restablecer tu contraseña."
+    );
+  }
+};
   return (
     <div className="min-h-screen bg-background">
       <Navbar />

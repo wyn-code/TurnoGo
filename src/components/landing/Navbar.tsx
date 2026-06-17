@@ -33,8 +33,17 @@ const Navbar = () => {
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
         
         {/* LOGO */}
-        <Link to="/" className="text-2xl font-bold tracking-tight text-foreground">
-          TurnGo
+
+        <Link
+          to="/"
+          className="
+            text-2xl
+            font-bold
+            tracking-tight
+            text-foreground
+          "
+        >
+          TurnoGo
         </Link>
 
         {/* DESKTOP */}

@@ -19,7 +19,12 @@ import AdminPanel from "./pages/AdminPanel.tsx";
 import { AdminRoute } from "./components/admin/AdminRoute.tsx";
 import OlvideContrasena from "./pages/OlvideContrasena.tsx";
 import RestablecerContrasena from "./pages/RestablecerContrasena.tsx";
+<<<<<<< HEAD
 import 'mapbox-gl/dist/mapbox-gl.css';
+=======
+import VerifyEmailPage from "./pages/VerifyEmailPage.tsx";
+
+>>>>>>> ade7998 (muchos cambios en el login y verificacion de usuarios)
 const queryClient = new QueryClient();
 
 const ROUTES_WITHOUT_PAGE_ANIMATION = new Set(["/login", "/registro"]);
@@ -44,7 +49,10 @@ const AppRoutes = () => {
       {/* Rutas protegidas — solo dueños de negocio */}
       <Route path="/registrar-negocio" element={<ProtectedRoute><RegistrarNegocio /></ProtectedRoute>} />
       <Route path="/dashboard/*" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/admin" element={<AdminRoute><AdminPanel /></AdminRoute>} />
+      <Route path="/admin/*" element={<AdminRoute><AdminPanel /></AdminRoute>} />
+      <Route path="/verify-email/:token" element={<VerifyEmailPage />}/>
+      <Route path="/restablecer-contrasena/:token" element={<RestablecerContrasena />}
+      />
 
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
