@@ -1,37 +1,64 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import apiClient from "@/lib/api-client";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function VerifyEmailPage() {
   const { token } = useParams();
   const navigate = useNavigate();
 
-  const [loading, setLoading] = useState(true);
-  const [success, setSuccess] = useState(false);
-  const [message, setMessage] = useState("");
+  const { loginWithToken } = useAuth();
+
+  const [loading, setLoading] =
+    useState(true);
+
+  const [success, setSuccess] =
+    useState(false);
+
+  const [message, setMessage] =
+    useState("");
 
   useEffect(() => {
     const verifyEmail = async () => {
       try {
-        await apiClient.get(
-          `/auth/verify-email/${token}`,
-        );
+        const response =
+          await apiClient.get<{
+            message: string;
+            access_token: string;
+            token_type: string;
+            usuario_id: number;
+          }>(
+            `/auth/verify-email/${token}`,
+          );
+
+        const session =
+          await loginWithToken(
+            response.access_token,
+          );
+
+        if (!session.success) {
+          throw new Error(
+            session.error,
+          );
+        }
 
         setSuccess(true);
 
         setMessage(
-          "Tu email fue verificado correctamente. Serás redirigido al login."
+          "Tu email fue verificado correctamente. Serás redirigido para registrar tu negocio."
         );
 
         setTimeout(() => {
-          navigate("/login");
-        }, 3000);
+          navigate(
+            "/registrar-negocio",
+          );
+        }, 2000);
 
       } catch (error: any) {
         setSuccess(false);
 
         setMessage(
-          error?.response?.data?.detail ||
+          error?.message ||
           "No se pudo verificar el email."
         );
       } finally {
@@ -42,7 +69,11 @@ export default function VerifyEmailPage() {
     if (token) {
       verifyEmail();
     }
-  }, [token, navigate]);
+  }, [
+    token,
+    navigate,
+    loginWithToken,
+  ]);
 
   if (loading) {
     return (
@@ -63,15 +94,6 @@ export default function VerifyEmailPage() {
       <p className="mb-6">
         {message}
       </p>
-
-      {!success && (
-        <button
-          onClick={() => navigate("/login")}
-          className="text-primary underline"
-        >
-          Ir a iniciar sesión
-        </button>
-      )}
     </div>
   );
 }

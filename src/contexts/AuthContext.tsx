@@ -37,6 +37,10 @@ interface AuthContextType {
     password: string,
   ) => Promise<AuthResult>;
 
+  loginWithToken: (
+    token: string,
+  ) => Promise<AuthResult>;
+
 register: (
   usuario: string,
   email: string,
@@ -321,6 +325,22 @@ export function AuthProvider({
     }
   };
 
+  const loginWithToken = async (
+  token: string,
+): Promise<AuthResult> => {
+  setIsLoading(true);
+
+  try {
+    return await applySessionFromToken(
+      token,
+      setUser,
+      setToken,
+    );
+  } finally {
+    setIsLoading(false);
+  }
+};
+
 const register = async (
   usuario: string,
   email: string,
@@ -417,19 +437,20 @@ const logout = () => {
   return (
     <AuthContext.Provider
   value={{
-    user,
-    token,
-    isAuthenticated: !!user && !!token,
-    isLoading,
+  user,
+  token,
+  isAuthenticated: !!user && !!token,
+  isLoading,
 
-    login,
-    register,
+  login,
+  loginWithToken,
+  register,
 
-    requestPasswordReset,
-    resetPassword,
+  requestPasswordReset,
+  resetPassword,
 
-    logout,
-  }}
+  logout,
+}}
 >
       {children}
     </AuthContext.Provider>

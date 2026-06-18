@@ -19,7 +19,7 @@ import AdminPanel from "./pages/AdminPanel.tsx";
 import { AdminRoute } from "./components/admin/AdminRoute.tsx";
 import OlvideContrasena from "./pages/OlvideContrasena.tsx";
 import RestablecerContrasena from "./pages/RestablecerContrasena.tsx";
-
+import AuthSuccess from "./pages/AuthSuccess";
 import 'mapbox-gl/dist/mapbox-gl.css';
 import VerifyEmailPage from "./pages/VerifyEmailPage.tsx";
 
@@ -52,6 +52,8 @@ const AppRoutes = () => {
       <Route path="/verify-email/:token" element={<VerifyEmailPage />}/>
       <Route path="/restablecer-contrasena/:token" element={<RestablecerContrasena />}
       />
+
+      <Route path="/auth-success" element={<AuthSuccess />} />
 
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
