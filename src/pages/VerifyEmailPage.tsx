@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import apiClient from "@/lib/api-client";
 
 export default function VerifyEmailPage() {
   const { token } = useParams();
+  const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
   const [success, setSuccess] = useState(false);
@@ -17,15 +18,21 @@ export default function VerifyEmailPage() {
         );
 
         setSuccess(true);
+
         setMessage(
-          "Tu email fue verificado correctamente.",
+          "Tu email fue verificado correctamente. Serás redirigido al login."
         );
+
+        setTimeout(() => {
+          navigate("/login");
+        }, 3000);
+
       } catch (error: any) {
         setSuccess(false);
 
         setMessage(
           error?.response?.data?.detail ||
-          "No se pudo verificar el email.",
+          "No se pudo verificar el email."
         );
       } finally {
         setLoading(false);
@@ -35,7 +42,7 @@ export default function VerifyEmailPage() {
     if (token) {
       verifyEmail();
     }
-  }, [token]);
+  }, [token, navigate]);
 
   if (loading) {
     return (
@@ -57,12 +64,14 @@ export default function VerifyEmailPage() {
         {message}
       </p>
 
-      <Link
-        to="/login"
-        className="text-primary underline"
-      >
-        Ir a iniciar sesión
-      </Link>
+      {!success && (
+        <button
+          onClick={() => navigate("/login")}
+          className="text-primary underline"
+        >
+          Ir a iniciar sesión
+        </button>
+      )}
     </div>
   );
 }
