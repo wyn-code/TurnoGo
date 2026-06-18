@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import apiClient from "@/lib/api-client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRef } from "react";
 
 export default function VerifyEmailPage() {
   const { token } = useParams();
   const navigate = useNavigate();
+  const alreadyVerified = useRef(false);
 
   const { loginWithToken } = useAuth();
 
@@ -18,70 +20,61 @@ export default function VerifyEmailPage() {
   const [message, setMessage] =
     useState("");
 
-  useEffect(() => {
-    const verifyEmail = async () => {
-      try {
-        const response =
-          await apiClient.get<{
-            message: string;
-            access_token: string;
-            token_type: string;
-            usuario_id: number;
-          }>(
-            `/auth/verify-email/${token}`,
-          );
+useEffect(() => {
+  if (!token) return;
 
-        const session =
-          await loginWithToken(
-            response.access_token,
-          );
-
-        if (!session.success) {
-          throw new Error(
-            session.error,
-          );
-        }
-
-        setSuccess(true);
-
-        setMessage(
-          "Tu email fue verificado correctamente. Serás redirigido para registrar tu negocio."
-        );
-
-        setTimeout(() => {
-          navigate(
-            "/registrar-negocio",
-          );
-        }, 2000);
-
-      } catch (error: any) {
-        setSuccess(false);
-
-        setMessage(
-          error?.message ||
-          "No se pudo verificar el email."
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    if (token) {
-      verifyEmail();
-    }
-  }, [
-    token,
-    navigate,
-    loginWithToken,
-  ]);
-
-  if (loading) {
-    return (
-      <div className="p-8 text-center">
-        Verificando email...
-      </div>
-    );
+  if (alreadyVerified.current) {
+    return;
   }
+
+  alreadyVerified.current = true;
+
+  const verifyEmail = async () => {
+    try {
+      const response = await apiClient.get<{
+        access_token: string;
+        token_type: string;
+      }>(
+        `/auth/verify-email/${token}`,
+      );
+      await loginWithToken(
+        response.access_token,
+      );
+
+      setSuccess(true);
+
+      setMessage(
+        "Email verificado correctamente. Redirigiendo..."
+      );
+
+      setTimeout(() => {
+        navigate("/registrar-negocio");
+      }, 2000);
+
+    } catch (error: any) {
+      setSuccess(false);
+
+      setMessage(
+        error?.detail ||
+        error?.message ||
+        "No se pudo verificar el email."
+      );
+
+      if (loading) {
+  return (
+    <div className="p-8 text-center">
+      Verificando email...
+    </div>
+  );
+}
+
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  verifyEmail();
+}, [token, navigate]);
 
   return (
     <div className="p-8 text-center">
