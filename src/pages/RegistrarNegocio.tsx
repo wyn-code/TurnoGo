@@ -1,5 +1,8 @@
 
-import { useNavigate } from "react-router-dom";
+import {
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -18,6 +21,8 @@ import { useEffect, useState } from "react";
 import { businessService } from "@/services/business.service";
 import type { ApiCategory } from "@/types/api";
 import ScheduleEditor, { defaultWeekSchedule } from "../components/business/ScheduleEditor";
+
+
 
 const STEPS = ["Información", "Contacto", "Ubicación", "Servicios", "Empleados", "Horarios", "Branding"];
 
@@ -67,6 +72,8 @@ const RegistrarNegocio = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [categories, setCategories] = useState<ApiCategory[]>([]);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [verifiedModalOpen, setVerifiedModalOpen] = useState(false);
 
   const form = useForm<FormData>({
     resolver: zodResolver(schema),
@@ -128,6 +135,14 @@ useEffect(() => {
     setModalOpen(true);
   };
 
+useEffect(() => {
+  const verified = searchParams.get("verified");
+
+  if (verified === "true") {
+    setVerifiedModalOpen(true);
+  }
+}, [searchParams]);
+
   if (submitted) {
     const data = getValues();
     return (
@@ -159,6 +174,30 @@ useEffect(() => {
 
   return (
     <>
+    <Dialog
+  open={verifiedModalOpen}
+  onOpenChange={setVerifiedModalOpen}
+>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>
+        ¡Email verificado!
+      </DialogTitle>
+
+      <DialogDescription>
+        Tu cuenta fue verificada correctamente.
+
+        Ahora completá los datos de tu negocio para comenzar a usar TurnGo.
+      </DialogDescription>
+    </DialogHeader>
+
+    <Button
+      onClick={() => setVerifiedModalOpen(false)}
+    >
+      Continuar
+    </Button>
+  </DialogContent>
+</Dialog>
     <Dialog open={modalOpen} onOpenChange={setModalOpen}>
       <DialogContent className="sm:max-w-md text-center">
         <DialogHeader className="text-center">
