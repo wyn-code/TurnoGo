@@ -15,7 +15,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import TermsAndConditionsDialog from "@/components/legal/TermsAndConditionsDialog";
 import { UserPlus, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { SocialAuthButtons } from "@/components/auth/SocialAuthButtons";
-import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
   DialogContent,
@@ -55,7 +54,6 @@ const schema = z
 type FormData = z.infer<typeof schema>;
 
 const Registro = () => {
-  const { toast } = useToast();
   const { register: authRegister } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
