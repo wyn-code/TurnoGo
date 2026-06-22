@@ -13,6 +13,7 @@ import Reservar from "./pages/reserva/Reservar.tsx";
 import Login from "./pages/Login.tsx";
 import Registro from "./pages/Registro.tsx";
 import RegistrarNegocio from "./pages/registrar-negocio/RegistrarNegocio.tsx";
+import BusinessImageStepDev from "./pages/registrar-negocio/BusinessImageStepDev.tsx";
 import Dashboard from "./pages/Dashboard.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import AdminPanel from "./pages/AdminPanel.tsx";
@@ -54,6 +55,10 @@ const AppRoutes = () => {
       />
 
       <Route path="/auth-success" element={<AuthSuccess />} />
+
+      {import.meta.env.DEV && (
+        <Route path="/dev/registro-imagenes" element={<BusinessImageStepDev />} />
+      )}
 
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
