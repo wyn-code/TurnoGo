@@ -74,37 +74,14 @@ const USER_KEY = "turnexo_user";
 const TOKEN_KEY = "turnexo_token";
 
 function normalizeUser(raw: Record<string, unknown>): User {
-  const idRaw = raw.id_us ?? raw.id;
-
-  const roleRaw =
-    raw.role ??
-    raw.rol ??
-    raw.role_us;
-
   return {
-    id: idRaw != null ? String(idRaw) : undefined,
-
-    email: String(
-      raw.email_us ??
-      raw.email ??
-      ""
-    ),
-
-    name:
-      raw.usuario_us != null
-        ? String(raw.usuario_us)
-        : raw.name != null
-          ? String(raw.name)
-          : undefined,
-
+    id: String(raw.id_us ?? ""),
+    email: String(raw.email_us ?? ""),
+    name: String(raw.usuario_us ?? ""),
     hasBusiness: Boolean(raw.has_business),
-
-    role:
-      roleRaw != null
-        ? String(roleRaw).toLowerCase()
-        : undefined,
+    role: String(raw.role ?? "").toLowerCase(),
   };
-}
+} 
 
 function normalizeApiDetail(detail: unknown): string {
   if (typeof detail === "string") {

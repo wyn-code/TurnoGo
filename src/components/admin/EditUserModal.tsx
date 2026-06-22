@@ -87,22 +87,10 @@ export function EditUserModal({
         <div className="grid gap-4 py-2">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Nombre</Label>
-              <Input
-                value={form.nombre_us}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, nombre_us: e.target.value }))
-                }
-              />
+              
             </div>
             <div className="space-y-2">
-              <Label>Apellido</Label>
-              <Input
-                value={form.apellido_us}
-                onChange={(e) =>
-                  setForm((prev) => ({ ...prev, apellido_us: e.target.value }))
-                }
-              />
+              
             </div>
           </div>
 

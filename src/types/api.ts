@@ -2,11 +2,14 @@ export interface ApiUsuario {
   id_us: number;
   usuario_us: string;
   email_us: string;
-  nombre_us: string;
-  apellido_us: string;
+
   role_us?: string;
   rol?: string;
-  habilitado: boolean;
+
+  estado: boolean;
+
+  negocio?: string | null;
+  membresia?: string | null;
 }
 
 export interface ApiCategory {

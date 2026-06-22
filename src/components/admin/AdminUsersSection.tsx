@@ -16,6 +16,7 @@ import {
 import { Pencil, Trash2, Search } from "lucide-react";
 import { userService } from "@/services/user.service";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 
 function getUserRole(user: ApiUsuario) {
   return (user.role_us ?? user.rol ?? "—").toLowerCase();
@@ -57,7 +58,7 @@ export function AdminUsersSection() {
 
   const filtered = users.filter((u) => {
     const q = search.toLowerCase();
-    const fullName = `${u.nombre_us} ${u.apellido_us}`.toLowerCase();
+    const fullName = u.usuario_us.toLowerCase();
     return (
       fullName.includes(q) ||
       u.email_us.toLowerCase().includes(q) ||
@@ -68,12 +69,10 @@ export function AdminUsersSection() {
   const handleSave = async (updated: ApiUsuario) => {
     try {
       const saved = await userService.update(updated.id_us, {
-        nombre_us: updated.nombre_us,
-        apellido_us: updated.apellido_us,
         usuario_us: updated.usuario_us,
         email_us: updated.email_us,
         role_us: updated.role_us ?? updated.rol,
-        habilitado: updated.habilitado,
+        estado: updated.estado,
       });
 
       setUsers((prev) => prev.map((u) => (u.id_us === saved.id_us ? saved : u)));
@@ -98,24 +97,33 @@ export function AdminUsersSection() {
     }
   };
 
-  const handleToggleStatus = async (user: ApiUsuario) => {
-    const nextHabilitado = !user.habilitado;
+const handleToggleStatus = async (user: ApiUsuario) => {
+  try {
+    const updated = await userService.toggleStatus(
+      user.id_us,
+      !user.estado,
+    );
 
-    try {
-      const updated = await userService.update(user.id_us, {
-        habilitado: nextHabilitado,
-      });
+    setUsers((prev) =>
+      prev.map((u) =>
+        u.id_us === updated.id_us
+          ? updated
+          : u,
+      ),
+    );
 
-      setUsers((prev) => prev.map((u) => (u.id_us === updated.id_us ? updated : u)));
-
-      toast.success(
-        nextHabilitado ? "Usuario habilitado" : "Usuario deshabilitado",
-      );
-    } catch (error) {
-      console.error("Error cambiando estado del usuario:", error);
-      toast.error("No se pudo cambiar el estado del usuario");
-    }
-  };
+    toast.success(
+      updated.estado
+        ? "Usuario habilitado"
+        : "Usuario deshabilitado",
+    );
+  } catch (error) {
+    console.error(error);
+    toast.error(
+      "No se pudo cambiar el estado",
+    );
+  }
+};
 
   return (
     <>
@@ -127,7 +135,7 @@ export function AdminUsersSection() {
         <div className="rounded-xl border border-border bg-card p-5 shadow-soft">
           <p className="text-sm text-muted-foreground">Habilitados</p>
           <p className="text-3xl font-bold text-primary">
-            {users.filter((u) => u.habilitado).length}
+            {users.filter((u) => u.estado).length}
           </p>
         </div>
         <div className="rounded-xl border border-border bg-card p-5 shadow-soft">
@@ -152,8 +160,8 @@ export function AdminUsersSection() {
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">
-              <TableHead>Nombre</TableHead>
               <TableHead>Usuario</TableHead>
+              <TableHead>Negocio</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Rol</TableHead>
               <TableHead>Estado</TableHead>
@@ -171,16 +179,16 @@ export function AdminUsersSection() {
               filtered.map((u) => (
                 <TableRow key={u.id_us}>
                   <TableCell className="font-medium">
-                    {u.nombre_us} {u.apellido_us}
+                    {u.usuario_us}
                   </TableCell>
-                  <TableCell className="text-muted-foreground">{u.usuario_us}</TableCell>
+                  <TableCell className="text-muted-foreground">{u.negocio || "-"}</TableCell>
                   <TableCell>{u.email_us}</TableCell>
                   <TableCell>
                     <Badge variant="secondary">{formatRole(getUserRole(u))}</Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={u.habilitado ? "default" : "outline"}>
-                      {u.habilitado ? "Habilitado" : "Deshabilitado"}
+                    <Badge variant={u.estado ? "default" : "outline"}>
+                      {u.estado ? "Habilitado" : "Deshabilitado"}
                     </Badge>
                   </TableCell>
                   <TableCell className="text-right">
@@ -189,9 +197,9 @@ export function AdminUsersSection() {
                         variant="ghost"
                         size="sm"
                         onClick={() => handleToggleStatus(u)}
-                        title={u.habilitado ? "Deshabilitar" : "Habilitar"}
+                        title={u.estado ? "Deshabilitar" : "Habilitar"}
                       >
-                        {u.habilitado ? "Deshabilitar" : "Habilitar"}
+                        {u.estado ? "Deshabilitar" : "Habilitar"}
                       </Button>
                       <Button
                         variant="ghost"
