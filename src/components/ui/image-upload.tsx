@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Upload, X } from "lucide-react";
 import { Button } from "./button";
 import { Card } from "./card";
@@ -9,19 +9,54 @@ interface ImageUploadProps {
   onChange: (url: string) => void;
   cloudName: string;
   uploadPreset: string;
+  showPreview?: boolean;
+  disabled?: boolean;
 }
 
-export const ImageUpload = ({ value, onChange, cloudName, uploadPreset }: ImageUploadProps) => {
+const MAX_FILE_SIZE_MB = 5;
+const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
+
+export const ImageUpload = ({
+  value,
+  onChange,
+  cloudName,
+  uploadPreset,
+  showPreview = true,
+  disabled = false,
+}: ImageUploadProps) => {
   const [uploading, setUploading] = useState(false);
   const [preview, setPreview] = useState<string | null>(value || null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPreview(value || null);
+  }, [value]);
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    if (disabled) {
+      e.target.value = "";
+      return;
+    }
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Seleccioná un archivo de imagen válido");
+      e.target.value = "";
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE_BYTES) {
+      toast.error(`La imagen no puede superar ${MAX_FILE_SIZE_MB}MB`);
+      e.target.value = "";
+      return;
+    }
+
     if (!cloudName || !uploadPreset) {
       toast.error("Cloudinary no está configurado. Verificá .env.local");
+      e.target.value = "";
       return;
     }
 
@@ -49,7 +84,7 @@ export const ImageUpload = ({ value, onChange, cloudName, uploadPreset }: ImageU
 
       if (data.secure_url) {
         onChange(data.secure_url);
-        setPreview(data.secure_url);
+        setPreview(showPreview ? data.secure_url : null);
       } else {
         console.error("Cloudinary response no contenía secure_url", data);
         toast.error("Error al subir la imagen");
@@ -77,13 +112,15 @@ export const ImageUpload = ({ value, onChange, cloudName, uploadPreset }: ImageU
         type="file"
         accept="image/*"
         onChange={handleFileSelect}
+        disabled={disabled}
         className="hidden"
       />
 
-      {preview ? (
+      {showPreview && preview ? (
         <Card className="relative overflow-hidden border-border p-2">
           <img src={preview} alt="Preview" className="w-full h-40 object-cover rounded" />
           <Button
+            type="button"
             variant="destructive"
             size="icon"
             className="absolute top-3 right-3"
@@ -94,8 +131,14 @@ export const ImageUpload = ({ value, onChange, cloudName, uploadPreset }: ImageU
         </Card>
       ) : (
         <Card
-          className="border-2 border-dashed border-border p-6 text-center cursor-pointer transition-colors hover:border-primary hover:bg-accent"
-          onClick={() => fileInputRef.current?.click()}
+          className={`border-2 border-dashed border-border p-6 text-center transition-colors ${
+            disabled
+              ? "cursor-not-allowed opacity-60"
+              : "cursor-pointer hover:border-primary hover:bg-accent"
+          }`}
+          onClick={() => {
+            if (!disabled) fileInputRef.current?.click();
+          }}
         >
           <Upload size={32} className="mx-auto mb-2 text-muted-foreground" />
           <p className="text-sm font-medium text-foreground">
@@ -112,7 +155,7 @@ export const ImageUpload = ({ value, onChange, cloudName, uploadPreset }: ImageU
         variant="outline"
         className="w-full"
         onClick={() => fileInputRef.current?.click()}
-        disabled={uploading}
+        disabled={uploading || disabled}
       >
         {uploading ? "Subiendo..." : "Seleccionar imagen"}
       </Button>

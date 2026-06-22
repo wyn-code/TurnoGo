@@ -11,6 +11,8 @@ type Props = {
   form: UseFormReturn<FormData>;
 };
 
+const MAX_COVER_IMAGES = 3;
+
 export default function BusinessImageStep({ form }: Props) {
   const {
     register,
@@ -21,8 +23,13 @@ export default function BusinessImageStep({ form }: Props) {
 
   const logoValue = watch("logo");
   const imagenes = watch("imagenes") || [];
+  const reachedImageLimit = imagenes.length >= MAX_COVER_IMAGES;
 
   const addImage = (url: string) => {
+    if (imagenes.length >= MAX_COVER_IMAGES) {
+      return;
+    }
+
     setValue("imagenes", [...imagenes, url], { shouldValidate: true });
   };
 
@@ -60,16 +67,33 @@ export default function BusinessImageStep({ form }: Props) {
 
       {/* GALERÍA */}
       <div className="space-y-3">
-        <Label>Fotos del negocio</Label>
+        <div className="flex items-center justify-between gap-3">
+          <Label>Fotos de portada</Label>
+          <span className="text-xs text-muted-foreground">
+            {imagenes.length}/{MAX_COVER_IMAGES}
+          </span>
+        </div>
 
         <ImageUpload
           value=""
           onChange={addImage}
           cloudName={CLOUDINARY_CONFIG.cloudName}
           uploadPreset={CLOUDINARY_CONFIG.uploadPreset}
+          showPreview={false}
+          disabled={reachedImageLimit}
         />
 
+        {reachedImageLimit && (
+          <p className="text-xs text-muted-foreground">
+            Ya cargaste el máximo de {MAX_COVER_IMAGES} imágenes de portada.
+          </p>
+        )}
+
         <input {...register("imagenes")} type="hidden" />
+
+        {errors.imagenes && (
+          <p className="text-xs text-red-500">{errors.imagenes.message}</p>
+        )}
 
         {imagenes.length > 0 && (
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mt-4">
