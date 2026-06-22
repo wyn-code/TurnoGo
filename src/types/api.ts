@@ -18,6 +18,7 @@ export interface ApiCategory {
   icono?: string | null;
   slug?: string;
   created_at?: string;
+  descripcion?: string | null;
 }
 
 export interface ApiNegocio {
