@@ -28,12 +28,10 @@ interface EditUserModalProps {
 }
 
 const getFormFromUser = (user: ApiUsuario | null) => ({
-  nombre_us: user?.nombre_us ?? "",
-  apellido_us: user?.apellido_us ?? "",
   usuario_us: user?.usuario_us ?? "",
   email_us: user?.email_us ?? "",
   role_us: user?.role_us ?? user?.rol ?? "duenio",
-  habilitado: user?.habilitado ?? true,
+  estado: user?.estado ?? true,
 });
 
 export function EditUserModal({
@@ -53,8 +51,6 @@ export function EditUserModal({
 
   const handleSave = async () => {
     if (
-      !form.nombre_us.trim() ||
-      !form.apellido_us.trim() ||
       !form.usuario_us.trim() ||
       !form.email_us.trim()
     ) {
@@ -137,7 +133,7 @@ export function EditUserModal({
           <div className="space-y-2">
             <Label>Estado</Label>
             <Select
-              value={form.habilitado ? "habilitado" : "deshabilitado"}
+              value={form.estado ? "habilitado" : "deshabilitado"}
               onValueChange={(value) =>
                 setForm((prev) => ({
                   ...prev,

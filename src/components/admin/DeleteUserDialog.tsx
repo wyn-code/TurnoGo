@@ -25,7 +25,6 @@ export function DeleteUserDialog({
 }: DeleteUserDialogProps) {
   if (!user) return null;
 
-  const fullName = `${user.nombre_us} ${user.apellido_us}`.trim();
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
@@ -34,7 +33,7 @@ export function DeleteUserDialog({
           <AlertDialogTitle>¿Eliminar usuario?</AlertDialogTitle>
           <AlertDialogDescription>
             Vas a eliminar la cuenta de{" "}
-            <span className="font-semibold text-foreground">{fullName}</span> (
+            <span className="font-semibold text-foreground">{user.usuario_us}</span> (
             {user.email_us}). Esta acción no se puede deshacer.
           </AlertDialogDescription>
         </AlertDialogHeader>

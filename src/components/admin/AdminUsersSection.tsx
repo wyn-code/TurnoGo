@@ -16,7 +16,6 @@ import {
 import { Pencil, Trash2, Search } from "lucide-react";
 import { userService } from "@/services/user.service";
 import { toast } from "sonner";
-import { Link } from "react-router-dom";
 
 function getUserRole(user: ApiUsuario) {
   return (user.role_us ?? user.rol ?? "—").toLowerCase();
