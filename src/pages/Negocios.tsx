@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
+import { Search } from "lucide-react";
 import Navbar from "@/components/landing/Navbar";
 import Footer from "@/components/landing/Footer";
-import SearchBar from "@/components/marketplace/SearchBar";
-import CategoryFilter from "@/components/marketplace/CategoryFilter";
 import BusinessGrid from "@/components/marketplace/BusinessesGrid";
 import { businessService } from "@/services/business.service";
+import { cn } from "@/lib/utils";
 
 import type { City, ApiNegocio, ApiCategory } from "@/types/api";
 
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -16,8 +17,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-
-
 
 const Negocios = () => {
   const [search, setSearch] = useState("");
@@ -84,9 +83,7 @@ const Negocios = () => {
     }
 
     if (selectedCategory) {
-      result = result.filter(
-        (b) => b.id_categoria === selectedCategory
-      );
+      result = result.filter((b) => b.id_categoria === selectedCategory);
     }
 
     if (selectedCity) {
@@ -99,7 +96,7 @@ const Negocios = () => {
 
     return result;
   }, [businesses, search, selectedCategory, selectedCity, cities]);
-  
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -114,18 +111,31 @@ const Negocios = () => {
           </p>
         </div>
 
-        {/* Buscador y Filtro de Ciudad */}
-        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center">
-          <div className="flex-1">
-            <SearchBar value={search} onChange={setSearch} />
+        {/* Barra de búsqueda (estilo tarjeta redondeada, en tiempo real) */}
+        <div className="mb-10 flex flex-col gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm sm:flex-row sm:items-center">
+          <div className="relative flex-1">
+            <Search
+              size={18}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground"
+            />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="¿Qué negocio o servicio buscás?"
+              className="border-0 bg-transparent pl-10 shadow-none focus-visible:ring-0"
+            />
           </div>
+
+          <div className="hidden h-8 w-px bg-border sm:block" />
 
           <Select
             value={selectedCity ?? "all"}
-            onValueChange={(value) => setSelectedCity(value === "all" ? null : value)}
-            disabled={isLoading} // Deshabilitamos mientras carga
+            onValueChange={(value) =>
+              setSelectedCity(value === "all" ? null : value)
+            }
+            disabled={isLoading}
           >
-            <SelectTrigger className="w-full sm:w-48">
+            <SelectTrigger className="w-full border-0 bg-transparent shadow-none focus:ring-0 sm:w-48">
               <SelectValue placeholder="Ciudad" />
             </SelectTrigger>
             <SelectContent>
@@ -139,43 +149,78 @@ const Negocios = () => {
           </Select>
         </div>
 
-        {/* Filtro de Categorías */}
-        <div className="mb-8">
-          <CategoryFilter
-            categories={categories}
-            selected={selectedCategory}
-            onSelect={setSelectedCategory}
-            // Podrías pasarle un disabled={isLoading} si tu componente lo soporta
-          />
-        </div>
+        {/* Layout: sidebar de categorías + resultados */}
+        <div className="grid gap-8 lg:grid-cols-[220px_1fr]">
+          {/* Sidebar de categorías */}
+          <aside className="space-y-2">
+            <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+              Categoría
+            </p>
+            <button
+              onClick={() => setSelectedCategory(null)}
+              disabled={isLoading}
+              className={cn(
+                "w-full rounded-lg px-4 py-2.5 text-left text-sm font-medium transition-colors",
+                selectedCategory === null
+                  ? "bg-violet-600 text-white hover:bg-violet-700"
+                  : "text-foreground hover:bg-accent"
+              )}
+            >
+              Todas
+            </button>
+            {categories.map((cat) => (
+              <button
+                key={cat.id_categoria}
+                onClick={() => setSelectedCategory(cat.id_categoria)}
+                disabled={isLoading}
+                className={cn(
+                  "w-full rounded-lg px-4 py-2.5 text-left text-sm font-medium transition-colors",
+                  selectedCategory === cat.id_categoria
+                    ? "bg-violet-600 text-white hover:bg-violet-700"
+                    : "text-foreground hover:bg-accent"
+                )}
+              >
+                {cat.nombre}
+              </button>
+            ))}
+          </aside>
 
-      {/* --- LÓGICA DE CARGA Y SKELETONS --- */}
-      {error ? (
-        <div className="py-12 text-center">
-          <p className="text-lg font-medium text-destructive">{error}</p>
+          {/* Resultados */}
+          <div>
+            {error ? (
+              <div className="py-12 text-center">
+                <p className="text-lg font-medium text-destructive">{error}</p>
+              </div>
+            ) : isLoading ? (
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="space-y-3 rounded-2xl border bg-card p-4"
+                  >
+                    <Skeleton className="h-40 w-full rounded-xl" />
+                    <Skeleton className="h-4 w-20 rounded-full" />
+                    <Skeleton className="h-5 w-3/4 rounded-md" />
+                    <Skeleton className="h-4 w-1/2 rounded-md" />
+                    <Skeleton className="mt-2 h-9 w-full rounded-xl" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <>
+                <p className="mb-5 text-sm font-medium text-muted-foreground">
+                  {filteredBusinesses.length} negocio
+                  {filteredBusinesses.length !== 1 && "s"} encontrado
+                  {filteredBusinesses.length !== 1 && "s"}
+                </p>
+                <BusinessGrid
+                  businesses={filteredBusinesses}
+                  categories={categories}
+                />
+              </>
+            )}
+          </div>
         </div>
-      ) : isLoading ? (
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="rounded-2xl border bg-card p-4 space-y-3">
-              <Skeleton className="h-40 w-full rounded-xl" />
-              <Skeleton className="h-4 w-20 rounded-full" />
-              <Skeleton className="h-5 w-3/4 rounded-md" />
-              <Skeleton className="h-4 w-1/2 rounded-md" />
-              <Skeleton className="h-9 w-full rounded-xl mt-2" />
-            </div>
-          ))}
-        </div>
-      ) : (
-        <>
-          <p className="mb-4 text-sm font-medium text-muted-foreground">
-            {filteredBusinesses.length} negocio
-            {filteredBusinesses.length !== 1 && "s"} encontrado
-            {filteredBusinesses.length !== 1 && "s"}
-          </p>
-          <BusinessGrid businesses={filteredBusinesses} categories={categories} />
-        </>
-      )}
       </main>
 
       <Footer />
