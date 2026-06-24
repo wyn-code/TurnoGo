@@ -63,3 +63,11 @@ export const useBusinessProfessionals = (businessId: string) => {
   });
 };
 
+export const useCategories = () => {
+  return useQuery({
+    queryKey: ["categories"],
+    queryFn: businessService.getCategories,
+    staleTime: 1000 * 60 * 60,
+  });
+};
+

@@ -27,6 +27,7 @@ const DAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "
 const WEEKDAYS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
 const WEEKEND = ["Sábado", "Domingo"];
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const defaultWeekSchedule: WeekSchedule = Object.fromEntries(
   DAYS.map((d) => [
     d,

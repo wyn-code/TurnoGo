@@ -1,87 +1,32 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
-
-import {
-  Link,
-  useLocation,
-  useNavigate,
-} from "react-router-dom";
-
-import {
-  CircleUser,
-  LayoutDashboard,
-  LogOut,
-  Menu,
-  X,
-} from "lucide-react";
+import { CircleUser, LayoutDashboard, LogOut, Menu, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
-
 import { useAuth } from "@/contexts/AuthContext";
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
 const Navbar = () => {
-  const [mobileOpen, setMobileOpen] =
-    useState(false);
-
-  const [userMenuOpen, setUserMenuOpen] =
-    useState(false);
-
-  const menuRef =
-    useRef<HTMLDivElement>(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const location = useLocation();
-
   const navigate = useNavigate();
 
-const {
-  user,
-  isAuthenticated,
-  logout,
-} = useAuth();
+  const { user, isAuthenticated, logout } = useAuth();
 
-  // =========================
-  // CLOSE MENUS ON NAVIGATION
-  // =========================
-
+  // Cerrar menú mobile al navegar
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMobileOpen(false);
-    setUserMenuOpen(false);
   }, [location.pathname]);
-
-  // =========================
-  // CLOSE DROPDOWN OUTSIDE
-  // =========================
-
-  useEffect(() => {
-    const handleClickOutside = (
-      event: MouseEvent,
-    ) => {
-      if (
-        menuRef.current &&
-        !menuRef.current.contains(
-          event.target as Node,
-        )
-      ) {
-        setUserMenuOpen(false);
-      }
-    };
-
-    document.addEventListener(
-      "mousedown",
-      handleClickOutside,
-    );
-
-    return () => {
-      document.removeEventListener(
-        "mousedown",
-        handleClickOutside,
-      );
-    };
-  }, []);
 
   return (
     <nav
@@ -108,22 +53,14 @@ const {
           lg:px-8
         "
       >
-        {/* LOGO */}
-
-        <Link
-          to="/"
-          className="
-            text-2xl
-            font-bold
-            tracking-tight
-            text-foreground
-          "
-        >
-          TurnoGo
-        </Link>
-
+<Link to="/" className="flex items-center gap-2">
+  {/* Usar un PNG de buena calidad para la interfaz */}
+  <img src="/icon.ico" className="h-10 w-15 object-contain" alt="TurnoGo Logo" />
+  <span className="text-2xl font-bold">
+    TurnoGo
+  </span>
+</Link>
         {/* DESKTOP */}
-
         <div
           className="
             hidden
@@ -132,202 +69,157 @@ const {
             md:flex
           "
         >
-          <Button
-            variant="ghost"
-            size="sm"
-            asChild
-          >
-            <Link to="/negocios">
-              Explorar negocios
-            </Link>
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/negocios">Explorar negocios</Link>
           </Button>
+          <Button asChild size="sm">
+          <Link to="/registro" className="flex items-center gap-2">
+            Registrar negocio
+          </Link>
+          </Button>
+          
 
-          {/* USER MENU */}
+{isAuthenticated ? (
+  <DropdownMenu>
+    <DropdownMenuTrigger asChild>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="rounded-full"
+      >
+        <CircleUser className="h-5 w-5" />
+      </Button>
+    </DropdownMenuTrigger>
 
-          {isAuthenticated ? (
-            <div
-              ref={menuRef}
-              className="relative"
-            >
-              {/* USER BUTTON */}
+    <DropdownMenuContent
+      align="end"
+      sideOffset={10}
+      className="w-56 rounded-2xl p-0 shadow-xl"
+    >
+      <button
+        type="button"
+        onClick={() => navigate("/admin")}
+        className="
+          flex
+          w-full
+          items-center
+          px-4
+          py-3
+          text-left
+          hover:bg-accent
+          transition-colors
+        "
+      >
+        <CircleUser className="mr-3 h-4 w-4" />
 
-              <button
-                type="button"
-                onClick={() =>
-                  setUserMenuOpen(
-                    !userMenuOpen,
-                  )
-                }
-                className="
-                  flex
-                  items-center
-                  justify-center
-                  rounded-full
-                  border
-                  border-border/60
-                  bg-background/70
-                  p-2
-                  backdrop-blur-md
-                "
-              >
-                <CircleUser className="h-5 w-5" />
-              </button>
+        <div className="flex flex-col">
+          <span className="text-sm font-medium">
+            {user?.name}
+          </span>
 
-              {/* TEST DROPDOWN */}
+          <span className="text-xs text-muted-foreground">
+            Mi negocio
+          </span>
+        </div>
+      </button>
 
-              {userMenuOpen && (
-                <div
-                  className="
-                    absolute
-                    right-0
-                    top-14
-                    z-[9999]
-                    w-72
-                    overflow-hidden
-                    rounded-2xl
-                    border
-                    border-border/50
-                    bg-background
-                    shadow-2xl
-                  "
-                >
-                  {/* USER INFO */}
+      <DropdownMenuSeparator className="m-0" />
 
-                  <div
-                    className="
-                      border-b
-                      border-border/50
-                      px-5
-                      py-4
-                    "
-                  >
-                    <p
-                      className="
-                        text-sm
-                        font-semibold
-                        text-foreground
-                      "
-                    >
-                      {user?.name || "Usuario"}
-                    </p>
-
-                    <p
-                      className="
-                        mt-1
-                        text-xs
-                        text-muted-foreground
-                      "
-                    >
-                      {user?.email}
-                    </p>
-                  </div>
-
-                  {/* MENU OPTIONS */}
-
-                  <div className="p-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        navigate("/admin");
-                        setUserMenuOpen(false);
-                      }}
-                      className="
-                        flex
-                        w-full
-                        items-center
-                        gap-3
-                        rounded-xl
-                        px-3
-                        py-2.5
-                        text-left
-                        text-sm
-                        transition-colors
-                        hover:bg-accent
-                      "
-                    >
-                      <LayoutDashboard className="h-4 w-4" />
-
-                      Ir al Dashboard
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        logout();
-                        navigate("/");
-                      }}
-                      className="
-                        mt-1
-                        flex
-                        w-full
-                        items-center
-                        gap-3
-                        rounded-xl
-                        px-3
-                        py-2.5
-                        text-left
-                        text-sm
-                        text-red-500
-                        transition-colors
-                        hover:bg-red-500/10
-                      "
-                    >
-                      <LogOut className="h-4 w-4" />
-
-                      Cerrar sesión
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() =>
-                navigate("/login")
-              }
-              className="
-                flex
-                items-center
-                justify-center
-                rounded-full
-                border
-                border-border/60
-                bg-background/70
-                p-2
-              "
-            >
-              <CircleUser className="h-5 w-5" />
-            </button>
-          )}
+      <DropdownMenuItem
+        onClick={() => {
+          logout();
+          navigate("/");
+        }}
+        className="
+          h-11
+          cursor-pointer
+          gap-3
+          px-4
+          text-red-500
+          focus:text-red-500
+        "
+      >
+        <LogOut className="h-4 w-4" />
+        Cerrar sesión
+      </DropdownMenuItem>
+    </DropdownMenuContent>
+  </DropdownMenu>
+) : (
+  <Button
+    variant="ghost"
+    size="icon"
+    onClick={() => navigate("/login")}
+  >
+    <CircleUser className="h-5 w-5" />
+  </Button>
+)}
         </div>
 
-        {/* MOBILE */}
+        {/* MOBILE TOGGLE */}
+        <button
+          type="button"
+          onClick={() => setMobileOpen(!mobileOpen)}
+          className="md:hidden"
+          aria-label="Abrir menú"
+        >
+          {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+      </div>
 
+      {/* MOBILE MENU */}
+      {mobileOpen && (
         <div
           className="
-            flex
-            items-center
-            gap-2
+            border-t
+            border-border
+            bg-background
             md:hidden
           "
         >
-          <button
-            type="button"
-            onClick={() =>
-              setMobileOpen(
-                !mobileOpen,
-              )
-            }
-          >
-            {mobileOpen ? (
-              <X size={24} />
+          <div className="flex flex-col p-4">
+            <Button
+              variant="ghost"
+              className="justify-start"
+              onClick={() => navigate("/negocios")}
+            >
+              Explorar negocios
+            </Button>
+
+            {isAuthenticated ? (
+              <>
+                <Button
+                  variant="ghost"
+                  className="justify-start"
+                  onClick={() => navigate("/admin")}
+                >
+                  <LayoutDashboard className="mr-2 h-4 w-4" />
+                  Dashboard
+                </Button>
+
+                <Button
+                  variant="ghost"
+                  className="justify-start text-red-500"
+                  onClick={() => {
+                    logout();
+                    navigate("/");
+                  }}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Cerrar sesión
+                </Button>
+              </>
             ) : (
-              <Menu size={24} />
+              <Button
+                variant="ghost"
+                className="justify-start"
+                onClick={() => navigate("/login")}
+              >
+                Iniciar sesión
+              </Button>
             )}
-          </button>
+          </div>
         </div>
-      </div>
+      )}
     </nav>
   );
 };
