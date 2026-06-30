@@ -17,9 +17,25 @@ export default function ProtectedRoute({
   const {
     isAuthenticated,
     isLoading,
-  } = useAuth();
+    user,
+} = useAuth();
 
   const location = useLocation();
+
+  if (
+    user?.role === "duenio" &&
+    !user.hasBusiness &&
+    location.pathname !== "/registrar-negocio"
+) {
+    return (
+        <Navigate
+            to="/registrar-negocio"
+            replace
+        />
+    );
+}
+
+  
 
   // =========================
   // LOADING
@@ -49,6 +65,19 @@ export default function ProtectedRoute({
       </div>
     );
   }
+
+  if (
+    user?.role === "duenio" &&
+    user.hasBusiness &&
+    location.pathname === "/registrar-negocio"
+) {
+    return (
+        <Navigate
+            to="/dashboard"
+            replace
+        />
+    );
+}
 
   // =========================
   // NOT AUTHENTICATED

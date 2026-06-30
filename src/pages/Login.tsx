@@ -132,19 +132,22 @@ if (
     return;
   }
 
-  if (
-    role === "duenio" ||
-    role === "dueño"
-  ) {
-    navigate(
-      "/dashboard",
-      {
+  if (role === "duenio" || role === "dueño") {
+
+    if (!result.user.hasBusiness) {
+        navigate("/registrar-negocio", {
+            replace: true,
+        });
+
+        return;
+    }
+
+    navigate("/dashboard", {
         replace: true,
-      },
-    );
+    });
 
     return;
-  }
+}
 
   navigate("/", {
     replace: true,
