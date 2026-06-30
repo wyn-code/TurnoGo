@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 AUDITORIA_DASHBOARD.md
 CORRECCIONES_CODIGO.md
+
+.env
