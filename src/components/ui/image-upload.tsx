@@ -16,7 +16,6 @@ interface ImageUploadProps {
 const MAX_FILE_SIZE_MB = 5;
 const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;
 
-console.log("ImageUpload cargado");
 
 export const ImageUpload = ({
   value,
@@ -68,10 +67,6 @@ export const ImageUpload = ({
     formData.append("upload_preset", uploadPreset);
 
     try {
-            console.log({
-        cloudName,
-        uploadPreset,
-      });
       const response = await fetch(
         `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`,
         {

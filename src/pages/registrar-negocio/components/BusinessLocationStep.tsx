@@ -64,7 +64,6 @@ export default function BusinessLocationStep({ form }: Props) {
 
       setLoadingLocalidades(true);
       try {
-        // ¡AQUÍ ESTABA EL ERROR! Cambiamos id_provincia por provincia
         const url = `http://127.0.0.1:8000/api/georef/localidades?provincia=${selectedProvinciaId}`;
         const response = await fetch(url);
         
@@ -75,7 +74,6 @@ export default function BusinessLocationStep({ form }: Props) {
         const data = await response.json();
         
         if (isMounted) {
-          // Como tu Swagger muestra un array directo [...], esto lo procesará correctamente
           const lista = Array.isArray(data) ? data : (data.localidades || []);
           
           setLocalidades(lista.sort((a: Localidad, b: Localidad) => a.nombre.localeCompare(b.nombre)));
@@ -94,13 +92,6 @@ export default function BusinessLocationStep({ form }: Props) {
 
   return (
     <div className="space-y-4">
-      {/* DIRECCIÓN */}
-      <div className="space-y-2">
-        <Label htmlFor="direccion">Dirección</Label>
-        <Input {...register("direccion")} id="direccion" placeholder="Calle y Nro" />
-        {errors.direccion && <p className="text-xs text-red-500">{errors.direccion.message}</p>}
-      </div>
-
       {/* PROVINCIA */}
       <div className="space-y-2">
         <Label htmlFor="id_provincia">Provincia</Label>
@@ -135,6 +126,13 @@ export default function BusinessLocationStep({ form }: Props) {
           ))}
         </select>
         {errors.ciudad && <p className="text-xs text-red-500">{errors.ciudad.message}</p>}
+      </div>
+
+      {/* DIRECCIÓN */}
+      <div className="space-y-2">
+        <Label htmlFor="direccion">Dirección</Label>
+        <Input {...register("direccion")} id="direccion" placeholder="Calle y Nro" />
+        {errors.direccion && <p className="text-xs text-red-500">{errors.direccion.message}</p>}
       </div>
     </div>
   );
