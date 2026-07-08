@@ -1,27 +1,31 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useEffect, useRef } from "react";
+import { lazy, Suspense, useEffect, useRef } from "react";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider } from "@/contexts/AuthContext";
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import Index from "./pages/Index.tsx";
-import Negocios from "./pages/Negocios.tsx";
-import NegocioPerfil from "./pages/NegocioPerfil.tsx";
-import Reservar from "./pages/reserva/Reservar.tsx";
-import Login from "./pages/Login.tsx";
-import Registro from "./pages/Registro.tsx";
-import RegistrarNegocio from "./pages/registrar-negocio/RegistrarNegocio.tsx";
-import Dashboard from "./pages/Dashboard.tsx";
-import NotFound from "./pages/NotFound.tsx";
-import AdminPanel from "./pages/AdminPanel.tsx";
-import { AdminRoute } from "./components/admin/AdminRoute.tsx";
-import OlvideContrasena from "./pages/OlvideContrasena.tsx";
-import RestablecerContrasena from "./pages/RestablecerContrasena.tsx";
-import AuthSuccess from "./pages/AuthSuccess";
+import { AuthProvider } from "@/features/auth/contexts/AuthContext";
+import { MembershipProvider } from "@/features/membership/contexts/MembershipContext";
+import ProtectedRoute from "@/features/auth/components/ProtectedRoute";
+import Index from "./features/landing/pages/Index.tsx";
+import Negocios from "./features/business/pages/Negocios.tsx";
+import NegocioPerfil from "./features/business/pages/NegocioPerfil.tsx";
+import Reservar from "./features/booking/pages/reserva/Reservar.tsx";
+import Login from "./features/auth/pages/Login.tsx";
+import Registro from "./features/auth/pages/Registro.tsx";
+import RegistrarNegocio from "./features/register-business/pages/RegistrarNegocio.tsx";
+import Dashboard from "./features/dashboard/pages/Dashboard.tsx";
+const Planes = lazy(() => import("./features/membership/pages/Planes.tsx"));
+const MiSuscripcion = lazy(() => import("./features/membership/pages/MiSuscripcion.tsx"));
+const ResultadoPago = lazy(() => import("./features/membership/pages/ResultadoPago.tsx"));
+import NotFound from "./features/landing/pages/NotFound.tsx";
+import AdminPanel from "./features/admin/pages/AdminPanel.tsx";
+import { AdminRoute } from "./features/admin/components/AdminRoute.tsx";
+import OlvideContrasena from "./features/auth/pages/OlvideContrasena.tsx";
+import RestablecerContrasena from "./features/auth/pages/RestablecerContrasena.tsx";
+import AuthSuccess from "./features/auth/pages/AuthSuccess";
 import 'mapbox-gl/dist/mapbox-gl.css';
-import VerifyEmailPage from "./pages/VerifyEmailPage.tsx";
+import VerifyEmailPage from "./features/auth/pages/VerifyEmailPage.tsx";
 
 
 const queryClient = new QueryClient();
@@ -48,12 +52,15 @@ const AppRoutes = () => {
       {/* Rutas protegidas — solo dueños de negocio */}
       <Route path="/registrar-negocio" element={<ProtectedRoute><RegistrarNegocio /></ProtectedRoute>} />
       <Route path="/dashboard/*" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+      <Route path="/planes" element={<ProtectedRoute><Planes /></ProtectedRoute>} />
+      <Route path="/mi-suscripcion" element={<ProtectedRoute><MiSuscripcion /></ProtectedRoute>} />
       <Route path="/admin/*" element={<AdminRoute><AdminPanel /></AdminRoute>} />
       <Route path="/verify-email/:token" element={<VerifyEmailPage />}/>
       <Route path="/restablecer-contrasena/:token" element={<RestablecerContrasena />}
       />
 
       <Route path="/auth-success" element={<AuthSuccess />} />
+      <Route path="/pagos/resultado" element={<ResultadoPago />} />
 
       {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
       <Route path="*" element={<NotFound />} />
@@ -115,6 +122,14 @@ const AppRoutes = () => {
   );
 };
 
+function PageLoader() {
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center">
+      <p className="text-muted-foreground">Cargando...</p>
+    </div>
+  );
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -122,7 +137,11 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <AppRoutes />
+          <MembershipProvider>
+            <Suspense fallback={<PageLoader />}>
+              <AppRoutes />
+            </Suspense>
+          </MembershipProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
