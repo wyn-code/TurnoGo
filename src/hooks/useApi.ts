@@ -35,6 +35,17 @@ export const useBusinesses = (params?: { category?: string; city?: string; page?
   });
 };
 
+
+// Hook para obtener un negocio por usuario
+export const useMyBusiness = (usuarioId?: string | number) => {
+  return useQuery({
+    queryKey: ["my-business", usuarioId],
+    queryFn: () => businessService.getMyBusiness(usuarioId),
+    enabled: usuarioId != null,
+    staleTime: 2 * 60 * 1000,
+  });
+};
+
 // Hook para obtener un negocio por slug
 export const useBusinessBySlug = (slug: string) => {
   return useQuery({

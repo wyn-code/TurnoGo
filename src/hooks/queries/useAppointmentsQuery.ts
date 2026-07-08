@@ -1,11 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { appointmentService } from "@/services/appointment.service";
 import type { ApiTurno } from "@/types/api";
+import {
+  getLocalDayRange,
+  getLocalWeekRange,
+  type DateTimeRange,
+} from "@/lib/datetime-utils";
 
-export type AppointmentsRange = {
-  desde: string;
-  hasta: string;
-};
+export type AppointmentsRange = DateTimeRange;
 
 export const getAppointmentsQueryKey = (
   businessId: string | number | null,
@@ -13,33 +15,11 @@ export const getAppointmentsQueryKey = (
 ) => ["appointments", businessId, range?.desde, range?.hasta] as const;
 
 export function getDayRange(date: Date): AppointmentsRange {
-  const desde = new Date(date);
-  desde.setHours(0, 0, 0, 0);
-
-  const hasta = new Date(date);
-  hasta.setHours(23, 59, 59, 999);
-
-  return {
-    desde: desde.toISOString(),
-    hasta: hasta.toISOString(),
-  };
+  return getLocalDayRange(date);
 }
 
 export function getWeekRange(date: Date): AppointmentsRange {
-  const start = new Date(date);
-  const day = start.getDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  start.setDate(start.getDate() + diff);
-  start.setHours(0, 0, 0, 0);
-
-  const end = new Date(start);
-  end.setDate(end.getDate() + 6);
-  end.setHours(23, 59, 59, 999);
-
-  return {
-    desde: start.toISOString(),
-    hasta: end.toISOString(),
-  };
+  return getLocalWeekRange(date);
 }
 
 export const useAppointments = (

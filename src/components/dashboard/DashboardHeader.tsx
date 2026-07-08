@@ -1,9 +1,8 @@
 import { SidebarTrigger } from "../../components/ui/sidebar";
 import { Button } from "../../components/ui/button";
-import { Link, useNavigate } from "react-router-dom";
-import { LogOut, ExternalLink } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useDashboardBusiness } from "@/contexts/DashboardBusinessContext";
 
 interface DashboardHeaderProps {
   title: string;
@@ -11,7 +10,6 @@ interface DashboardHeaderProps {
 
 const DashboardHeader = ({ title }: DashboardHeaderProps) => {
   const { logout } = useAuth();
-  const { business } = useDashboardBusiness();
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -25,18 +23,11 @@ const DashboardHeader = ({ title }: DashboardHeaderProps) => {
         <SidebarTrigger />
         <h1 className="text-lg font-semibold text-foreground">{title}</h1>
       </div>
-      <div className="flex items-center gap-2">
-        {business?.slug && (
-          <Button variant="ghost" size="sm" asChild>
-            <Link to={`/negocio/${business.slug}`}>
-              <ExternalLink size={14} className="mr-1" /> Ver página
-            </Link>
-          </Button>
-        )}
-        <Button variant="ghost" size="sm" onClick={handleLogout}>
-          <LogOut size={14} className="mr-1" /> Salir
-        </Button>
-      </div>
+
+      <Button variant="ghost" size="sm" onClick={handleLogout}>
+        <LogOut size={14} className="mr-1" />
+        Salir
+      </Button>
     </header>
   );
 };

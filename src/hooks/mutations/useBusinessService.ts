@@ -33,10 +33,14 @@ export const useUpdateBusiness = () => {
 
     onSuccess: (updatedBusiness) => {
       queryClient.invalidateQueries({ queryKey: ["businesses"] });
+      queryClient.invalidateQueries({ queryKey: ["my-business"] });
       queryClient.setQueryData(
-        ["business", updatedBusiness.id_negocio],
+        ["my-business", updatedBusiness.usuario_id],
         updatedBusiness,
       );
+      if (updatedBusiness.slug) {
+        queryClient.setQueryData(["business", updatedBusiness.slug], updatedBusiness);
+      }
       toast.success("Configuración guardada correctamente");
     },
 

@@ -41,6 +41,8 @@ import type {
   ApiHorario,
 } from "@/types/api";
 import { ApiError } from "@/lib/api-client";
+import { buildLocalDateTimeString } from "@/lib/datetime-utils";
+import { apiDayToWeekDayIndex } from "@/lib/schedule-utils";
 
 const STEPS = ["Servicio", "Fecha y horario", "Datos", "Completado"];
 
@@ -52,24 +54,6 @@ const toLocalDateKey = (d: Date) =>
 const addMinutes = (d: Date, m: number) => new Date(d.getTime() + m * 60_000);
 const rangesOverlap = (aS: Date, aE: Date, bS: Date, bE: Date) =>
   aS < bE && aE > bS;
-
-const buildLocalDateTimeString = (date: Date, time: string) => {
-  const [h, m] = time.split(":");
-  const local = new Date(
-    date.getFullYear(),
-    date.getMonth(),
-    date.getDate(),
-    Number(h),
-    Number(m),
-    0,
-  );
-  const off = local.getTimezoneOffset();
-  const sign = off <= 0 ? "+" : "-";
-  const abs = Math.abs(off);
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(
-    date.getDate(),
-  )}T${h}:${m}:00${sign}${pad(Math.floor(abs / 60))}:${pad(abs % 60)}`;
-};
 
 const SLOT_INTERVAL = 30;
 
@@ -183,9 +167,10 @@ const Reservar = () => {
     const jsDay = date.getDay();
     const apiDay = jsDay === 0 ? 6 : jsDay - 1;
 
-    const h = b.horarios.find(
-      (x: ApiHorario) => x.dia_semana === apiDay
-    );
+    const h = b.horarios.find((x: ApiHorario) => {
+      const dayIndex = apiDayToWeekDayIndex(x.dia_semana);
+      return dayIndex === apiDay;
+    });
 
     if (!h) return undefined;
 

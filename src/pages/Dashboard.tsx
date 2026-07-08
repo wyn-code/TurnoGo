@@ -1,12 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
 import { Routes, Route, useLocation } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import { useAuth } from "@/contexts/AuthContext";
-import { businessService } from "@/services/business.service";
-import type { ApiNegocio } from "@/types/api";
-import { DashboardBusinessProvider } from "@/contexts/DashboardBusinessContext";
 import DashboardResumen from "./dashboard/DashboardResumen";
 import DashboardTurnos from "./dashboard/DashboardTurnos";
 import DashboardServicios from "./dashboard/DashboardServicios";
@@ -14,6 +9,11 @@ import DashboardEmpleados from "./dashboard/DashboardEmpleados";
 import DashboardHorarios from "./dashboard/DashboardHorarios";
 import DashboardConfiguracion from "./dashboard/DashboardConfiguracion";
 import DashboardPersonalizacion from "./dashboard/DashboardPersonalizacion";
+import DashboardEstadisticas from "./dashboard/DashboardEstadisticas";
+import { DashboardBusinessProvider } from "@/contexts/DashboardBusinessContext";
+import { useMyBusiness } from "@/hooks/useApi";
+import { useAuth } from "@/contexts/AuthContext";
+import { Loader2 } from "lucide-react";
 
 const sectionTitles: Record<string, string> = {
   "": "Resumen",
@@ -21,74 +21,66 @@ const sectionTitles: Record<string, string> = {
   servicios: "Servicios",
   empleados: "Empleados",
   horarios: "Horarios",
+  estadisticas: "Estadísticas",
   configuracion: "Configuración",
   personalizacion: "Personalización",
 };
 
-const Dashboard = () => {
-  const { user } = useAuth();
+const DashboardContent = () => {
   const location = useLocation();
-  const [business, setBusiness] = useState<ApiNegocio | null>(null);
-  const [isLoadingBusiness, setIsLoadingBusiness] = useState(true);
-
-  // eslint-disable-next-line react-hooks/preserve-manual-memoization
-  const loadBusiness = useCallback(async () => {
-    if (!user?.id) {
-      setBusiness(null);
-      setIsLoadingBusiness(false);
-      return;
-    }
-
-    try {
-      setIsLoadingBusiness(true);
-      const negocios = await businessService.getAllBusinesses();
-      const linkedBusiness =
-        negocios.find((n) => String(n.usuario_id) === String(user.id)) ?? null;
-      setBusiness(linkedBusiness);
-    } catch (error) {
-      console.error("Error cargando negocio del usuario:", error);
-      setBusiness(null);
-    } finally {
-      setIsLoadingBusiness(false);
-    }
-  }, [user?.id]);
-
-  const path = location.pathname.replace(/^\/dashboard\/?/, "");
+  const path = location.pathname.split("/dashboard/")[1]?.split("/")[0] || "";
   const title = sectionTitles[path] || "Dashboard";
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    void loadBusiness();
-  }, [loadBusiness]);
+  return (
+    <div className="min-h-screen flex w-full">
+      <DashboardSidebar />
+      <div className="flex-1 flex flex-col">
+        <DashboardHeader title={title} />
+        <main className="flex-1 p-6">
+          <Routes>
+            <Route index element={<DashboardResumen />} />
+            <Route path="turnos" element={<DashboardTurnos />} />
+            <Route path="servicios" element={<DashboardServicios />} />
+            <Route path="empleados" element={<DashboardEmpleados />} />
+            <Route path="horarios" element={<DashboardHorarios />} />
+            <Route path="estadisticas" element={<DashboardEstadisticas />} />
+            <Route path="configuracion" element={<DashboardConfiguracion />} />
+            <Route path="personalizacion" element={<DashboardPersonalizacion />} />
+          </Routes>
+        </main>
+      </div>
+    </div>
+  );
+};
+
+const Dashboard = () => {
+  const { user, isLoading: authLoading } = useAuth();
+  const {
+    data: business,
+    isLoading: isLoadingBusiness,
+    refetch,
+  } = useMyBusiness(user?.id);
+
+  if (authLoading || (user?.id && isLoadingBusiness)) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <DashboardBusinessProvider
-      value={{ business, isLoadingBusiness, refreshBusiness: loadBusiness }}
+      value={{
+        business: business ?? null,
+        isLoadingBusiness,
+        refreshBusiness: async () => {
+          await refetch();
+        },
+      }}
     >
       <SidebarProvider>
-        <div className="min-h-screen flex w-full">
-          <DashboardSidebar />
-          <div className="flex-1 flex flex-col">
-            <DashboardHeader title={title} />
-            <main className="flex-1 p-6">
-              <Routes>
-                <Route index element={<DashboardResumen />} />
-                <Route path="turnos" element={<DashboardTurnos />} />
-                <Route path="servicios" element={<DashboardServicios />} />
-                <Route path="empleados" element={<DashboardEmpleados />} />
-                <Route path="horarios" element={<DashboardHorarios />} />
-                <Route
-                  path="configuracion"
-                  element={<DashboardConfiguracion />}
-                />
-                <Route
-                  path="personalizacion"
-                  element={<DashboardPersonalizacion />}
-                />
-              </Routes>
-            </main>
-          </div>
-        </div>
+        <DashboardContent />
       </SidebarProvider>
     </DashboardBusinessProvider>
   );

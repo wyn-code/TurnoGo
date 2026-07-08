@@ -1,5 +1,5 @@
-import apiClient from "@/lib/api-client";
-import type { ApiHorario } from "@/types/api";
+import apiClient, { ApiError } from "@/lib/api-client";
+import type { ApiHorario, ApiNegocio } from "@/types/api";
 
 export interface BusinessSchedulePayload {
   dia_semana: number;
@@ -21,7 +21,21 @@ export const horarioService = {
     businessId: string | number
   ): Promise<ApiHorario[]> => {
     const id = String(businessId);
-    return apiClient.get<ApiHorario[]>(`/horarios/${id}`);
+
+    try {
+      return await apiClient.get<ApiHorario[]>(`/horarios/${id}`);
+    } catch (error) {
+      if (error instanceof ApiError && error.status === 404) {
+        try {
+          const business = await apiClient.get<ApiNegocio>(`/negocios/${id}`);
+          return business.horarios ?? [];
+        } catch {
+          return [];
+        }
+      }
+
+      throw error;
+    }
   },
 
   /**

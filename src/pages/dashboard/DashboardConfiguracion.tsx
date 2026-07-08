@@ -55,7 +55,6 @@ const DashboardConfiguracion = () => {
         },
       });
       await refreshBusiness();
-      toast.success("Configuración guardada");
     } catch {
       // El hook ya muestra el error
     }

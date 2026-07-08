@@ -20,9 +20,9 @@ const closedWeekSchedule: WeekSchedule = Object.fromEntries(
   WEEK_DAYS.map((d) => [d, { open: false, start: "09:00", end: "18:00" }]),
 ) as WeekSchedule;
 
-/** Backend: 1 = Lunes … 7 = Domingo */
+/** Backend: 0 = Lunes … 6 = Domingo (misma convención que registro y reservas) */
 export function weekDayIndexToApi(dayIndex: number): number {
-  return dayIndex + 1;
+  return dayIndex;
 }
 
 /** Convierte dia_semana del API al índice 0–6 (Lunes–Domingo). */
@@ -55,7 +55,7 @@ export function mapHorariosToWeekSchedule(
   apiHorarios: ApiHorario[],
 ): WeekSchedule {
   if (!apiHorarios.length) {
-    return { ...defaultWeekSchedule };
+    return { ...closedWeekSchedule };
   }
 
   const mapped: WeekSchedule = { ...closedWeekSchedule };

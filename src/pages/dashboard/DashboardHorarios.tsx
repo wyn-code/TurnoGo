@@ -12,7 +12,6 @@ import { useHorarios } from "@/hooks/queries/useHorariosQuery";
 import { useUpdateHorarios } from "@/hooks/mutations/useUpdateHorarios";
 import {
   WEEK_DAYS,
-  defaultWeekSchedule,
   mapHorariosToWeekSchedule,
   mapWeekScheduleToPayload,
   type WeekDay,
@@ -28,13 +27,15 @@ const DashboardHorarios = () => {
   const { data: apiHorarios = [], isLoading, error } = useHorarios(businessId);
   const updateMutation = useUpdateHorarios();
 
-  const [schedule, setSchedule] = useState<WeekSchedule>(defaultWeekSchedule);
+  const [schedule, setSchedule] = useState<WeekSchedule>(() =>
+    mapHorariosToWeekSchedule([]),
+  );
 
   useEffect(() => {
-    if (apiHorarios.length > 0) {
+    if (!isLoading) {
       setSchedule(mapHorariosToWeekSchedule(apiHorarios));
     }
-  }, [apiHorarios]);
+  }, [apiHorarios, isLoading]);
 
   const update = <K extends DayField>(
     day: WeekDay,

@@ -1,4 +1,4 @@
-import apiClient from "@/lib/api-client";
+import apiClient, { ApiError } from "@/lib/api-client";
 import type { ApiCategory, ApiNegocio, NegocioMapa } from "@/types/api";
 
 
@@ -63,6 +63,29 @@ export const businessService = {
 
   getBusinessById: async (id: string | number): Promise<ApiNegocio> => {
     return apiClient.get<ApiNegocio>(`/negocios/${id}`);
+  },
+
+  getMyBusiness: async (usuarioId?: string | number): Promise<ApiNegocio> => {
+    try {
+      return await apiClient.get<ApiNegocio>("/negocios/me");
+    } catch (error) {
+      if (
+        usuarioId != null &&
+        error instanceof ApiError &&
+        (error.status === 404 || error.status === 405)
+      ) {
+        const negocios = await apiClient.get<ApiNegocio[]>("/negocios/");
+        const mine = negocios.find(
+          (n) => String(n.usuario_id) === String(usuarioId),
+        );
+
+        if (mine) {
+          return mine;
+        }
+      }
+
+      throw error;
+    }
   },
 
   getBusinessBySlug: async (slug: string): Promise<ApiNegocio> => {

@@ -1,42 +1,38 @@
 import type { ApiHorario } from "@/types/api";
+import { apiDayToWeekDayName, normalizeTimeValue } from "@/lib/schedule-utils";
 
 interface HorarioCardProps {
   horarios: ApiHorario[];
 }
 
-const dias = [
-  "Domingo",
-  "Lunes",
-  "Martes",
-  "Miércoles",
-  "Jueves",
-  "Viernes",
-  "Sábado",
-];
+export default function HorarioCard({ horarios }: HorarioCardProps) {
+  const sorted = [...horarios].sort((a, b) => {
+    const indexA = a.dia_semana >= 1 && a.dia_semana <= 7 ? a.dia_semana - 1 : a.dia_semana;
+    const indexB = b.dia_semana >= 1 && b.dia_semana <= 7 ? b.dia_semana - 1 : b.dia_semana;
+    return indexA - indexB;
+  });
 
-export default function HorarioCard({
-  horarios,
-}: HorarioCardProps) {
   return (
     <div className="rounded-xl border bg-card p-4 shadow-sm">
-      <h3 className="mb-4 font-semibold">
-        Horarios de Atención
-      </h3>
+      <h3 className="mb-4 font-semibold">Horarios de Atención</h3>
 
       <div className="space-y-2 text-sm">
-        {horarios.map((horario) => (
-          <div
-            key={horario.dia_semana}
-            className="flex justify-between"
-          >
-            <span>{dias[horario.dia_semana]}</span>
+        {sorted.map((horario) => {
+          const dayName = apiDayToWeekDayName(horario.dia_semana);
 
-            <span className="text-muted-foreground">
-              {horario.hora_apertura.slice(0, 5)} -{" "}
-              {horario.hora_cierre.slice(0, 5)}
-            </span>
-          </div>
-        ))}
+          return (
+            <div
+              key={`${horario.dia_semana}-${horario.hora_apertura}`}
+              className="flex justify-between"
+            >
+              <span>{dayName ?? `Día ${horario.dia_semana}`}</span>
+              <span className="text-muted-foreground">
+                {normalizeTimeValue(horario.hora_apertura)} -{" "}
+                {normalizeTimeValue(horario.hora_cierre)}
+              </span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

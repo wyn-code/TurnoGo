@@ -1,5 +1,5 @@
-import { LayoutDashboard, CalendarDays, Briefcase, Users, Clock, Settings, Palette, Star } from "lucide-react";
-import { NavLink } from "../../components/NavLink";
+import { LayoutDashboard, CalendarDays, Briefcase, Users, Clock, Settings, Palette, Star, BarChart3 } from "lucide-react";
+import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -11,7 +11,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   useSidebar,
-} from "../../components/ui/sidebar";
+} from "@/components/ui/sidebar";
 
 const items = [
   { title: "Resumen", url: "/dashboard", icon: LayoutDashboard },
@@ -19,6 +19,7 @@ const items = [
   { title: "Servicios", url: "/dashboard/servicios", icon: Briefcase },
   { title: "Empleados", url: "/dashboard/empleados", icon: Users },
   { title: "Horarios", url: "/dashboard/horarios", icon: Clock },
+  { title: "Estadísticas", url: "/dashboard/estadisticas", icon: BarChart3 },
   { title: "Configuración", url: "/dashboard/configuracion", icon: Settings },
   { title: "Personalización", url: "/dashboard/personalizacion", icon: Palette },
 ];
