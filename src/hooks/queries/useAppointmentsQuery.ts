@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { appointmentService } from "@/services/appointment.service";
+import { appointmentService } from "@/features/booking/services/appointment.service";
 import type { ApiTurno } from "@/types/api";
 import {
   getLocalDayRange,

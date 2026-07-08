@@ -179,6 +179,39 @@ export interface NegocioMapa {
   latitud: number;
   longitud: number;
 }
+
+export interface ApiPlan {
+  id_plan: number;
+  nombre: string;
+  precio: number;
+  duracion_dias: number;
+  descripcion: string | null;
+  activo: boolean;
+  feature_keys: string[];
+}
+
+export interface ApiSuscripcion {
+  id_suscripcion: number;
+  estado: "activa" | "pendiente" | "vencida" | "cancelada" | "fallida";
+  fecha_inicio: string;
+  fecha_fin: string;
+  renovacion_automatica: boolean;
+  plan: ApiPlan;
+}
+
+export interface ApiNegocioFunciones {
+  id_negocio: number;
+  plan: string | null;
+  estado: string | null;
+  fecha_fin: string | null;
+  funciones: string[];
+}
+
+export interface ApiCrearPreferenciaResponse {
+  init_point: string;
+  preference_id: string;
+}
+
 // Aliases de compatibilidad para transición gradual
 export type ApiBusiness = ApiNegocio;
 export type ApiService = ApiServicio;
