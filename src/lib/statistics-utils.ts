@@ -170,18 +170,25 @@ function getClientName(appointment: ApiTurno) {
   return name || `Cliente #${appointment.id_cliente}`;
 }
 
+function getServiceId(appointment: ApiTurno): number | undefined {
+  return appointment.servicio?.id_servicio ?? appointment.id_servicio;
+}
+
 function getServicePrice(
   appointment: ApiTurno,
   servicesById: Map<number, ApiServicio>,
 ) {
-  return servicesById.get(appointment.id_servicio)?.precio ?? 0;
+  const sid = getServiceId(appointment);
+  return sid != null ? (servicesById.get(sid)?.precio ?? 0) : 0;
 }
 
 function getServiceDuration(
   appointment: ApiTurno,
   servicesById: Map<number, ApiServicio>,
 ) {
-  const service = servicesById.get(appointment.id_servicio);
+  const sid = getServiceId(appointment);
+  if (sid == null) return 30;
+  const service = servicesById.get(sid);
   if (!service) {
     return 30;
   }
@@ -456,7 +463,10 @@ function buildServiceStats(
   const counts = new Map<number, { solicitados: number; ingresos: number }>();
 
   appointments.forEach((appointment) => {
-    const current = counts.get(appointment.id_servicio) ?? {
+    const sid = getServiceId(appointment);
+    if (sid == null) return;
+
+    const current = counts.get(sid) ?? {
       solicitados: 0,
       ingresos: 0,
     };
@@ -467,7 +477,7 @@ function buildServiceStats(
       current.ingresos += getServicePrice(appointment, servicesById);
     }
 
-    counts.set(appointment.id_servicio, current);
+    counts.set(sid, current);
   });
 
   const items = services
@@ -489,9 +499,11 @@ function buildServiceStats(
 
   const previousCounts = new Map<number, number>();
   comparisonAppointments.forEach((appointment) => {
+    const sid = getServiceId(appointment);
+    if (sid == null) return;
     previousCounts.set(
-      appointment.id_servicio,
-      (previousCounts.get(appointment.id_servicio) ?? 0) + 1,
+      sid,
+      (previousCounts.get(sid) ?? 0) + 1,
     );
   });
 
@@ -518,7 +530,7 @@ function buildEmployeeStats(
 
   return activeEmployees.map((employee) => {
     const employeeAppointments = appointments.filter(
-      (appointment) => appointment.id_empleado === employee.id_empleado,
+      (appointment) => (appointment.empleado?.id_empleado ?? appointment.id_empleado) === employee.id_empleado,
     );
 
     const turnos = employeeAppointments.length;
@@ -839,7 +851,7 @@ export function exportStatisticsFile(
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `estadisticas-turnexo.${format === "csv" ? "csv" : "xls"}`;
+  link.download = `estadisticas-turnogo.${format === "csv" ? "csv" : "xls"}`;
   link.click();
   URL.revokeObjectURL(url);
 }

@@ -53,7 +53,7 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import { useStatistics } from "@/hooks/useEstadistica";
-import { useDashboardBusiness } from "@/contexts/DashboardBusinessContext";
+import { useDashboardBusiness } from "@/features/dashboard/contexts/DashboardBusinessContext";
 import { exportStatisticsFile } from "@/lib/statistics-utils";
 import type { MetricWithDelta, StatisticsCompare, StatisticsRange } from "@/types/statistics";
 

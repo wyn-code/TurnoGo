@@ -5,12 +5,14 @@ import {
   User,
   Briefcase,
   CalendarPlus,
+  QrCode,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { Link } from "react-router-dom";
+import { QRCodeSVG } from "qrcode.react";
 import type { ApiEmpleado, ApiServicio } from "@/types/api";
 
 interface BookingSummaryProps {
@@ -21,6 +23,7 @@ interface BookingSummaryProps {
   client: { firstName: string; lastName: string; email: string; phone: string };
   businessName: string;
   confirmed?: boolean;
+  turnoId?: number | null;
 }
 
 const generateGoogleCalendarLink = (
@@ -72,7 +75,7 @@ const generateGoogleCalendarLink = (
 
   const title = encodeURIComponent(`Turno: ${serviceName} en ${businessName}`);
 
-  const details = encodeURIComponent(`Turno reservado a través de Turnexo.`);
+  const details = encodeURIComponent(`Turno reservado a través de TurnoGo.`);
 
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${formatDateForGoogle(startDate)}/${formatDateForGoogle(endDate)}&details=${details}`;
 };
@@ -85,6 +88,7 @@ const BookingSummary = ({
   client,
   businessName,
   confirmed,
+  turnoId,
 }: BookingSummaryProps) => {
   const parsedDate = new Date(date);
 
@@ -128,6 +132,23 @@ const BookingSummary = ({
                 </span>
               </p>
             </div>
+          </div>
+        )}
+
+        {confirmed && turnoId && (
+          <div className="flex flex-col items-center gap-2 py-4">
+            <div className="rounded-2xl bg-white p-4 shadow-sm border border-border">
+              <QRCodeSVG
+                value={`${window.location.origin}/dashboard/turnos?turno=${turnoId}`}
+                size={160}
+                level="M"
+                includeMargin={false}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground flex items-center gap-1">
+              <QrCode size={12} />
+              Presentá este código al llegar
+            </p>
           </div>
         )}
 

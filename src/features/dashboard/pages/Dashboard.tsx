@@ -1,26 +1,8 @@
 import { Routes, Route, useLocation } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
-<<<<<<< HEAD:src/pages/Dashboard.tsx
-import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
-import DashboardHeader from "@/components/dashboard/DashboardHeader";
-import DashboardResumen from "./dashboard/DashboardResumen";
-import DashboardTurnos from "./dashboard/DashboardTurnos";
-import DashboardServicios from "./dashboard/DashboardServicios";
-import DashboardEmpleados from "./dashboard/DashboardEmpleados";
-import DashboardHorarios from "./dashboard/DashboardHorarios";
-import DashboardConfiguracion from "./dashboard/DashboardConfiguracion";
-import DashboardPersonalizacion from "./dashboard/DashboardPersonalizacion";
-import DashboardEstadisticas from "./dashboard/DashboardEstadisticas";
-import { DashboardBusinessProvider } from "@/contexts/DashboardBusinessContext";
-import { useMyBusiness } from "@/hooks/useApi";
-import { useAuth } from "@/contexts/AuthContext";
-import { Loader2 } from "lucide-react";
-=======
 import { DashboardSidebar } from "@/features/dashboard/components/DashboardSidebar";
 import DashboardHeader from "@/features/dashboard/components/DashboardHeader";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
-import { businessService } from "@/services/business.service";
-import type { ApiNegocio } from "@/types/api";
 import { DashboardBusinessProvider } from "@/features/dashboard/contexts/DashboardBusinessContext";
 import DashboardResumen from "./subpages/DashboardResumen";
 import DashboardTurnos from "./subpages/DashboardTurnos";
@@ -29,7 +11,9 @@ import DashboardEmpleados from "./subpages/DashboardEmpleados";
 import DashboardHorarios from "./subpages/DashboardHorarios";
 import DashboardConfiguracion from "./subpages/DashboardConfiguracion";
 import DashboardPersonalizacion from "./subpages/DashboardPersonalizacion";
->>>>>>> rocco:src/features/dashboard/pages/Dashboard.tsx
+import DashboardEstadisticas from "./subpages/DashboardEstadisticas";
+import { useMyBusiness } from "@/hooks/useApi";
+import { Loader2 } from "lucide-react";
 
 const sectionTitles: Record<string, string> = {
   "": "Resumen",

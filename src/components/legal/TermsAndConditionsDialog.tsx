@@ -20,7 +20,7 @@ export default function TermsAndConditionsDialog({
       <DialogTrigger asChild>{trigger}</DialogTrigger>
       <DialogContent className="max-w-3xl">
         <DialogHeader>
-          <DialogTitle>Términos y Condiciones de Uso - Turnexo</DialogTitle>
+          <DialogTitle>Términos y Condiciones de Uso - TurnoGo</DialogTitle>
         </DialogHeader>
 
         <ScrollArea className="h-[70vh] pr-4">
@@ -30,7 +30,7 @@ export default function TermsAndConditionsDialog({
               7 de mayo de 2026
             </p>
             <p>
-              Bienvenido a Turnexo. Al registrarse y utilizar la plataforma, el
+              Bienvenido a TurnoGo. Al registrarse y utilizar la plataforma, el
               usuario acepta los siguientes términos y condiciones.
             </p>
 
@@ -39,12 +39,12 @@ export default function TermsAndConditionsDialog({
                 1. Sobre la plataforma
               </h3>
               <p>
-                Turnexo es una plataforma digital destinada a facilitar la
+                TurnoGo es una plataforma digital destinada a facilitar la
                 gestión de turnos, reservas y servicios entre negocios y
                 clientes.
               </p>
               <p>
-                Turnexo actúa únicamente como intermediario tecnológico y no
+                TurnoGo actúa únicamente como intermediario tecnológico y no
                 participa directamente en la prestación de los servicios
                 ofrecidos por los negocios registrados.
               </p>
@@ -65,7 +65,7 @@ export default function TermsAndConditionsDialog({
                 <li>El cumplimiento de leyes y regulaciones aplicables.</li>
               </ul>
               <p>
-                Turnexo no garantiza la autenticidad, legalidad o calidad de los
+                TurnoGo no garantiza la autenticidad, legalidad o calidad de los
                 negocios publicados dentro de la plataforma.
               </p>
             </section>
@@ -75,11 +75,11 @@ export default function TermsAndConditionsDialog({
                 3. Negocios falsos o fraudulentos
               </h3>
               <p>
-                Turnexo no se responsabiliza por negocios falsos, fraudulentos o
+                TurnoGo no se responsabiliza por negocios falsos, fraudulentos o
                 engañosos creados por terceros dentro de la plataforma.
               </p>
               <p>
-                En caso de detectar actividad sospechosa, Turnexo podrá
+                En caso de detectar actividad sospechosa, TurnoGo podrá
                 suspender o eliminar cuentas sin previo aviso.
               </p>
               <p>
@@ -92,7 +92,7 @@ export default function TermsAndConditionsDialog({
               <h3 className="font-semibold text-foreground">
                 4. Pagos y transacciones
               </h3>
-              <p>Turnexo no es responsable por:</p>
+              <p>TurnoGo no es responsable por:</p>
               <ul className="list-disc space-y-1 pl-5">
                 <li>Pagos realizados entre usuarios y negocios.</li>
                 <li>Transferencias bancarias.</li>
@@ -113,7 +113,7 @@ export default function TermsAndConditionsDialog({
                 5. Disponibilidad del servicio
               </h3>
               <p>
-                Turnexo no garantiza disponibilidad ininterrumpida de la
+                TurnoGo no garantiza disponibilidad ininterrumpida de la
                 plataforma.
               </p>
               <p>La plataforma puede presentar:</p>
@@ -130,7 +130,7 @@ export default function TermsAndConditionsDialog({
               <h3 className="font-semibold text-foreground">
                 6. Uso indebido
               </h3>
-              <p>Está prohibido utilizar Turnexo para:</p>
+              <p>Está prohibido utilizar TurnoGo para:</p>
               <ul className="list-disc space-y-1 pl-5">
                 <li>actividades ilegales,</li>
                 <li>suplantación de identidad,</li>
@@ -140,7 +140,7 @@ export default function TermsAndConditionsDialog({
                 <li>contenido ofensivo o engañoso.</li>
               </ul>
               <p>
-                Turnexo podrá suspender cuentas que incumplan estas reglas.
+                TurnoGo podrá suspender cuentas que incumplan estas reglas.
               </p>
             </section>
 
@@ -149,7 +149,7 @@ export default function TermsAndConditionsDialog({
                 7. Protección de datos
               </h3>
               <p>
-                Turnexo podrá almacenar información básica de usuarios y negocios
+                TurnoGo podrá almacenar información básica de usuarios y negocios
                 para el funcionamiento de la plataforma.
               </p>
               <p>
@@ -162,7 +162,7 @@ export default function TermsAndConditionsDialog({
               <h3 className="font-semibold text-foreground">
                 8. Limitación de responsabilidad
               </h3>
-              <p>Turnexo no será responsable por:</p>
+              <p>TurnoGo no será responsable por:</p>
               <ul className="list-disc space-y-1 pl-5">
                 <li>daños directos o indirectos,</li>
                 <li>pérdida de ingresos,</li>
@@ -183,7 +183,7 @@ export default function TermsAndConditionsDialog({
                 9. Modificaciones
               </h3>
               <p>
-                Turnexo podrá modificar estos términos y condiciones en cualquier
+                TurnoGo podrá modificar estos términos y condiciones en cualquier
                 momento.
               </p>
               <p>

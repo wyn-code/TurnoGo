@@ -1,34 +1,40 @@
 import type { ApiHorario } from "@/types/api";
-import { apiDayToWeekDayName, normalizeTimeValue } from "@/lib/schedule-utils";
+import { WEEK_DAYS, apiDayToWeekDayIndex } from "@/lib/schedule-utils";
 
 interface HorarioCardProps {
   horarios: ApiHorario[];
 }
 
 export default function HorarioCard({ horarios }: HorarioCardProps) {
-  const sorted = [...horarios].sort((a, b) => {
-    const indexA = a.dia_semana >= 1 && a.dia_semana <= 7 ? a.dia_semana - 1 : a.dia_semana;
-    const indexB = b.dia_semana >= 1 && b.dia_semana <= 7 ? b.dia_semana - 1 : b.dia_semana;
-    return indexA - indexB;
-  });
+  const today = new Date().getDay();
+  const todayIndex = today === 0 ? 6 : today - 1;
 
   return (
     <div className="rounded-xl border bg-card p-4 shadow-sm">
       <h3 className="mb-4 font-semibold">Horarios de Atención</h3>
 
       <div className="space-y-2 text-sm">
-        {sorted.map((horario) => {
-          const dayName = apiDayToWeekDayName(horario.dia_semana);
+        {WEEK_DAYS.map((dayName, idx) => {
+          const horario = horarios.find(
+            (h) => apiDayToWeekDayIndex(h.dia_semana) === idx,
+          );
+          const isToday = idx === todayIndex;
 
           return (
             <div
-              key={`${horario.dia_semana}-${horario.hora_apertura}`}
-              className="flex justify-between"
+              key={dayName}
+              className={`flex justify-between rounded-lg px-2 py-1 ${isToday ? "bg-primary/5 font-medium" : ""}`}
             >
-              <span>{dayName ?? `Día ${horario.dia_semana}`}</span>
-              <span className="text-muted-foreground">
-                {normalizeTimeValue(horario.hora_apertura)} -{" "}
-                {normalizeTimeValue(horario.hora_cierre)}
+              <span className={isToday ? "text-primary" : horario ? "text-foreground" : "text-muted-foreground/50"}>
+                {dayName}
+                {isToday && (
+                  <span className="ml-2 text-xs font-normal text-primary">(hoy)</span>
+                )}
+              </span>
+              <span className={horario ? "text-muted-foreground" : "text-muted-foreground/50"}>
+                {horario
+                  ? `${horario.hora_apertura.slice(0, 5)} – ${horario.hora_cierre.slice(0, 5)}`
+                  : "Cerrado"}
               </span>
             </div>
           );

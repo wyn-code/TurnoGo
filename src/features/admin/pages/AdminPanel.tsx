@@ -31,7 +31,7 @@ const AdminPanel = () => {
                 <ShieldCheck className="h-6 w-6 text-primary shrink-0" />
                 <div>
                   <h1 className="text-lg font-bold text-foreground">Panel de Desarrolladores</h1>
-                  <p className="text-xs text-muted-foreground">Administración de Turnexo</p>
+                  <p className="text-xs text-muted-foreground">Administración de TurnoGo</p>
                 </div>
               </div>
               <AdminNavbar />

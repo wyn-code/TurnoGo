@@ -1,15 +1,66 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2 } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Loader2, CheckCircle, Ban, UserX } from "lucide-react";
 import { useDashboardBusiness } from "@/features/dashboard/contexts/DashboardBusinessContext";
 import {
   useAppointments,
   getDayRange,
   getWeekRange,
 } from "@/hooks/queries/useAppointmentsQuery";
+import { appointmentService } from "@/features/booking/services/appointment.service";
+import { ApiError } from "@/lib/api-client";
 import type { ApiTurno } from "@/types/api";
+
+const ESTADO = {
+  PENDIENTE: 1,
+  CONFIRMADO: 2,
+  COMPLETADO: 3,
+  CANCELADO: 4,
+  NO_ASISTIO: 5,
+} as const;
+
+const TRANSICIONES_PERMITIDAS: Record<number, number[]> = {
+  [ESTADO.PENDIENTE]: [ESTADO.CONFIRMADO, ESTADO.CANCELADO],
+  [ESTADO.CONFIRMADO]: [ESTADO.COMPLETADO, ESTADO.CANCELADO, ESTADO.NO_ASISTIO],
+};
+
+const ACCIONES: Record<
+  number,
+  { label: string; icon: React.ReactNode; variant: "default" | "destructive" | "outline" }
+> = {
+  [ESTADO.CONFIRMADO]: {
+    label: "Confirmar",
+    icon: <CheckCircle size={14} />,
+    variant: "default",
+  },
+  [ESTADO.COMPLETADO]: {
+    label: "Completar",
+    icon: <CheckCircle size={14} />,
+    variant: "default",
+  },
+  [ESTADO.CANCELADO]: {
+    label: "Cancelar",
+    icon: <Ban size={14} />,
+    variant: "destructive",
+  },
+  [ESTADO.NO_ASISTIO]: {
+    label: "No asistió",
+    icon: <UserX size={14} />,
+    variant: "outline",
+  },
+};
 
 type ViewMode = "today" | "week";
 
@@ -45,8 +96,15 @@ const DashboardTurnos = () => {
   const { business, isLoadingBusiness } = useDashboardBusiness();
   const businessId = business?.id_negocio ?? null;
   const businessIdStr = businessId ? String(businessId) : null;
+  const queryClient = useQueryClient();
 
   const [view, setView] = useState<ViewMode>("today");
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+  const [cancelTurnoId, setCancelTurnoId] = useState<number | null>(null);
+  const [cancelMotivo, setCancelMotivo] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const highlightedId = searchParams.get("turno");
+  const highlightedRef = useRef<HTMLDivElement>(null);
 
   const range = useMemo(
     () => (view === "today" ? getDayRange(new Date()) : getWeekRange(new Date())),
@@ -68,6 +126,54 @@ const DashboardTurnos = () => {
       ),
     [appointments],
   );
+
+  const statusMutation = useMutation({
+    mutationFn: ({ turnoId, id_estado, rechazado_motivo }: {
+      turnoId: number;
+      id_estado: number;
+      rechazado_motivo?: string;
+    }) => appointmentService.changeStatus(turnoId, { id_estado, rechazado_motivo }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["appointments"] });
+    },
+    onError: (err: unknown) => {
+      const msg = err instanceof ApiError ? err.detail : "Error al cambiar estado";
+      alert(msg);
+    },
+  });
+
+  const handleCancel = () => {
+    if (!cancelTurnoId || !cancelMotivo.trim()) return;
+    statusMutation.mutate(
+      { turnoId: cancelTurnoId, id_estado: ESTADO.CANCELADO, rechazado_motivo: cancelMotivo.trim() },
+      {
+        onSuccess: () => {
+          setCancelDialogOpen(false);
+          setCancelTurnoId(null);
+          setCancelMotivo("");
+        },
+      },
+    );
+  };
+
+  useEffect(() => {
+    if (highlightedId && sortedAppointments.length > 0) {
+      const timer = setTimeout(() => {
+        highlightedRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightedId, sortedAppointments.length]);
+
+  useEffect(() => {
+    if (highlightedId) {
+      const timer = setTimeout(() => {
+        searchParams.delete("turno");
+        setSearchParams(searchParams, { replace: true });
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [highlightedId]);
 
   if (isLoadingBusiness || (businessId && isLoading)) {
     return (
@@ -126,42 +232,144 @@ const DashboardTurnos = () => {
             </p>
           ) : (
             <div className="space-y-3">
-              {sortedAppointments.map((appointment) => (
-                <div
-                  key={appointment.id_turno}
-                  className="flex flex-wrap items-start justify-between gap-2 rounded-lg border border-border p-4"
-                >
-                  <div className="min-w-0 space-y-1">
-                    <p className="font-medium text-foreground">
-                      {appointment.servicio?.nombre_servicio ??
-                        `Servicio #${appointment.id_servicio}`}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {getClientLabel(appointment)}
-                      {appointment.cliente?.telefono
-                        ? ` · ${appointment.cliente.telefono}`
-                        : ""}
-                    </p>
-                    {appointment.empleado ? (
-                      <p className="text-sm text-muted-foreground">
-                        Profesional:{" "}
-                        {[appointment.empleado.nombre, appointment.empleado.apellido]
-                          .filter(Boolean)
-                          .join(" ")}
-                      </p>
-                    ) : null}
-                    <p className="text-sm text-muted-foreground">
-                      {formatDateTime(appointment.fecha_hora_inicio)}
-                    </p>
-                  </div>
+              {sortedAppointments.map((appointment) => {
+                const transiciones = TRANSICIONES_PERMITIDAS[appointment.id_estado] ?? [];
 
-                  <Badge variant="secondary">{getStatusLabel(appointment)}</Badge>
-                </div>
-              ))}
+                return (
+                  <div
+                    key={appointment.id_turno}
+                    ref={String(appointment.id_turno) === highlightedId ? highlightedRef : undefined}
+                    className={`flex flex-wrap items-start justify-between gap-2 rounded-lg border p-4 transition-all ${
+                      String(appointment.id_turno) === highlightedId
+                        ? "border-primary bg-primary/5 ring-2 ring-primary/20"
+                        : "border-border"
+                    }`}
+                  >
+                    <div className="min-w-0 space-y-1">
+                      <p className="font-medium text-foreground">
+                        {appointment.servicio?.nombre_servicio ??
+                          `Servicio #${appointment.id_servicio}`}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {getClientLabel(appointment)}
+                        {appointment.cliente?.telefono
+                          ? ` · ${appointment.cliente.telefono}`
+                          : ""}
+                      </p>
+                      {appointment.empleado ? (
+                        <p className="text-sm text-muted-foreground">
+                          Profesional:{" "}
+                          {[appointment.empleado.nombre, appointment.empleado.apellido]
+                            .filter(Boolean)
+                            .join(" ")}
+                        </p>
+                      ) : null}
+                      <p className="text-sm text-muted-foreground">
+                        {formatDateTime(appointment.fecha_hora_inicio)}
+                      </p>
+                      {appointment.rechazado_motivo && (
+                        <p className="text-xs text-destructive">
+                          Motivo: {appointment.rechazado_motivo}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col items-end gap-2">
+                      <Badge variant="secondary">{getStatusLabel(appointment)}</Badge>
+
+                      {transiciones.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {transiciones.map((targetEstado) => {
+                            const accion = ACCIONES[targetEstado];
+                            if (!accion) return null;
+
+                            if (targetEstado === ESTADO.CANCELADO) {
+                              return (
+                                <Button
+                                  key={targetEstado}
+                                  size="sm"
+                                  variant={accion.variant}
+                                  className="h-7 text-xs gap-1"
+                                  disabled={statusMutation.isPending}
+                                  onClick={() => {
+                                    setCancelTurnoId(appointment.id_turno);
+                                    setCancelMotivo("");
+                                    setCancelDialogOpen(true);
+                                  }}
+                                >
+                                  {accion.icon}
+                                  {accion.label}
+                                </Button>
+                              );
+                            }
+
+                            return (
+                              <Button
+                                key={targetEstado}
+                                size="sm"
+                                variant={accion.variant}
+                                className="h-7 text-xs gap-1"
+                                disabled={statusMutation.isPending}
+                                onClick={() =>
+                                  statusMutation.mutate({
+                                    turnoId: appointment.id_turno,
+                                    id_estado: targetEstado,
+                                  })
+                                }
+                              >
+                                {accion.icon}
+                                {accion.label}
+                              </Button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={cancelDialogOpen} onOpenChange={setCancelDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cancelar turno</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Ingresá el motivo de la cancelación (mínimo 5 caracteres).
+            </p>
+            <Textarea
+              placeholder="Motivo de cancelación..."
+              value={cancelMotivo}
+              onChange={(e) => setCancelMotivo(e.target.value)}
+              rows={3}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setCancelDialogOpen(false)}
+            >
+              Volver
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={cancelMotivo.trim().length < 5 || statusMutation.isPending}
+              onClick={handleCancel}
+            >
+              {statusMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Cancelar turno"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

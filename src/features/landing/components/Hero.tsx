@@ -44,7 +44,7 @@ const Hero = () => {
           </h1>
 
           <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-            Turnexo conecta clientes con negocios de servicios. Encontrá peluquerías, barberías, centros de estética y más, y reservá tu turno en segundos.
+            TurnoGo conecta clientes con negocios de servicios. Encontrá peluquerías, barberías, centros de estética y más, y reservá tu turno en segundos.
           </p>
 
           <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">

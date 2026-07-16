@@ -12,6 +12,7 @@ import {
   Sparkles,
   Sun,
   Moon,
+  Loader2,
 } from "lucide-react";
 
 import { appointmentService } from "@/features/booking/services/appointment.service";
@@ -42,7 +43,7 @@ import type {
 } from "@/types/api";
 import { ApiError } from "@/lib/api-client";
 import { buildLocalDateTimeString } from "@/lib/datetime-utils";
-import { apiDayToWeekDayIndex } from "@/lib/schedule-utils";
+import { apiDayToWeekDayIndex, WEEK_DAYS } from "@/lib/schedule-utils";
 
 const STEPS = ["Servicio", "Fecha y horario", "Datos", "Completado"];
 
@@ -61,7 +62,7 @@ const generateTimeSlots = (
   selectedDate: Date | null,
   occupied: ApiTurno[],
   duration: number,
-  hours = { open: true, start: "09:00", end: "18:00" },
+  hours = { open: false, start: "09:00", end: "18:00" },
 ): TimeSlot[] => {
   if (!selectedDate || !hours?.open) return [];
   const slots: TimeSlot[] = [];
@@ -133,7 +134,9 @@ const Reservar = () => {
   const [occupiedDays, setOccupiedDays] = useState<Set<string>>(new Set());
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [visibleMonth, setVisibleMonth] = useState<Date>(new Date());
+  const [createdTurnoId, setCreatedTurnoId] = useState<number | null>(null);
 
   useEffect(() => {
     const load = async () => {
@@ -288,6 +291,7 @@ const refreshOccupiedAppointments = useCallback(async () => {
     const currentDate = booking.date;
     try {
       setSubmitError(null);
+      setIsSubmitting(true);
       if (!business || !booking.date || !effectiveSelectedTime || !booking.serviceId) {
         setSubmitError("Faltan datos para confirmar la reserva"); return;
       }
@@ -298,6 +302,7 @@ const refreshOccupiedAppointments = useCallback(async () => {
         telefono: booking.client.phone.trim(),
         nombre: booking.client.firstName.trim(),
         apellido: booking.client.lastName.trim(),
+        email: booking.client.email.trim() || undefined,
       });
       await appointmentService.createAppointment({
         id_negocio: Number(business.id_negocio),
@@ -305,7 +310,7 @@ const refreshOccupiedAppointments = useCallback(async () => {
         id_servicio: Number(booking.serviceId),
         id_empleado: booking.professionalId ? Number(booking.professionalId) : null,
         fecha_hora_inicio: buildLocalDateTimeString(booking.date, effectiveSelectedTime),
-      });
+      }).then((res) => setCreatedTurnoId(res.id_turno));
       await refreshOccupiedAppointments();
       await refreshOccupiedDays(booking.date);
       setStep(4);
@@ -324,6 +329,8 @@ const refreshOccupiedAppointments = useCallback(async () => {
       }
       if (err instanceof Error) { setSubmitError(err.message); return; }
       setSubmitError("Error inesperado al crear la reserva");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -378,9 +385,10 @@ const refreshOccupiedAppointments = useCallback(async () => {
               date={booking.date}
               time={effectiveSelectedTime}
               client={booking.client}
+              turnoId={createdTurnoId}
             />
             <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
-              <Button asChild variant="outline"><Link to={`/${slug}`}>Volver al negocio</Link></Button>
+              <Button asChild variant="outline"><Link to={`/negocio/${slug}`}>Volver al negocio</Link></Button>
               <Button asChild><Link to="/">Ir al inicio</Link></Button>
             </div>
           </div>
@@ -528,6 +536,33 @@ const refreshOccupiedAppointments = useCallback(async () => {
                     <span className="h-2.5 w-2.5 rounded-full bg-destructive/40" /> Sin cupos
                   </span>
                 </div>
+
+                {business.horarios && business.horarios.length > 0 && (
+                  <div className="mt-4 rounded-xl border bg-muted/30 p-3">
+                    <p className="text-xs font-medium text-muted-foreground mb-2">Horarios del negocio</p>
+                    <div className="space-y-1">
+                      {WEEK_DAYS.map((dayName, idx) => {
+                        const horario = business.horarios!.find(
+                          (h) => apiDayToWeekDayIndex(h.dia_semana) === idx,
+                        );
+                        const isSelected = booking.date && (booking.date.getDay() === 0 ? 7 : booking.date.getDay()) === idx + 1;
+                        return (
+                          <div
+                            key={dayName}
+                            className={`flex justify-between text-xs ${isSelected ? "font-semibold text-primary" : horario ? "text-foreground" : "text-muted-foreground/50"}`}
+                          >
+                            <span>{dayName}</span>
+                            <span>
+                              {horario
+                                ? `${horario.hora_apertura.slice(0, 5)} – ${horario.hora_cierre.slice(0, 5)}`
+                                : "Cerrado"}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Horarios */}
@@ -655,9 +690,21 @@ const refreshOccupiedAppointments = useCallback(async () => {
             </Button>
           )}
           {step === 3 && (
-            <Button disabled={!canNext()} onClick={handleConfirm}>
-              Confirmar reserva
-            </Button>
+            <>
+              <p className="text-sm text-muted-foreground text-center mb-4">
+                Una vez confirmada la reserva recibirás un correo electrónico con un código QR y todos los datos de tu turno.
+              </p>
+              <Button disabled={!canNext() || isSubmitting} onClick={handleConfirm}>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Confirmando...
+                  </>
+                ) : (
+                  "Confirmar reserva"
+                )}
+              </Button>
+            </>
           )}
         </div>
       </div>

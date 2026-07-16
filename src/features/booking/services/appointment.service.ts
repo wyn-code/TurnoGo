@@ -9,6 +9,11 @@ export interface CreateAppointmentRequest {
   id_empleado: number | null;
 }
 
+export interface ChangeStatusRequest {
+  id_estado: number;
+  rechazado_motivo?: string;
+}
+
 export const appointmentService = {
   createAppointment: async (data: CreateAppointmentRequest): Promise<ApiTurno> => {
     return apiClient.post<ApiTurno>("/turnos/", data);
@@ -32,6 +37,13 @@ export const appointmentService = {
     data: Partial<CreateAppointmentRequest>
   ): Promise<ApiTurno> => {
     return apiClient.put<ApiTurno>(`/turnos/${id}`, data);
+  },
+
+  changeStatus: async (
+    id: string | number,
+    data: ChangeStatusRequest
+  ): Promise<ApiTurno> => {
+    return apiClient.put<ApiTurno>(`/turnos/${id}/estado`, data);
   },
 
   deleteAppointment: async (id: string | number): Promise<ApiTurno> => {

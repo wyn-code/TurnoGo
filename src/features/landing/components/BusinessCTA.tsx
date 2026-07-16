@@ -14,7 +14,7 @@ const BusinessCTA = () => {
           </h2>
 
           <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-            Registrá tu negocio en Turnexo y obtené una página profesional para recibir reservas online. Solo completá un formulario y empezá a recibir clientes.
+            Registrá tu negocio en TurnoGo y obtené una página profesional para recibir reservas online. Solo completá un formulario y empezá a recibir clientes.
           </p>
 
           <Button

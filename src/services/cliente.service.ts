@@ -6,6 +6,7 @@ export interface ClientResponse {
   telefono: string;
   nombre: string;
   apellido: string;
+  email?: string | null;
   created_at: string | null;
 }
 
@@ -13,6 +14,7 @@ export interface GetOrCreateClientRequest {
   telefono: string;
   nombre: string;
   apellido: string;
+  email?: string;
 }
 
 export const clientService = {
