@@ -1,6 +1,15 @@
 export type StatisticsRange = "hoy" | "semana" | "mes" | "anio";
 export type StatisticsCompare = "anterior" | "anio";
 
+export type TabValue =
+  | "resumen"
+  | "clientes"
+  | "servicios"
+  | "ingresos"
+  | "agenda"
+  | "asistencia"
+  | "empleados";
+
 export interface StatisticsQueryOptions {
   rango: StatisticsRange;
   comparar: StatisticsCompare;

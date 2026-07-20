@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import { estadisticaService } from "@/services/estadistica.service";
 import type {
   StatisticsCompare,
@@ -15,7 +15,8 @@ export const useStatistics = (
     queryFn: () =>
       estadisticaService.getByBusiness(businessId!, { rango, comparar }),
     enabled: businessId != null,
-    staleTime: 60 * 1000,
+    staleTime: 5 * 60 * 1000,
+    placeholderData: keepPreviousData,
   });
 };
 

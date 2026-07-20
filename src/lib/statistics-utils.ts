@@ -171,7 +171,7 @@ function getClientName(appointment: ApiTurno) {
 }
 
 function getServiceId(appointment: ApiTurno): number | undefined {
-  return appointment.servicio?.id_servicio ?? appointment.id_servicio;
+  return appointment.id_servicio;
 }
 
 function getServicePrice(
@@ -530,7 +530,7 @@ function buildEmployeeStats(
 
   return activeEmployees.map((employee) => {
     const employeeAppointments = appointments.filter(
-      (appointment) => (appointment.empleado?.id_empleado ?? appointment.id_empleado) === employee.id_empleado,
+      (appointment) => appointment.id_empleado === employee.id_empleado,
     );
 
     const turnos = employeeAppointments.length;
@@ -723,19 +723,20 @@ export function buildDashboardStatistics(input: {
       ? 0
       : Math.round(previousIncome / previousRevenueAppointments.length);
 
-  const incomeByWeekday = DAY_LABELS.map((_, index) => {
-    const dayAppointments = periodAppointments.filter((appointment) => {
-      const date = new Date(appointment.fecha_hora_inicio);
-      const jsDay = date.getDay();
-      const weekdayIndex = jsDay === 0 ? 6 : jsDay - 1;
-      return weekdayIndex === index;
-    });
-
-    return {
-      index,
-      income: sumRevenue(dayAppointments, servicesById),
-    };
+  const incomeByWeekdayAccum = DAY_LABELS.map(() => 0);
+  periodAppointments.forEach((appointment) => {
+    const date = new Date(appointment.fecha_hora_inicio);
+    const jsDay = date.getDay();
+    const weekdayIndex = jsDay === 0 ? 6 : jsDay - 1;
+    if (REVENUE_STATUSES.has(classifyStatus(appointment))) {
+      incomeByWeekdayAccum[weekdayIndex] += getServicePrice(appointment, servicesById);
+    }
   });
+
+  const incomeByWeekday = DAY_LABELS.map((_, index) => ({
+    index,
+    income: incomeByWeekdayAccum[index],
+  }));
 
   const topBillingDayIndex = incomeByWeekday.reduce(
     (best, current) => (current.income > best.income ? current : best),

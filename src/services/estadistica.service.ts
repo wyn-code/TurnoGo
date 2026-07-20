@@ -90,11 +90,16 @@ export const estadisticaService = {
     const localStatistics = await buildLocalStatistics(businessId, options);
 
     try {
+      const now = new Date();
+      const range = getStatisticsPeriodRange(options.rango, now);
+      const dateStart = range.desde.split(" ")[0];
+      const dateEnd = range.hasta.split(" ")[0];
+
       const apiData = await apiClient.get<unknown>(
         `/statistics/business/${businessId}`,
         {
-          rango: options.rango,
-          comparar: options.comparar,
+          date_start: dateStart,
+          date_end: dateEnd,
         },
       );
 
