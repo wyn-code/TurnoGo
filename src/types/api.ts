@@ -108,6 +108,7 @@ export interface ApiHorario {
   dia_semana: number;
   hora_apertura: string;
   hora_cierre: string;
+  activo: true;
 }
 
 export interface BookingData {
