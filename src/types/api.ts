@@ -58,7 +58,7 @@ export interface ApiServicio {
   id_negocio: number;
   nombre_servicio: string;
   precio: number;
-  requiere_aprobacion: boolean;
+  requiere_aprobacion?: boolean;
   duracion_min: number;
   duracion_max: number;
   activo: boolean;

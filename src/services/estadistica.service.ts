@@ -1,5 +1,4 @@
 import apiClient, { ApiError } from "@/lib/api-client";
-import { appointmentService } from "@/features/booking/services/appointment.service";
 import { empleadoService } from "@/services/empleado.service";
 import { horarioService } from "@/services/horario.service";
 import { servicioService } from "@/services/servicio.service";
