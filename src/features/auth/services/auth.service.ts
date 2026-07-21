@@ -41,6 +41,13 @@ export interface AuthUserResponse {
   email_us: string;
   usuario_us: string;
   nombre_us: string;
+  role?: string;
+  role_us?: string;
+  rol?: string;
+  rol_us?: string;
+  has_business?: boolean;
+  negocio_id?: number | null;
+  negocio_slug?: string | null;
 }
 
 export const authService = {
@@ -119,6 +126,23 @@ export const authService = {
         new_password: newPassword,
         confirm_password: confirmPassword,
       },
+      undefined,
+      true,
+      true,
+    );
+  },
+
+  // =========================
+  // VERIFICAR CREDENCIALES (2FA)
+  // =========================
+
+  verifyCredentials: async (
+    data: LoginRequest
+  ): Promise<void> => {
+    return apiClient.postWithBase(
+      AUTH_API_ROOT,
+      "/verify-credentials",
+      data,
       undefined,
       true,
       true,

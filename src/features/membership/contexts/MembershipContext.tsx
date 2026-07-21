@@ -1,4 +1,4 @@
-import { createContext, useContext, useCallback } from "react";
+import { createContext, useContext, useCallback, useMemo } from "react";
 import type { ReactNode } from "react";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { useFuncionesNegocio } from "@/features/membership/hooks/useMembershipQuery";
@@ -28,7 +28,7 @@ export function MembershipProvider({ children }: { children: ReactNode }) {
   const planActual = funcionesData?.plan ?? null;
   const estadoSuscripcion = funcionesData?.estado ?? null;
   const fechaFin = funcionesData?.fecha_fin ?? null;
-  const funciones = funcionesData?.funciones ?? [];
+  const funciones = useMemo(() => funcionesData?.funciones ?? [], [funcionesData?.funciones]);
   const isFree = !planActual;
 
   const tieneFuncion = useCallback(

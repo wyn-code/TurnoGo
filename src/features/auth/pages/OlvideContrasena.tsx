@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -19,7 +19,6 @@ type FormData = z.infer<typeof schema>;
 
 const OlvideContrasena = () => {
   const { requestPasswordReset } = useAuth();
-  const navigate = useNavigate();
   const [sent, setSent] = useState(false);
   const [sentEmail, setSentEmail] = useState("");
   const [serverError, setServerError] = useState("");
@@ -90,9 +89,6 @@ const OlvideContrasena = () => {
                 </p>
               </CardHeader>
               <CardContent className="space-y-3 pt-4">
-                <Button className="w-full" onClick={() => navigate("/restablecer-contrasena")}>
-                  Continuar a restablecer contraseña
-                </Button>
                 <p className="text-center text-sm text-muted-foreground">
                   <Link to="/login" className="font-medium text-primary hover:underline">
                     Volver al inicio de sesión

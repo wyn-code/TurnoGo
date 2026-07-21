@@ -39,6 +39,9 @@ interface AuthContextType {
     password: string,
   ) => Promise<AuthResult>;
 
+  verifyCredentials: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
+
+
   loginWithToken: (
     token: string,
   ) => Promise<AuthResult>;
@@ -74,6 +77,29 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 const USER_KEY = "turnexo_user";
 const TOKEN_KEY = "turnexo_token";
+
+const verifyCredentials = async (
+  email: string,
+  password: string,
+): Promise<{ success: boolean; error?: string }> => {
+  try {
+    await authService.verifyCredentials({
+      email_us: email.trim(),
+      contrasena_us: password,
+    });
+
+    return { success: true };
+  } catch (error: unknown) {
+    return {
+      success: false,
+      error: normalizeApiDetail(
+        error instanceof Error
+          ? error.message
+          : error,
+      ),
+    };
+  }
+};
 
 function normalizeUser(raw: Record<string, unknown>): User {
   return {
@@ -286,7 +312,7 @@ export function AuthProvider({
         setUser,
         setToken,
       );
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(
         "LOGIN ERROR:",
         error,
@@ -295,10 +321,9 @@ export function AuthProvider({
       return {
         success: false,
         error: normalizeApiDetail(
-          error?.response?.data
-            ?.detail ||
-            error?.message ||
-            error,
+          error instanceof Error
+            ? error.message
+            : error,
         ),
       };
     } finally {
@@ -341,13 +366,13 @@ const register = async (
     return {
       success: true,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
       error: normalizeApiDetail(
-        error?.response?.data?.detail ||
-        error?.message ||
-        error,
+        error instanceof Error
+          ? error.message
+          : error,
       ),
     };
   }
@@ -364,13 +389,13 @@ const register = async (
     return {
       success: true,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
       error: normalizeApiDetail(
-        error?.response?.data?.detail ||
-        error?.message ||
-        error,
+        error instanceof Error
+          ? error.message
+          : error,
       ),
     };
   }
@@ -391,13 +416,13 @@ const resetPassword = async (
     return {
       success: true,
     };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
       error: normalizeApiDetail(
-        error?.response?.data?.detail ||
-        error?.message ||
-        error,
+        error instanceof Error
+          ? error.message
+          : error,
       ),
     };
   }
@@ -416,22 +441,24 @@ const logout = () => {
 };
 
   return (
-    <AuthContext.Provider
+<AuthContext.Provider
   value={{
-  user,
-  token,
-  isAuthenticated: !!user && !!token,
-  isLoading,
+      user,
+      token,
+      isAuthenticated: !!user && !!token,
+      isLoading,
 
-  login,
-  loginWithToken,
-  register,
+      login,
+      verifyCredentials,
+      loginWithToken,
 
-  requestPasswordReset,
-  resetPassword,
+      register,
 
-  logout,
-}}
+      requestPasswordReset,
+      resetPassword,
+
+      logout,
+  }}
 >
       {children}
     </AuthContext.Provider>

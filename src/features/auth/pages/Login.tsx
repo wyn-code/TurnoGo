@@ -32,14 +32,20 @@ import {
   CardHeader,
 } from "@/components/ui/card";
 
-import {
-  Eye,
-  EyeOff,
-  LogIn,
-  AlertCircle,
-} from "lucide-react";
-
 import { SocialAuthButtons } from "@/features/auth/components/SocialAuthButtons";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { LogIn, AlertCircle, Eye, EyeOff, ShieldCheck, Mail } from "lucide-react";
+
+
+const PENDING_KEY = "turnexo_pending_2fa";
+const generateCode = () => Math.floor(100000 + Math.random() * 900000).toString();
 
 const schema = z.object({
   email: z
@@ -62,7 +68,7 @@ type FormData = z.infer<
 >;
 
 const Login = () => {
-  const { login } = useAuth();
+  const { verifyCredentials } = useAuth();
 
   const navigate = useNavigate();
 
@@ -79,6 +85,8 @@ const Login = () => {
     showPassword,
     setShowPassword,
   ] = useState(false);
+    const [twoFAOpen, setTwoFAOpen] = useState(false);
+  const [pendingCreds, setPendingCreds] = useState<{ email: string; password: string } | null>(null);
 
   const {
     register,
@@ -96,76 +104,29 @@ const Login = () => {
     data: FormData,
   ) => {
     setServerError("");
-
-    const result = await login(
-  data.email,
-  data.password,
-);
-
-// =========================
-// LOGIN SUCCESS
-// =========================
-
-if (
-  result.success &&
-  result.user
-) {
-  if (redirectPath) {
-    navigate(
-      redirectPath,
-      {
-        replace: true,
-      },
-    );
-
-    return;
-  }
-
-  const role =
-    result.user.role?.toLowerCase();
-
-  if (role === "admin") {
-    navigate("/admin", {
-      replace: true,
-    });
-
-    return;
-  }
-
-  if (role === "duenio" || role === "dueño") {
-
-    if (!result.user.hasBusiness) {
-        navigate("/registrar-negocio", {
-            replace: true,
-        });
-
-        return;
+        const result = await verifyCredentials(data.email, data.password);
+    if (!result.success) {
+      setServerError(result.error || "Error al iniciar sesión.");
+      return;
     }
-
-    navigate("/dashboard", {
-        replace: true,
-    });
-
-    return;
-}
-
-  navigate("/", {
-    replace: true,
-  });
-
-  return;
-}
-
-// =========================
-// LOGIN ERROR
-// =========================
-
-if (!result.success) {
-  setServerError(
-    result.error ||
-      "Error al iniciar sesión.",
-  );
-}
+    setPendingCreds({ email: data.email, password: data.password });
+    setTwoFAOpen(true);
+  };
+  const handleSendCode = () => {
+    if (!pendingCreds) return;
+    const code = generateCode();
+    sessionStorage.setItem(
+      PENDING_KEY,
+      JSON.stringify({
+        email: pendingCreds.email,
+        password: pendingCreds.password,
+        code,
+        from: redirectPath || "",
+        expiresAt: Date.now() + 5 * 60 * 1000,
+      })
+    );
+    setTwoFAOpen(false);
+    navigate("/verificar-codigo");
   };
 
   return (
@@ -415,6 +376,34 @@ if (!result.success) {
       </main>
 
       <Footer />
+            <Dialog open={twoFAOpen} onOpenChange={setTwoFAOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-accent">
+              <ShieldCheck className="h-6 w-6 text-primary" />
+            </div>
+            <DialogTitle className="text-center">Verificación en dos pasos</DialogTitle>
+            <DialogDescription className="text-center">
+              Por tu seguridad, vamos a enviarte un <strong>código de verificación</strong> de 6 dígitos al correo:
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center justify-center gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm font-medium text-foreground">
+            <Mail size={16} className="text-primary" />
+            {pendingCreds?.email}
+          </div>
+          <p className="text-center text-xs text-muted-foreground">
+            El código tiene una validez de 5 minutos.
+          </p>
+          <DialogFooter className="gap-2 sm:gap-2">
+            <Button variant="outline" onClick={() => setTwoFAOpen(false)} className="flex-1">
+              Cancelar
+            </Button>
+            <Button onClick={handleSendCode} className="flex-1">
+              Enviar código
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

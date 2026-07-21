@@ -214,7 +214,7 @@ const onSubmit = async (data: FormData) => {
                         : "text-muted-foreground"
                     }
                   >
-                    ✓ Entre 10 y 20 caracteres
+                    ✓ Entre 12 y 16 caracteres
                   </p>
 
                   <p
@@ -247,7 +247,15 @@ const onSubmit = async (data: FormData) => {
                     ✓ Al menos un número
                   </p>
 
-      
+                  <p
+                    className={
+                      passwordChecks.special
+                        ? "text-green-500"
+                        : "text-muted-foreground"
+                    }
+                  >
+                    ✓ Al menos un carácter especial (@$!%*?&.#_-)
+                  </p>
                 </div>
               </div>
 

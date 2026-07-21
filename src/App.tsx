@@ -26,6 +26,7 @@ import RestablecerContrasena from "./features/auth/pages/RestablecerContrasena.t
 import AuthSuccess from "./features/auth/pages/AuthSuccess";
 import 'mapbox-gl/dist/mapbox-gl.css';
 import VerifyEmailPage from "./features/auth/pages/VerifyEmailPage.tsx";
+import VerificarCodigo from "./features/auth/pages/VerificarCodigo.tsx";
 
 
 const queryClient = new QueryClient();
@@ -46,6 +47,7 @@ const AppRoutes = () => {
       <Route path="/reservar/:slug" element={<Reservar />} />
       <Route path="/login" element={<Login />} />
       <Route path="/registro" element={<Registro />} />
+      <Route path="/verificar-codigo" element={<VerificarCodigo />} />
       <Route path="/olvide-contrasena" element={<OlvideContrasena />} />
       <Route path="/restablecer-contrasena" element={<RestablecerContrasena />} />
 

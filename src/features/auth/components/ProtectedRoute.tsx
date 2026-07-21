@@ -18,24 +18,9 @@ export default function ProtectedRoute({
     isAuthenticated,
     isLoading,
     user,
-} = useAuth();
+  } = useAuth();
 
   const location = useLocation();
-
-  if (
-    user?.role === "duenio" &&
-    !user.hasBusiness &&
-    location.pathname !== "/registrar-negocio"
-) {
-    return (
-        <Navigate
-            to="/registrar-negocio"
-            replace
-        />
-    );
-}
-
-  
 
   // =========================
   // LOADING
@@ -66,19 +51,6 @@ export default function ProtectedRoute({
     );
   }
 
-  if (
-    user?.role === "duenio" &&
-    user.hasBusiness &&
-    location.pathname === "/registrar-negocio"
-) {
-    return (
-        <Navigate
-            to="/dashboard"
-            replace
-        />
-    );
-}
-
   // =========================
   // NOT AUTHENTICATED
   // =========================
@@ -94,6 +66,51 @@ export default function ProtectedRoute({
       />
     );
   }
+
+  // =========================
+  // ADMIN BYPASS
+  // =========================
+
+  if (user?.role === "admin") {
+    if (
+      location.pathname.startsWith("/admin") ||
+      location.pathname.startsWith("/planes") ||
+      location.pathname.startsWith("/mi-suscripcion")
+    ) {
+      return <>{children}</>;
+    }
+    return <Navigate to="/admin" replace />;
+  }
+
+  // =========================
+  // DUENIO LOGIC
+  // =========================
+
+  if (
+    user?.role === "duenio" &&
+    !user.hasBusiness &&
+    location.pathname !== "/registrar-negocio"
+  ) {
+    return (
+        <Navigate
+            to="/registrar-negocio"
+            replace
+        />
+    );
+  }
+
+  if (
+    user?.role === "duenio" &&
+    user.hasBusiness &&
+    location.pathname === "/registrar-negocio"
+  ) {
+    return (
+        <Navigate
+            to="/dashboard"
+            replace
+        />
+    );
+}
 
   // =========================
   // AUTHORIZED

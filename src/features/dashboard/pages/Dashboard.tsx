@@ -4,6 +4,8 @@ import { DashboardSidebar } from "@/features/dashboard/components/DashboardSideb
 import DashboardHeader from "@/features/dashboard/components/DashboardHeader";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { DashboardBusinessProvider } from "@/features/dashboard/contexts/DashboardBusinessContext";
+import { useMyBusiness } from "@/hooks/useApi";
+import { Loader2 } from "lucide-react";
 import DashboardResumen from "./subpages/DashboardResumen";
 import DashboardTurnos from "./subpages/DashboardTurnos";
 import DashboardServicios from "./subpages/DashboardServicios";
@@ -12,8 +14,6 @@ import DashboardHorarios from "./subpages/DashboardHorarios";
 import DashboardConfiguracion from "./subpages/DashboardConfiguracion";
 import DashboardPersonalizacion from "./subpages/DashboardPersonalizacion";
 import DashboardEstadisticas from "./subpages/DashboardEstadisticas";
-import { useMyBusiness } from "@/hooks/useApi";
-import { Loader2 } from "lucide-react";
 
 const sectionTitles: Record<string, string> = {
   "": "Resumen",

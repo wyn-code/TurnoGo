@@ -81,15 +81,6 @@ export function EditUserModal({
         </DialogHeader>
 
         <div className="grid gap-4 py-2">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              
-            </div>
-            <div className="space-y-2">
-              
-            </div>
-          </div>
-
           <div className="space-y-2">
             <Label>Usuario</Label>
             <Input
@@ -137,7 +128,7 @@ export function EditUserModal({
               onValueChange={(value) =>
                 setForm((prev) => ({
                   ...prev,
-                  habilitado: value === "habilitado",
+                  estado: value === "habilitado",
                 }))
               }
             >

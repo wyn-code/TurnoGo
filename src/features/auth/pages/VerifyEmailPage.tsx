@@ -51,37 +51,35 @@ useEffect(() => {
         navigate("/registrar-negocio");
       }, 2000);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       setSuccess(false);
 
       setMessage(
-        error?.detail ||
-        error?.message ||
-        "No se pudo verificar el email."
+        error instanceof Error
+          ? error.message
+          : "No se pudo verificar el email."
       );
-
-      if (loading) {
-  return (
-    <div className="p-8 text-center">
-      Verificando email...
-    </div>
-  );
-}
-
     } finally {
       setLoading(false);
     }
   };
 
   verifyEmail();
-}, [token, navigate]);
+}, [token, navigate, loginWithToken]);
+
+  if (loading) {
+    return (
+      <div className="p-8 text-center">
+        <h1 className="text-2xl font-bold mb-4">Verificando email...</h1>
+        <p className="mb-6">Un momento por favor.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-8 text-center">
       <h1 className="text-2xl font-bold mb-4">
-        {success
-          ? "✅ Email verificado"
-          : "❌ Error"}
+        {success ? "Email verificado" : "Error"}
       </h1>
 
       <p className="mb-6">

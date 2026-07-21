@@ -15,11 +15,12 @@ import { ShieldCheck, AlertCircle, Eye, EyeOff, CheckCircle2 } from "lucide-reac
 const schema = z.object({
   password: z
     .string()
-    .min(13, "Mínimo 13 caracteres")
-    .regex(/[A-Z]/, "Debe contener al menos 1 mayúscula")
-    .regex(/[a-z]/, "Debe contener al menos 1 minúscula")
-    .regex(/[0-9]/, "Debe contener al menos 1 número")
-    .regex(/[^A-Za-z0-9]/, "Debe contener al menos 1 carácter especial"),
+    .min(12, "La contraseña debe tener al menos 12 caracteres")
+    .max(16, "La contraseña debe tener máximo 16 caracteres")
+    .regex(
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&.#_-])[A-Za-z\d@$!%*?&.#_-]{12,16}$/,
+      "Debe incluir mayúsculas, minúsculas, números y un carácter especial",
+    ),
   confirmPassword: z.string(),
 }).refine((d) => d.password === d.confirmPassword, {
   message: "Las contraseñas no coinciden",
@@ -100,6 +101,11 @@ const RestablecerContrasena = () => {
                 {serverError && (
                   <div className="flex items-center gap-2 rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
                     <AlertCircle size={16} /> {serverError}
+                    {!token && (
+                      <Link to="/olvide-contrasena" className="ml-1 font-medium underline">
+                        Solicitá uno nuevo
+                      </Link>
+                    )}
                   </div>
                 )}
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -132,7 +138,7 @@ const RestablecerContrasena = () => {
                     {errors.confirmPassword && <p className="text-sm text-destructive">{errors.confirmPassword.message}</p>}
                   </div>
                   <p className="text-xs text-muted-foreground rounded-md border border-border bg-muted/40 p-3">
-                    La contraseña debe contener 1 mayúscula, 1 minúscula, 1 número y un carácter especial como mínimo, además de tener una longitud de 13 caracteres.
+                    La contraseña debe tener entre 12 y 16 caracteres, con al menos 1 mayúscula, 1 minúscula, 1 número y 1 carácter especial.
                   </p>
                   <Button type="submit" className="w-full" disabled={isSubmitting}>
                     {isSubmitting ? "Guardando..." : "Aceptar"}
