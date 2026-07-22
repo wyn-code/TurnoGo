@@ -113,24 +113,23 @@ export const authService = {
     );
   },
 
-  resetPassword: async (
-    token: string,
-    newPassword: string,
-    confirmPassword: string,
-  ) => {
+resetPassword: async (
+  token: string,
+  newPassword: string,
+  confirmPassword: string,
+) => {
     return apiClient.postWithBase(
-      AUTH_API_ROOT,
-      "/reset-password",
-      {
-        token,
-        new_password: newPassword,
-        confirm_password: confirmPassword,
-      },
-      undefined,
-      true,
-      true,
-    );
-  },
+    AUTH_API_ROOT,
+    `/reset-password/${token}`,
+    {
+      new_password: newPassword,
+      confirm_password: confirmPassword,
+    },
+    undefined,
+    true,
+    true,
+  );
+},
 
   // =========================
   // VERIFICAR CREDENCIALES (2FA)

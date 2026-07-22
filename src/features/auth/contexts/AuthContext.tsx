@@ -5,6 +5,7 @@ import {
   useEffect,
 } from "react";
 
+
 import type { ReactNode } from "react";
 
 import apiClient from "@/lib/api-client";
@@ -420,9 +421,7 @@ const resetPassword = async (
     return {
       success: false,
       error: normalizeApiDetail(
-        error instanceof Error
-          ? error.message
-          : error,
+        error instanceof Error ? error.message : error,
       ),
     };
   }
@@ -465,6 +464,7 @@ const logout = () => {
   );
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const ctx =
     useContext(AuthContext);
