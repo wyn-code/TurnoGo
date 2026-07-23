@@ -69,10 +69,6 @@ const VerificarCodigo = () => {
       setError("Ingresá los 6 dígitos del código.");
       return;
     }
-    if (code !== pending.code) {
-      setError("El código es incorrecto. Verificá e intentá de nuevo.");
-      return;
-    }
     setSubmitting(true);
     const result = await login(pending.email, pending.password);
     setSubmitting(false);

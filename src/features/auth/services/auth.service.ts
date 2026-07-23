@@ -50,6 +50,11 @@ export interface AuthUserResponse {
   negocio_slug?: string | null;
 }
 
+export interface Verify2FARequest {
+  email_us: string;
+  otp_code: string;
+}
+
 export const authService = {
   // =========================
   // API
@@ -147,6 +152,19 @@ resetPassword: async (
       true,
     );
   },
+
+  verifyTwoFactorCode: async (
+  data: Verify2FARequest,
+): Promise<AuthTokenResponse> => {
+  return apiClient.postWithBase<AuthTokenResponse>(
+    AUTH_API_ROOT,
+    "/verify-2fa",
+    data,
+    undefined,
+    true,
+    true,
+  );
+},
 
   // =========================
   // VERIFICAR EMAIL

@@ -40,6 +40,11 @@ interface AuthContextType {
     password: string,
   ) => Promise<AuthResult>;
 
+  verifyTwoFactorCode: (
+    email: string,
+    otp: string,
+) => Promise<AuthResult>;
+
   verifyCredentials: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
 
 
@@ -113,6 +118,7 @@ function normalizeUser(raw: Record<string, unknown>): User {
     role: String(raw.role ?? "").toLowerCase(),
   };
 } 
+
 
 function normalizeApiDetail(detail: unknown): string {
   if (typeof detail === "string") {
@@ -332,6 +338,38 @@ export function AuthProvider({
     }
   };
 
+  const verifyTwoFactorCode = async (
+  email: string,
+  otp: string,
+): Promise<AuthResult> => {
+  setIsLoading(true);
+
+  try {
+    const data =
+      await authService.verifyTwoFactorCode({
+        email_us: email,
+        otp_code: otp,
+      });
+
+    return await applySessionFromToken(
+      data.access_token,
+      setUser,
+      setToken,
+    );
+  } catch (error: unknown) {
+    return {
+      success: false,
+      error: normalizeApiDetail(
+        error instanceof Error
+          ? error.message
+          : error,
+      ),
+    };
+  } finally {
+    setIsLoading(false);
+  }
+};
+
   const loginWithToken = async (
   token: string,
 ): Promise<AuthResult> => {
@@ -455,7 +493,7 @@ const logout = () => {
 
       requestPasswordReset,
       resetPassword,
-
+      verifyTwoFactorCode,
       logout,
   }}
 >
