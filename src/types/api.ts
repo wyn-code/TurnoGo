@@ -162,6 +162,8 @@ export interface DaySchedule {
   open: boolean;
   start: string;
   end: string;
+  start2?: string;
+  end2?: string;
 }
 
 export type WeekSchedule = Record<string, DaySchedule>;

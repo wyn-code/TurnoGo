@@ -60,15 +60,30 @@ export function mapHorariosToWeekSchedule(
 
   const mapped: WeekSchedule = { ...closedWeekSchedule };
 
+  // agrupar horarios por día y ordenar por hora_apertura
+  const porDia = new Map<number, ApiHorario[]>();
   apiHorarios.forEach((item) => {
-    const dayName = apiDayToWeekDayName(item.dia_semana);
+    const day = item.dia_semana;
+    if (!porDia.has(day)) porDia.set(day, []);
+    porDia.get(day)!.push(item);
+  });
+
+  porDia.forEach((horarios, diaSemana) => {
+    const dayName = apiDayToWeekDayName(diaSemana);
     if (!dayName) return;
+
+    horarios.sort((a, b) => a.hora_apertura.localeCompare(b.hora_apertura));
 
     mapped[dayName] = {
       open: true,
-      start: normalizeTimeValue(item.hora_apertura),
-      end: normalizeTimeValue(item.hora_cierre),
+      start: normalizeTimeValue(horarios[0].hora_apertura),
+      end: normalizeTimeValue(horarios[0].hora_cierre),
     };
+
+    if (horarios.length >= 2) {
+      mapped[dayName].start2 = normalizeTimeValue(horarios[1].hora_apertura);
+      mapped[dayName].end2 = normalizeTimeValue(horarios[1].hora_cierre);
+    }
   });
 
   return mapped;
@@ -81,13 +96,23 @@ export function mapWeekScheduleToPayload(
     const day = schedule[dayName];
     if (!day.open) return [];
 
-    return [
+    const result: Array<{ dia_semana: number; hora_apertura: string; hora_cierre: string }> = [
       {
         dia_semana: weekDayIndexToApi(index),
         hora_apertura: formatTimeForApi(day.start),
         hora_cierre: formatTimeForApi(day.end),
       },
     ];
+
+    if (day.start2 && day.end2) {
+      result.push({
+        dia_semana: weekDayIndexToApi(index),
+        hora_apertura: formatTimeForApi(day.start2),
+        hora_cierre: formatTimeForApi(day.end2),
+      });
+    }
+
+    return result;
   });
 }
 

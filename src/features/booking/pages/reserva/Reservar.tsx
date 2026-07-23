@@ -62,50 +62,54 @@ const generateTimeSlots = (
   selectedDate: Date | null,
   occupied: ApiTurno[],
   duration: number,
-  hours = { open: false, start: "09:00", end: "18:00" },
+  ranges?: { start: string; end: string }[],
 ): TimeSlot[] => {
-  if (!selectedDate || !hours?.open) return [];
+  if (!selectedDate || !ranges || ranges.length === 0) return [];
   const slots: TimeSlot[] = [];
   const now = new Date();
-  const [sh, sm] = hours.start.split(":").map(Number);
-  const [eh, em] = hours.end.split(":").map(Number);
-  const dayStart = new Date(selectedDate);
-  dayStart.setHours(sh, sm, 0, 0);
-  const dayEnd = new Date(selectedDate);
-  dayEnd.setHours(eh, em, 0, 0);
 
-  let cur = new Date(dayStart);
-  while (true) {
-    const end = addMinutes(cur, duration);
-    if (end > dayEnd) break;
-    
-    const time = `${pad(cur.getHours())}:${pad(cur.getMinutes())}`;
-    const isPast = cur <= now;
+  for (const range of ranges) {
+    const [sh, sm] = range.start.split(":").map(Number);
+    const [eh, em] = range.end.split(":").map(Number);
 
-    const slotStartStr = buildLocalDateTimeString(selectedDate, time);
-    
-    // Calculamos el string de finalización del slot
-    const slotEndTime = `${pad(end.getHours())}:${pad(end.getMinutes())}`;
-    const slotEndStr = buildLocalDateTimeString(selectedDate, slotEndTime);
+    const dayStart = new Date(selectedDate);
+    dayStart.setHours(sh, sm, 0, 0);
 
-    const isOccupied = occupied.some((t) => {
-      if (!t.fecha_hora_inicio || !t.fecha_hora_fin) return false;
+    const cruzaMedianoche = eh < sh || (eh === sh && em < sm);
+    const dayEnd = new Date(
+      cruzaMedianoche
+        ? selectedDate.getTime() + 86400000
+        : selectedDate.getTime(),
+    );
+    dayEnd.setHours(eh, em, 0, 0);
+    if (!cruzaMedianoche && dayEnd <= dayStart) continue;
 
-      // Normalizamos las fechas que vienen de la API a objetos Date locales reales
-      const dbStart = new Date(t.fecha_hora_inicio);
-      const dbEnd = new Date(t.fecha_hora_fin);
+    let cur = new Date(dayStart);
+    while (true) {
+      const end = addMinutes(cur, duration);
+      if (end > dayEnd) break;
 
-      // Convertimos también nuestros slots actuales a objetos Date puros para comparar milisegundos
-      const slotStartObj = new Date(slotStartStr);
-      const slotEndObj = new Date(slotEndStr);
+      const time = `${pad(cur.getHours())}:${pad(cur.getMinutes())}`;
+      const isPast = cur <= now;
 
-      // Ejecutamos el overlap con datos homogéneos (todos en la misma zona horaria)
-      return rangesOverlap(slotStartObj, slotEndObj, dbStart, dbEnd);
-    });
+      const slotStartStr = buildLocalDateTimeString(selectedDate, time);
+      const slotEndTime = `${pad(end.getHours())}:${pad(end.getMinutes())}`;
+      const slotEndStr = buildLocalDateTimeString(selectedDate, slotEndTime);
 
-    slots.push({ id: time, time, available: !isPast && !isOccupied });
-    cur = addMinutes(cur, SLOT_INTERVAL);
+      const isOccupied = occupied.some((t) => {
+        if (!t.fecha_hora_inicio || !t.fecha_hora_fin) return false;
+        const dbStart = new Date(t.fecha_hora_inicio);
+        const dbEnd = new Date(t.fecha_hora_fin);
+        const slotStartObj = new Date(slotStartStr);
+        const slotEndObj = new Date(slotEndStr);
+        return rangesOverlap(slotStartObj, slotEndObj, dbStart, dbEnd);
+      });
+
+      slots.push({ id: time, time, available: !isPast && !isOccupied });
+      cur = addMinutes(cur, SLOT_INTERVAL);
+    }
   }
+
   return slots;
 };
 
@@ -170,18 +174,21 @@ const Reservar = () => {
     const jsDay = date.getDay();
     const apiDay = jsDay === 0 ? 6 : jsDay - 1;
 
-    const h = b.horarios.find((x: ApiHorario) => {
-      const dayIndex = apiDayToWeekDayIndex(x.dia_semana);
-      return dayIndex === apiDay;
-    });
+    const matching = b.horarios
+      .filter((x: ApiHorario) => {
+        const dayIndex = apiDayToWeekDayIndex(x.dia_semana);
+        return dayIndex === apiDay;
+      })
+      .sort((a: ApiHorario, b: ApiHorario) =>
+        a.hora_apertura.localeCompare(b.hora_apertura),
+      );
 
-    if (!h) return undefined;
+    if (matching.length === 0) return undefined;
 
-    return {
-      open: true,
+    return matching.map((h: ApiHorario) => ({
       start: h.hora_apertura,
       end: h.hora_cierre,
-    };
+    }));
   },
   []
 );
