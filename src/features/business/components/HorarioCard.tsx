@@ -5,6 +5,10 @@ interface HorarioCardProps {
   horarios: ApiHorario[];
 }
 
+function formatHour(val: string): string {
+  return val.slice(0, 5);
+}
+
 export default function HorarioCard({ horarios }: HorarioCardProps) {
   const today = new Date().getDay();
   const todayIndex = today === 0 ? 6 : today - 1;
@@ -15,9 +19,10 @@ export default function HorarioCard({ horarios }: HorarioCardProps) {
 
       <div className="space-y-2 text-sm">
         {WEEK_DAYS.map((dayName, idx) => {
-          const horario = horarios.find(
+          const slots = horarios.filter(
             (h) => apiDayToWeekDayIndex(h.dia_semana) === idx,
-          );
+          ).sort((a, b) => a.hora_apertura.localeCompare(b.hora_apertura));
+
           const isToday = idx === todayIndex;
 
           return (
@@ -25,16 +30,23 @@ export default function HorarioCard({ horarios }: HorarioCardProps) {
               key={dayName}
               className={`flex justify-between rounded-lg px-2 py-1 ${isToday ? "bg-primary/5 font-medium" : ""}`}
             >
-              <span className={isToday ? "text-primary" : horario ? "text-foreground" : "text-muted-foreground/50"}>
+              <span className={isToday ? "text-primary" : slots.length > 0 ? "text-foreground" : "text-muted-foreground/50"}>
                 {dayName}
                 {isToday && (
                   <span className="ml-2 text-xs font-normal text-primary">(hoy)</span>
                 )}
               </span>
-              <span className={horario ? "text-muted-foreground" : "text-muted-foreground/50"}>
-                {horario
-                  ? `${horario.hora_apertura.slice(0, 5)} – ${horario.hora_cierre.slice(0, 5)}`
-                  : "Cerrado"}
+              <span className="text-right text-muted-foreground">
+                {slots.length === 0 ? (
+                  <span className="text-muted-foreground/50">Cerrado</span>
+                ) : (
+                  slots.map((s, i) => (
+                    <span key={i}>
+                      {i > 0 && <span className="mx-1 text-muted-foreground/40">/</span>}
+                      {formatHour(s.hora_apertura)}–{formatHour(s.hora_cierre)}
+                    </span>
+                  ))
+                )}
               </span>
             </div>
           );
