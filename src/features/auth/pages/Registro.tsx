@@ -324,7 +324,9 @@ const onSubmit = async (data: FormData) => {
               </Button>
             </form>
 
-            <SocialAuthButtons />
+            <SocialAuthButtons
+              onNeedsVerification={() => setShowVerifyModal(true)}
+            />
 
             <p className="text-center text-sm text-muted-foreground">
               ¿Ya tenés cuenta?{" "}

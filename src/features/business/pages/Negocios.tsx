@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Search } from "lucide-react";
 import Navbar from "@/features/landing/components/Navbar";
 import Footer from "@/features/landing/components/Footer";
@@ -19,8 +20,12 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 
 const Negocios = () => {
+  const [searchParams] = useSearchParams();
   const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(() => {
+    const param = searchParams.get("categoria");
+    return param ? Number(param) : null;
+  });
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
 
   const [businesses, setBusinesses] = useState<ApiNegocio[]>([]);

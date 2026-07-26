@@ -25,6 +25,11 @@ type AuthResult =
   | { success: true; user: User }
   | { success: false; error: string };
 
+type GoogleAuthResult =
+  | { success: true; user: User }
+  | { success: false; error: string }
+  | { success: false; needsVerification: true; email: string };
+
 type RegisterResult =
   | { success: true }
   | { success: false; error: string };
@@ -51,6 +56,10 @@ interface AuthContextType {
   loginWithToken: (
     token: string,
   ) => Promise<AuthResult>;
+
+  loginWithGoogle: (
+    credential: string,
+  ) => Promise<GoogleAuthResult>;
 
 register: (
   usuario: string,
@@ -386,6 +395,48 @@ export function AuthProvider({
   }
 };
 
+  const loginWithGoogle = async (
+    credential: string,
+  ): Promise<GoogleAuthResult> => {
+    setIsLoading(true);
+
+    try {
+      console.log("Enviando credential al backend...");
+      const data = await authService.googleLogin(credential);
+      console.log("Respuesta del backend:", data);
+      const token = data.access_token;
+
+      if (!token) {
+        if (data.message && data.email) {
+          return {
+            success: false,
+            needsVerification: true,
+            email: data.email,
+          };
+        }
+        return {
+          success: false,
+          error: "Respuesta del servidor sin token",
+        };
+      }
+
+      return await applySessionFromToken(
+        token,
+        setUser,
+        setToken,
+      );
+    } catch (error: unknown) {
+      return {
+        success: false,
+        error: normalizeApiDetail(
+          error instanceof Error ? error.message : error,
+        ),
+      };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
 const register = async (
   usuario: string,
   email: string,
@@ -488,6 +539,7 @@ const logout = () => {
       login,
       verifyCredentials,
       loginWithToken,
+      loginWithGoogle,
 
       register,
 

@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { businessService } from "@/services/business.service";
 import type { ApiCategory } from "@/types/api";
 
@@ -6,10 +7,15 @@ const fallbackImage =
   "https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?auto=format&fit=crop&w=1200&q=80";
 
 const Categories = () => {
+  const navigate = useNavigate();
   const [categories, setCategories] = useState<ApiCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<number | null>(null);
+
+  const handleCategoryClick = (idCategoria: number) => {
+    navigate(`/negocios?categoria=${idCategoria}`);
+  };
 
   useEffect(() => {
     const loadCategories = async () => {
@@ -90,6 +96,7 @@ const Categories = () => {
                 return (
                   <button
                     key={cat.id_categoria}
+                    onClick={() => handleCategoryClick(cat.id_categoria)}
                     onMouseEnter={() => setActiveCategory(cat.id_categoria)}
                     onFocus={() => setActiveCategory(cat.id_categoria)}
                     className={`group relative overflow-hidden rounded-2xl transition-all duration-500 ease-out ${
@@ -144,7 +151,7 @@ const Categories = () => {
                 return (
                   <button
                     key={cat.id_categoria}
-                    onClick={() => setActiveCategory(cat.id_categoria)}
+                    onClick={() => handleCategoryClick(cat.id_categoria)}
                     className={`relative overflow-hidden rounded-2xl transition-all duration-500 ${
                       isActive ? "h-64" : "h-20"
                     }`}

@@ -36,6 +36,11 @@ export interface AuthTokenResponse {
   token_type: string;
 }
 
+export interface GoogleNeedsVerificationResponse {
+  message: string;
+  email: string;
+}
+
 export interface AuthUserResponse {
   id_us: string | number;
   email_us: string;
@@ -96,6 +101,23 @@ export const authService = {
     return apiClient.getWithBase<AuthUserResponse>(
       AUTH_API_ROOT,
       "/me"
+    );
+  },
+
+  // =========================
+  // GOOGLE AUTH
+  // =========================
+
+  googleLogin: async (
+    credential: string
+  ): Promise<AuthTokenResponse | GoogleNeedsVerificationResponse> => {
+    return apiClient.postWithBase<AuthTokenResponse | GoogleNeedsVerificationResponse>(
+      AUTH_API_ROOT,
+      "/google",
+      { id_token: credential },
+      undefined,
+      true,
+      true,
     );
   },
 
