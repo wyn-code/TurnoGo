@@ -1,5 +1,6 @@
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { useEffect, useRef, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 
 declare global {
   interface Window {
@@ -36,6 +37,9 @@ export function SocialAuthButtons({
   onNeedsVerification?: () => void;
 }) {
   const { loginWithGoogle } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const redirectPath = (location.state as { from?: string } | null)?.from;
   const [googleError, setGoogleError] = useState("");
   const buttonRef = useRef<HTMLDivElement>(null);
   const initialized = useRef(false);
@@ -60,7 +64,14 @@ export function SocialAuthButtons({
       } else {
         setGoogleError("Error al iniciar sesión con Google");
       }
+      return;
     }
+
+    // Login exitoso: volvemos a donde el usuario quería ir,
+    // o a "/" si no había ruta previa guardada.
+    // ProtectedRoute se encarga después de aplicar la lógica de roles
+    // (admin, dueño sin negocio, etc.) si corresponde.
+    navigate(redirectPath || "/", { replace: true });
   };
 
   useEffect(() => {
