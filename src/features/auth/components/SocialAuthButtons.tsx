@@ -1,19 +1,34 @@
 import { useAuth } from "@/features/auth/contexts/AuthContext";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useEffect, useRef, useState } from "react";
 
 declare global {
   interface Window {
     google?: {
       accounts?: {
         id?: {
-          initialize: (config: { client_id: string; callback: (response: { credential?: string }) => void }) => void;
-          prompt: (callback?: (notification: { isNotDisplayed: () => boolean; isSkippedMoment: () => boolean }) => void) => void;
+          initialize: (config: {
+            client_id: string;
+            callback: (response: { credential?: string }) => void;
+          }) => void;
+          renderButton: (
+            parent: HTMLElement,
+            options: {
+              theme?: "outline" | "filled_blue" | "filled_black";
+              size?: "large" | "medium" | "small";
+              width?: number;
+              text?: "signin_with" | "signup_with" | "continue_with" | "signin";
+              shape?: "rectangular" | "pill" | "circle" | "square";
+              logo_alignment?: "left" | "center";
+            }
+          ) => void;
         };
       };
     };
   }
 }
+
+const MAX_RETRIES = 20; // ~4 segundos (20 * 200ms)
+const RETRY_DELAY_MS = 200;
 
 export function SocialAuthButtons({
   onNeedsVerification,
@@ -22,6 +37,8 @@ export function SocialAuthButtons({
 }) {
   const { loginWithGoogle } = useAuth();
   const [googleError, setGoogleError] = useState("");
+  const buttonRef = useRef<HTMLDivElement>(null);
+  const initialized = useRef(false);
 
   const handleGoogleCredential = async (credential: string) => {
     setGoogleError("");
@@ -46,27 +63,58 @@ export function SocialAuthButtons({
     }
   };
 
-  const handleGoogleClick = () => {
-    if (!window.google?.accounts?.id) {
-      setGoogleError("Servicio de Google no disponible. Recargá la página.");
-      return;
-    }
+  useEffect(() => {
+    if (initialized.current) return;
 
-    window.google.accounts.id.initialize({
-      client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
-      callback: (response) => {
-        if (response.credential) {
-          handleGoogleCredential(response.credential);
-        }
-      },
-    });
+    let cancelled = false;
+    let attempts = 0;
 
-    window.google.accounts.id.prompt((notification) => {
-      if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-        setGoogleError("No se pudo iniciar sesión con Google. Intentá de nuevo.");
+    const trySetup = () => {
+      if (cancelled) return;
+
+      if (window.google?.accounts?.id && buttonRef.current) {
+        window.google.accounts.id.initialize({
+          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+          callback: (response) => {
+            if (response.credential) {
+              handleGoogleCredential(response.credential);
+            } else {
+              setGoogleError("No se pudo obtener la credencial de Google.");
+            }
+          },
+        });
+
+        window.google.accounts.id.renderButton(buttonRef.current, {
+          theme: "outline",
+          size: "large",
+          width: 300,
+          text: "continue_with",
+          shape: "rectangular",
+          logo_alignment: "left",
+        });
+
+        initialized.current = true;
+        return;
       }
-    });
-  };
+
+      attempts += 1;
+      if (attempts >= MAX_RETRIES) {
+        setGoogleError("Servicio de Google no disponible. Recargá la página.");
+        return;
+      }
+
+      setTimeout(trySetup, RETRY_DELAY_MS);
+    };
+
+    // Se dispara asincrónicamente (no en el cuerpo del efecto), evitando
+    // el setState síncrono y dándole tiempo al script de Google a cargar.
+    setTimeout(trySetup, 0);
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="space-y-4">
@@ -84,20 +132,7 @@ export function SocialAuthButtons({
       )}
 
       <div className="flex justify-center">
-        <Button
-          type="button"
-          variant="outline"
-          className="w-full gap-2"
-          onClick={handleGoogleClick}
-        >
-          <svg viewBox="0 0 24 24" className="h-5 w-5" xmlns="http://www.w3.org/2000/svg">
-            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
-            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-          </svg>
-          Google
-        </Button>
+        <div ref={buttonRef} />
       </div>
     </div>
   );
