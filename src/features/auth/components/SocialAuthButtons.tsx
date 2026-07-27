@@ -68,10 +68,9 @@ export function SocialAuthButtons({
     }
 
     // Login exitoso: volvemos a donde el usuario quería ir,
-    // o a "/" si no había ruta previa guardada.
-    // ProtectedRoute se encarga después de aplicar la lógica de roles
-    // (admin, dueño sin negocio, etc.) si corresponde.
-    navigate(redirectPath || "/", { replace: true });
+    // o a "/dashboard" por defecto (ProtectedRoute decide el
+    // destino final según el rol: admin, dueño sin negocio, etc.)
+    navigate(redirectPath || "/dashboard", { replace: true });
   };
 
   useEffect(() => {
@@ -117,8 +116,6 @@ export function SocialAuthButtons({
       setTimeout(trySetup, RETRY_DELAY_MS);
     };
 
-    // Se dispara asincrónicamente (no en el cuerpo del efecto), evitando
-    // el setState síncrono y dándole tiempo al script de Google a cargar.
     setTimeout(trySetup, 0);
 
     return () => {
@@ -126,9 +123,6 @@ export function SocialAuthButtons({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  navigate(redirectPath || "/", { replace: true });
-  console.log("NAVIGATE EJECUTADO, redirectPath:", redirectPath);
 
   return (
     <div className="space-y-4">
