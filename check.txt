@@ -1,4 +1,4 @@
-import { useAuth } from "@/features/auth/contexts/AuthContext";
+﻿import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -54,7 +54,7 @@ export function SocialAuthButtons({
         if (onNeedsVerification) {
           onNeedsVerification();
         } else {
-          setGoogleError("Cuenta creada. Revisá tu email para verificarla.");
+          setGoogleError("Cuenta creada. Revis├í tu email para verificarla.");
         }
         return;
       }
@@ -62,15 +62,15 @@ export function SocialAuthButtons({
       if ("error" in result) {
         setGoogleError(result.error);
       } else {
-        setGoogleError("Error al iniciar sesión con Google");
+        setGoogleError("Error al iniciar sesi├│n con Google");
       }
       return;
     }
 
-    // Login exitoso: volvemos a donde el usuario quería ir,
-    // o a "/" si no había ruta previa guardada.
-    // ProtectedRoute se encarga después de aplicar la lógica de roles
-    // (admin, dueño sin negocio, etc.) si corresponde.
+    // Login exitoso: volvemos a donde el usuario quer├¡a ir,
+    // o a "/" si no hab├¡a ruta previa guardada.
+    // ProtectedRoute se encarga despu├®s de aplicar la l├│gica de roles
+    // (admin, due├▒o sin negocio, etc.) si corresponde.
     navigate(redirectPath || "/", { replace: true });
   };
 
@@ -110,15 +110,15 @@ export function SocialAuthButtons({
 
       attempts += 1;
       if (attempts >= MAX_RETRIES) {
-        setGoogleError("Servicio de Google no disponible. Recargá la página.");
+        setGoogleError("Servicio de Google no disponible. Recarg├í la p├ígina.");
         return;
       }
 
       setTimeout(trySetup, RETRY_DELAY_MS);
     };
 
-    // Se dispara asincrónicamente (no en el cuerpo del efecto), evitando
-    // el setState síncrono y dándole tiempo al script de Google a cargar.
+    // Se dispara asincr├│nicamente (no en el cuerpo del efecto), evitando
+    // el setState s├¡ncrono y d├índole tiempo al script de Google a cargar.
     setTimeout(trySetup, 0);
 
     return () => {
@@ -126,9 +126,6 @@ export function SocialAuthButtons({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  navigate(redirectPath || "/", { replace: true });
-  console.log("NAVIGATE EJECUTADO, redirectPath:", redirectPath);
 
   return (
     <div className="space-y-4">
