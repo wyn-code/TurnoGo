@@ -21,14 +21,16 @@ interface User {
   role?: string;
 }
 
-type AuthResult =
+type SessionResult =
   | { success: true; user: User }
-  | { success: false; error: string }
+  | { success: false; error: string };
+
+type AuthResult =
+  | SessionResult
   | { success: false; requires2fa: true };
 
 type GoogleAuthResult =
-  | { success: true; user: User }
-  | { success: false; error: string }
+  | SessionResult
   | { success: false; needsVerification: true; email: string };
 
 type RegisterResult =
@@ -179,7 +181,7 @@ async function applySessionFromToken(
   token: string,
   setUser: (u: User | null) => void,
   setToken: (t: string | null) => void,
-): Promise<AuthResult> {
+): Promise<SessionResult> {
   localStorage.setItem(
     TOKEN_KEY,
     token,
