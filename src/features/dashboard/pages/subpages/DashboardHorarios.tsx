@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,7 +17,6 @@ import {
   type WeekDay,
 } from "@/lib/schedule-utils";
 
-type DaySchedule = WeekSchedule[WeekDay];
 
 const DashboardHorarios = () => {
   const { business, isLoadingBusiness } = useDashboardBusiness();
@@ -30,11 +29,11 @@ const DashboardHorarios = () => {
     mapHorariosToWeekSchedule([]),
   );
 
-  useEffect(() => {
-    if (!isLoading) {
-      setSchedule(mapHorariosToWeekSchedule(apiHorarios));
-    }
-  }, [apiHorarios, isLoading]);
+  const [prevApiHorarios, setPrevApiHorarios] = useState(apiHorarios);
+  if (prevApiHorarios !== apiHorarios) {
+    setPrevApiHorarios(apiHorarios);
+    setSchedule(mapHorariosToWeekSchedule(apiHorarios));
+  }
 
   const update = (
     day: WeekDay,
@@ -79,11 +78,19 @@ const DashboardHorarios = () => {
       if (!schedule[day].open) continue;
 
       const { start, end, start2, end2 } = schedule[day];
+
+      if (!isValidTime(start) || !isValidTime(end)) {
+        return toast.error(`Horario inválido en ${day}.`);
+      }
+
       if (!isValidTimeRange(start, end)) {
         return toast.error(`Horario inválido en ${day}. La apertura y cierre no pueden ser iguales.`);
       }
 
       if (start2 && end2) {
+        if (!isValidTime(start2) || !isValidTime(end2)) {
+          return toast.error(`Horario inválido en ${day} (2da franja).`);
+        }
         if (!isValidTimeRange(start2, end2)) {
           return toast.error(`Horario inválido en ${day} (2da franja). La apertura y cierre no pueden ser iguales.`);
         }
