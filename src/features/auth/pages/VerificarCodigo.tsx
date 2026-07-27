@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import Navbar from "@/features/landing/components/Navbar";
 import Footer from "@/features/landing/components/Footer";
@@ -38,15 +38,15 @@ const VerificarCodigo = () => {
       toast.success("Verificación exitosa. ¡Bienvenido/a!");
       navigate("/dashboard", { replace: true });
     } else {
-      const msg = result.error || "No se pudo verificar el código.";
-      if (/expir|venc|caduc/i.test(msg)) {
-        clearPendingTwoFaEmail();
-        toast.error("El código expiró. Iniciá sesión nuevamente.");
-        navigate("/login", { replace: true });
-        return;
-      }
-      setError(msg);
+    const msg = "error" in result ? result.error : "No se pudo verificar el código.";
+    if (/expir|venc|caduc/i.test(msg)) {
+      clearPendingTwoFaEmail();
+      toast.error("El código expiró. Iniciá sesión nuevamente.");
+      navigate("/login", { replace: true });
+      return;
     }
+    setError(msg);
+  }
   };
 
   const maskedEmail = pendingTwoFaEmail
