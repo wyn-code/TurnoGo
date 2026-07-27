@@ -67,8 +67,8 @@ export const authService = {
 
   login: async (
     data: LoginRequest
-  ): Promise<AuthTokenResponse> => {
-    return apiClient.postWithBase<AuthTokenResponse>(
+  ): Promise<AuthTokenResponse | { requires_2fa: boolean; email: string }> => {
+    return apiClient.postWithBase<AuthTokenResponse | { requires_2fa: boolean; email: string }>(
       AUTH_API_ROOT,
       "/login",
       data,

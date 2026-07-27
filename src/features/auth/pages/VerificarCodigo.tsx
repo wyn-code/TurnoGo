@@ -9,90 +9,48 @@ import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp
 import { ShieldCheck, AlertCircle, Mail } from "lucide-react";
 import { toast } from "sonner";
 
-const PENDING_KEY = "turnexo_pending_2fa";
-
-interface Pending {
-  email: string;
-  password: string;
-  code: string;
-  from: string;
-  expiresAt: number;
-}
-
-function generateCode() {
-  return Math.floor(100000 + Math.random() * 900000).toString();
-}
-
-function readPending(): Pending | null {
-  const raw = sessionStorage.getItem(PENDING_KEY);
-  if (!raw) return null;
-  try {
-    const parsed: Pending = JSON.parse(raw);
-    if (Date.now() > parsed.expiresAt) {
-      sessionStorage.removeItem(PENDING_KEY);
-      return null;
-    }
-    return parsed;
-  } catch {
-    return null;
-  }
-}
-
 const VerificarCodigo = () => {
-  const { login } = useAuth();
+  const { pendingTwoFaEmail, clearPendingTwoFaEmail, verifyTwoFactorCode } = useAuth();
   const navigate = useNavigate();
-  const [pending, setPending] = useState<Pending | null>(() => readPending());
   const [code, setCode] = useState("");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [resendCooldown, setResendCooldown] = useState(0);
 
   useEffect(() => {
-    if (!pending) {
+    if (!pendingTwoFaEmail) {
       navigate("/login", { replace: true });
-      return;
     }
-    toast.info(`Código de verificación enviado (demo): ${pending.code}`, { duration: 8000 });
-  }, [pending, navigate]);
-
-  useEffect(() => {
-    if (resendCooldown <= 0) return;
-    const t = setTimeout(() => setResendCooldown((s) => s - 1), 1000);
-    return () => clearTimeout(t);
-  }, [resendCooldown]);
+  }, [pendingTwoFaEmail, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!pending) return;
+    if (!pendingTwoFaEmail) return;
     setError("");
     if (code.length !== 6) {
       setError("Ingresá los 6 dígitos del código.");
       return;
     }
     setSubmitting(true);
-    const result = await login(pending.email, pending.password);
+    const result = await verifyTwoFactorCode(pendingTwoFaEmail, code);
     setSubmitting(false);
     if (result.success) {
-      sessionStorage.removeItem(PENDING_KEY);
+      clearPendingTwoFaEmail();
       toast.success("Verificación exitosa. ¡Bienvenido/a!");
-      navigate(pending.from || "/dashboard", { replace: true });
+      navigate("/dashboard", { replace: true });
     } else {
-      setError(result.error || "No se pudo iniciar sesión.");
+      const msg = result.error || "No se pudo verificar el código.";
+      if (/expir|venc|caduc/i.test(msg)) {
+        clearPendingTwoFaEmail();
+        toast.error("El código expiró. Iniciá sesión nuevamente.");
+        navigate("/login", { replace: true });
+        return;
+      }
+      setError(msg);
     }
   };
 
-  const handleResend = () => {
-    if (!pending) return;
-    const newCode = generateCode();
-    const updated: Pending = { ...pending, code: newCode, expiresAt: Date.now() + 5 * 60 * 1000 };
-    sessionStorage.setItem(PENDING_KEY, JSON.stringify(updated));
-    setPending(updated);
-    setResendCooldown(30);
-    toast.info(`Nuevo código enviado (demo): ${newCode}`, { duration: 8000 });
-  };
-
-  const maskedEmail = pending?.email
-    ? pending.email.replace(/^(.)(.*)(.@.*)$/, (_, a, b, c) => a + "*".repeat(Math.max(b.length, 1)) + c)
+  const maskedEmail = pendingTwoFaEmail
+    ? pendingTwoFaEmail.replace(/^(.)(.*)(.@.*)$/, (_, a: string, b: string, c: string) => a + "*".repeat(Math.max(b.length, 1)) + c)
     : "";
 
   return (
@@ -136,21 +94,17 @@ const VerificarCodigo = () => {
                 {submitting ? "Verificando..." : "Verificar e iniciar sesión"}
               </Button>
             </form>
-            <div className="text-center text-sm text-muted-foreground">
-              ¿No recibiste el código?{" "}
+            <p className="text-center text-xs text-muted-foreground">
               <button
                 type="button"
-                onClick={handleResend}
-                disabled={resendCooldown > 0}
-                className="font-medium text-primary hover:underline disabled:opacity-50 disabled:no-underline"
+                onClick={() => {
+                  clearPendingTwoFaEmail();
+                  navigate("/login", { replace: true });
+                }}
+                className="hover:underline"
               >
-                {resendCooldown > 0 ? `Reenviar en ${resendCooldown}s` : "Reenviar código"}
-              </button>
-            </div>
-            <p className="text-center text-xs text-muted-foreground">
-              <Link to="/login" className="hover:underline">
                 Volver a iniciar sesión
-              </Link>
+              </button>
             </p>
           </CardContent>
         </Card>

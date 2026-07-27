@@ -23,7 +23,8 @@ interface User {
 
 type AuthResult =
   | { success: true; user: User }
-  | { success: false; error: string };
+  | { success: false; error: string }
+  | { success: false; requires2fa: true };
 
 type GoogleAuthResult =
   | { success: true; user: User }
@@ -39,16 +40,20 @@ interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  pendingTwoFaEmail: string | null;
 
   login: (
     email: string,
     password: string,
   ) => Promise<AuthResult>;
 
+  setPendingTwoFaEmail: (email: string) => void;
+  clearPendingTwoFaEmail: () => void;
+
   verifyTwoFactorCode: (
     email: string,
     otp: string,
-) => Promise<AuthResult>;
+  ) => Promise<AuthResult>;
 
   verifyCredentials: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
 
@@ -92,6 +97,7 @@ const AuthContext = createContext<AuthContextType | null>(null);
 
 const USER_KEY = "turnexo_user";
 const TOKEN_KEY = "turnexo_token";
+const PENDING_2FA_EMAIL_KEY = "turnexo_pending_2fa_email";
 
 const verifyCredentials = async (
   email: string,
@@ -241,6 +247,20 @@ export function AuthProvider({
   const [isLoading, setIsLoading] =
     useState(true);
 
+  const [pendingTwoFaEmail, setPendingTwoFaEmailState] = useState<string | null>(
+    () => localStorage.getItem(PENDING_2FA_EMAIL_KEY),
+  );
+
+  const setPendingTwoFaEmail = (email: string) => {
+    localStorage.setItem(PENDING_2FA_EMAIL_KEY, email);
+    setPendingTwoFaEmailState(email);
+  };
+
+  const clearPendingTwoFaEmail = () => {
+    localStorage.removeItem(PENDING_2FA_EMAIL_KEY);
+    setPendingTwoFaEmailState(null);
+  };
+
   useEffect(() => {
     const initSession = async () => {
       try {
@@ -312,8 +332,14 @@ export function AuthProvider({
           ),
         );
 
+      if ("requires_2fa" in data && data.requires_2fa) {
+        setPendingTwoFaEmail(data.email);
+        setIsLoading(false);
+        return { success: false, requires2fa: true };
+      }
+
       const token =
-        data.access_token;
+        (data as { access_token: string }).access_token;
 
       if (!token) {
         return {
@@ -322,6 +348,8 @@ export function AuthProvider({
             "Respuesta del servidor sin token",
         };
       }
+
+      clearPendingTwoFaEmail();
 
       return await applySessionFromToken(
         token,
@@ -401,10 +429,10 @@ export function AuthProvider({
   setIsLoading(true);
 
   try {
-    console.log("Enviando credential al backend...");
     const data = await authService.googleLogin(credential);
 
   if ("access_token" in data) {
+    clearPendingTwoFaEmail();
     return await applySessionFromToken(
       data.access_token,
       setUser,
@@ -417,11 +445,6 @@ export function AuthProvider({
     needsVerification: true,
     email: data.email,
   };
-
-    return {
-      success: false,
-      error: "Respuesta inesperada del servidor",
-    };
   } catch (error: unknown) {
     return {
       success: false,
@@ -522,6 +545,8 @@ const logout = () => {
 
   localStorage.removeItem(TOKEN_KEY);
 
+  clearPendingTwoFaEmail();
+
   apiClient.clearToken();
 };
 
@@ -532,6 +557,9 @@ const logout = () => {
       token,
       isAuthenticated: !!user && !!token,
       isLoading,
+      pendingTwoFaEmail,
+      setPendingTwoFaEmail,
+      clearPendingTwoFaEmail,
 
       login,
       verifyCredentials,

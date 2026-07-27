@@ -133,9 +133,6 @@ function PageLoader() {
   );
 }
 
-console.log("CLIENT ID:", import.meta.env.VITE_GOOGLE_CLIENT_ID);
-console.log("ORIGIN:", window.location.origin);
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>

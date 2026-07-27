@@ -18,6 +18,7 @@ export default function ProtectedRoute({
     isAuthenticated,
     isLoading,
     user,
+    pendingTwoFaEmail,
   } = useAuth();
 
   const location = useLocation();
@@ -48,6 +49,19 @@ export default function ProtectedRoute({
           "
         />
       </div>
+    );
+  }
+
+  // =========================
+  // PENDING 2FA
+  // =========================
+
+  if (!isAuthenticated && pendingTwoFaEmail) {
+    return (
+      <Navigate
+        to="/verificar-codigo"
+        replace
+      />
     );
   }
 

@@ -33,19 +33,8 @@ import {
 } from "@/components/ui/card";
 
 import { SocialAuthButtons } from "@/features/auth/components/SocialAuthButtons";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { LogIn, AlertCircle, Eye, EyeOff, ShieldCheck, Mail } from "lucide-react";
+import { LogIn, AlertCircle, Eye, EyeOff } from "lucide-react";
 
-
-const PENDING_KEY = "turnexo_pending_2fa";
-const generateCode = () => Math.floor(100000 + Math.random() * 900000).toString();
 
 const schema = z.object({
   email: z
@@ -68,7 +57,7 @@ type FormData = z.infer<
 >;
 
 const Login = () => {
-  const { verifyCredentials } = useAuth();
+  const { login } = useAuth();
 
   const navigate = useNavigate();
 
@@ -85,8 +74,6 @@ const Login = () => {
     showPassword,
     setShowPassword,
   ] = useState(false);
-    const [twoFAOpen, setTwoFAOpen] = useState(false);
-  const [pendingCreds, setPendingCreds] = useState<{ email: string; password: string } | null>(null);
 
   const {
     register,
@@ -104,29 +91,16 @@ const Login = () => {
     data: FormData,
   ) => {
     setServerError("");
-        const result = await verifyCredentials(data.email, data.password);
-    if (!result.success) {
-      setServerError(result.error || "Error al iniciar sesión.");
+    const result = await login(data.email, data.password);
+    if (result.success) {
+      navigate(redirectPath || "/dashboard", { replace: true });
       return;
     }
-    setPendingCreds({ email: data.email, password: data.password });
-    setTwoFAOpen(true);
-  };
-  const handleSendCode = () => {
-    if (!pendingCreds) return;
-    const code = generateCode();
-    sessionStorage.setItem(
-      PENDING_KEY,
-      JSON.stringify({
-        email: pendingCreds.email,
-        password: pendingCreds.password,
-        code,
-        from: redirectPath || "",
-        expiresAt: Date.now() + 5 * 60 * 1000,
-      })
-    );
-    setTwoFAOpen(false);
-    navigate("/verificar-codigo");
+    if ("requires2fa" in result) {
+      navigate("/verificar-codigo", { replace: true });
+      return;
+    }
+    setServerError(result.error || "Error al iniciar sesión.");
   };
 
   return (
@@ -376,34 +350,6 @@ const Login = () => {
       </main>
 
       <Footer />
-            <Dialog open={twoFAOpen} onOpenChange={setTwoFAOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-accent">
-              <ShieldCheck className="h-6 w-6 text-primary" />
-            </div>
-            <DialogTitle className="text-center">Verificación en dos pasos</DialogTitle>
-            <DialogDescription className="text-center">
-              Por tu seguridad, vamos a enviarte un <strong>código de verificación</strong> de 6 dígitos al correo:
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex items-center justify-center gap-2 rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm font-medium text-foreground">
-            <Mail size={16} className="text-primary" />
-            {pendingCreds?.email}
-          </div>
-          <p className="text-center text-xs text-muted-foreground">
-            El código tiene una validez de 5 minutos.
-          </p>
-          <DialogFooter className="gap-2 sm:gap-2">
-            <Button variant="outline" onClick={() => setTwoFAOpen(false)} className="flex-1">
-              Cancelar
-            </Button>
-            <Button onClick={handleSendCode} className="flex-1">
-              Enviar código
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
