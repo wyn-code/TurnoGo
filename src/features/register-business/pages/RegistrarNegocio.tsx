@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
 import businessService from "@/services/business.service";
@@ -124,7 +125,7 @@ export default function RegistrarNegocioPage() {
       setSubmitted(true);
     } catch (err) {
       console.error("Error al crear negocio:", err);
-      alert("Hubo un problema al registrar el negocio.");
+      toast.error("Hubo un problema al registrar el negocio.");
     } finally {
       setIsLoading(false);
     }
@@ -183,7 +184,9 @@ export default function RegistrarNegocioPage() {
         <Card className="mt-8">
           <form onSubmit={handleFormSubmit}>
           <CardContent className="p-6 space-y-5">
-            {renderStep()}
+            <div key={step} className="animate-in fade-in slide-in-from-right-4 duration-300">
+              {renderStep()}
+            </div>
 
           <div className="flex items-center justify-between pt-4 border-t border-border">
             <Button
@@ -204,7 +207,7 @@ export default function RegistrarNegocioPage() {
                   e.preventDefault();
                   next();
                 }}
-                className="gap-2 bg-violet-600 hover:bg-violet-700 text-white"
+                className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 Siguiente
                 <ArrowRight className="h-4 w-4" />
@@ -213,7 +216,7 @@ export default function RegistrarNegocioPage() {
               <Button
                 type="submit"
                 disabled={isLoading}
-                className="gap-2 bg-violet-600 hover:bg-violet-700 text-white"
+                className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground"
               >
                 {isLoading ? "Registrando..." : "Registrar negocio"}
                 <ArrowRight className="h-4 w-4" />

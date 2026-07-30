@@ -40,7 +40,7 @@ export function StatsHeader({
 
     {isFetching ? (
       <div className="flex items-center gap-1 text-xs text-muted-foreground">
-        <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+        <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" aria-label="Cargando..." />
         <span>Actualizando…</span>
       </div>
     ) : (

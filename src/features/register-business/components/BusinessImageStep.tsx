@@ -61,7 +61,7 @@ export default function BusinessImageStep({ form }: Props) {
         <input {...register("logo")} type="hidden" />
 
         {errors.logo && (
-          <p className="text-xs text-red-500">{errors.logo.message}</p>
+          <p className="text-xs text-destructive">{errors.logo.message}</p>
         )}
       </div>
 
@@ -92,7 +92,7 @@ export default function BusinessImageStep({ form }: Props) {
         <input {...register("imagenes")} type="hidden" />
 
         {errors.imagenes && (
-          <p className="text-xs text-red-500">{errors.imagenes.message}</p>
+          <p className="text-xs text-destructive">{errors.imagenes.message}</p>
         )}
 
         {imagenes.length > 0 && (

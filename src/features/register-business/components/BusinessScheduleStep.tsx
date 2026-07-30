@@ -34,17 +34,17 @@ function TimeSelect({
       <select
         value={hours || "09"}
         onChange={(e) => handleHourChange(e.target.value)}
-        className="h-9 w-16 rounded-md border-0 bg-transparent text-center text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 cursor-pointer"
-      >
-        {HOURS.map((h) => (
-          <option key={h} value={h}>{h}</option>
-        ))}
-      </select>
-      <span className="text-muted-foreground font-medium">:</span>
-      <select
-        value={minutes || "00"}
-        onChange={(e) => handleMinuteChange(e.target.value)}
-        className="h-9 w-16 rounded-md border-0 bg-transparent text-center text-sm focus:outline-none focus:ring-2 focus:ring-violet-500 cursor-pointer"
+className="h-9 w-16 rounded-md border-0 bg-transparent text-center text-sm focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer"
+        >
+          {HOURS.map((h) => (
+            <option key={h} value={h}>{h}</option>
+          ))}
+        </select>
+        <span className="text-muted-foreground font-medium">:</span>
+        <select
+          value={minutes || "00"}
+          onChange={(e) => handleMinuteChange(e.target.value)}
+          className="h-9 w-16 rounded-md border-0 bg-transparent text-center text-sm focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer"
       >
         {MINUTES.map((m) => (
           <option key={m} value={m}>{m}</option>
@@ -132,7 +132,7 @@ export default function BusinessScheduleStep({ form }: Props) {
                 relative flex items-center justify-between 
                 rounded-lg border px-4 py-3 transition-all duration-200
                 ${open 
-                  ? "border-violet-200 bg-violet-50/50 dark:border-violet-800 dark:bg-violet-950/20" 
+                  ? "border-primary/20 bg-primary/5 dark:border-primary/40 dark:bg-primary/10" 
                   : "border-border bg-muted/30"
                 }
               `}
@@ -142,7 +142,7 @@ export default function BusinessScheduleStep({ form }: Props) {
                 <Switch
                   checked={open}
                   onCheckedChange={() => handleToggleDay(day, open)}
-                  className="data-[state=checked]:bg-violet-600"
+                  className="data-[state=checked]:bg-primary"
                 />
                 
                 <div className="flex items-center gap-2">
@@ -150,7 +150,7 @@ export default function BusinessScheduleStep({ form }: Props) {
                     className={`
                       flex h-7 w-7 items-center justify-center rounded-full text-xs font-semibold
                       ${open 
-                        ? "bg-violet-600 text-white" 
+                        ? "bg-primary text-primary-foreground" 
                         : "bg-muted text-muted-foreground"
                       }
                     `}
@@ -183,7 +183,7 @@ export default function BusinessScheduleStep({ form }: Props) {
                     type="button"
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-violet-600"
+                    className="h-8 w-8 text-muted-foreground hover:text-primary"
                     onClick={() => setCopyFromDay(copyFromDay === day ? null : day)}
                     title="Copiar horario"
                   >

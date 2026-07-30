@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Plus, Edit, Power, PowerOff, Loader2 } from "lucide-react";
+import { Plus, Edit, Power, PowerOff, Loader2, PackageX } from "lucide-react";
 import { toast } from "sonner";
 import type { ApiServicio } from "@/types/api";
 import { ServiceForm, type ServiceFormValues } from "./services/ServiceForm";
@@ -105,16 +105,20 @@ const DashboardServicios = () => {
   if (isLoading || isLoadingBusiness) {
     return (
       <div className="flex h-48 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" aria-label="Cargando..." />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="rounded-lg border border-destructive p-8 text-center">
-        <p className="text-destructive">
-          Error cargando servicios: {error.message}
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
+          <PackageX className="h-8 w-8 text-destructive" />
+        </div>
+        <h3 className="text-lg font-medium text-destructive">Error al cargar servicios</h3>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {error.message}
         </p>
       </div>
     );
@@ -122,8 +126,12 @@ const DashboardServicios = () => {
 
   if (!businessId) {
     return (
-      <div className="rounded-lg border border-dashed p-8 text-center">
-        <p className="text-muted-foreground">
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+          <PackageX className="h-8 w-8 text-muted-foreground" />
+        </div>
+        <h3 className="text-lg font-medium text-foreground">Sin negocio vinculado</h3>
+        <p className="mt-1 text-sm text-muted-foreground">
           No encontramos un negocio vinculado a tu usuario.
         </p>
       </div>
@@ -169,7 +177,7 @@ const DashboardServicios = () => {
           {services.map((s) => (
             <Card
               key={s.id_servicio}
-              className={!s.activo ? "border-dashed opacity-90" : undefined}
+              className={`transition-shadow hover:shadow-md ${!s.activo ? "border-dashed opacity-90" : ""}`}
             >
               <CardContent className="flex items-center justify-between p-4">
                 <div>
@@ -232,8 +240,14 @@ const DashboardServicios = () => {
         </div>
 
         {services.length === 0 && (
-          <div className="rounded-lg border border-dashed p-8 text-center">
-            <p className="text-muted-foreground">
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+              <PackageX className="h-8 w-8 text-muted-foreground" />
+            </div>
+            <h3 className="text-lg font-medium text-foreground">
+              {showInactive ? "Sin servicios inactivos" : "Sin servicios activos"}
+            </h3>
+            <p className="mt-1 text-sm text-muted-foreground">
               {showInactive
                 ? "No hay servicios inactivos."
                 : "No hay servicios activos. Activá «Ver inactivos» para reactivar uno."}

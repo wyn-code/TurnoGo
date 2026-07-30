@@ -19,7 +19,7 @@ const STATUS_CONFIG = {
     title: "El pago no pudo completarse",
     description:
       "Ocurrió un error al procesar el pago. Podés intentarlo de nuevo.",
-    color: "text-red-500",
+    color: "text-destructive",
   },
   pending: {
     icon: Clock,

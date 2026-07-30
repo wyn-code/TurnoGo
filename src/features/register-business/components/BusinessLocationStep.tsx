@@ -3,6 +3,7 @@ import type { UseFormReturn } from "react-hook-form";
 import type { FormData } from "../schema";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { API_BASE_URL } from "@/lib/api-config";
 
 interface Provincia {
   id: string;
@@ -38,7 +39,7 @@ export default function BusinessLocationStep({ form }: Props) {
     const fetchProvincias = async () => {
       setLoadingProvincias(true);
       try {
-        const response = await fetch("http://127.0.0.1:8000/api/georef/provincias");
+        const response = await fetch(`${API_BASE_URL}/georef/provincias`);
         const data = await response.json();
         
         const lista = Array.isArray(data) ? data : (data.provincias || []);
@@ -64,7 +65,7 @@ export default function BusinessLocationStep({ form }: Props) {
 
       setLoadingLocalidades(true);
       try {
-        const url = `http://127.0.0.1:8000/api/georef/localidades?provincia=${selectedProvinciaId}`;
+        const url = `${API_BASE_URL}/georef/localidades?provincia=${selectedProvinciaId}`;
         const response = await fetch(url);
         
         if (!response.ok) {
@@ -106,7 +107,7 @@ export default function BusinessLocationStep({ form }: Props) {
             <option key={p.id} value={p.id}>{p.nombre}</option>
           ))}
         </select>
-        {errors.id_provincia && <p className="text-xs text-red-500">{errors.id_provincia.message}</p>}
+        {errors.id_provincia && <p className="text-xs text-destructive">{errors.id_provincia.message}</p>}
       </div>
 
       {/* CIUDAD */}
@@ -125,14 +126,14 @@ export default function BusinessLocationStep({ form }: Props) {
             <option key={l.id} value={l.id}>{l.nombre}</option>
           ))}
         </select>
-        {errors.ciudad && <p className="text-xs text-red-500">{errors.ciudad.message}</p>}
+        {errors.ciudad && <p className="text-xs text-destructive">{errors.ciudad.message}</p>}
       </div>
 
       {/* DIRECCIÓN */}
       <div className="space-y-2">
         <Label htmlFor="direccion">Dirección</Label>
         <Input {...register("direccion")} id="direccion" placeholder="Calle y Nro" />
-        {errors.direccion && <p className="text-xs text-red-500">{errors.direccion.message}</p>}
+        {errors.direccion && <p className="text-xs text-destructive">{errors.direccion.message}</p>}
       </div>
     </div>
   );

@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { lazy, Suspense, useEffect, useRef } from "react";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import { ErrorBoundary } from "@/components/error-boundary";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -54,10 +55,10 @@ const AppRoutes = () => {
 
       {/* Rutas protegidas — solo dueños de negocio */}
       <Route path="/registrar-negocio" element={<ProtectedRoute><RegistrarNegocio /></ProtectedRoute>} />
-      <Route path="/dashboard/*" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-      <Route path="/planes" element={<ProtectedRoute><Planes /></ProtectedRoute>} />
-      <Route path="/mi-suscripcion" element={<ProtectedRoute><MiSuscripcion /></ProtectedRoute>} />
-      <Route path="/admin/*" element={<AdminRoute><AdminPanel /></AdminRoute>} />
+      <Route path="/dashboard/*" element={<ProtectedRoute><ErrorBoundary><Dashboard /></ErrorBoundary></ProtectedRoute>} />
+      <Route path="/planes" element={<ProtectedRoute><ErrorBoundary><Planes /></ErrorBoundary></ProtectedRoute>} />
+      <Route path="/mi-suscripcion" element={<ProtectedRoute><ErrorBoundary><MiSuscripcion /></ErrorBoundary></ProtectedRoute>} />
+      <Route path="/admin/*" element={<ErrorBoundary><AdminRoute><AdminPanel /></AdminRoute></ErrorBoundary>} />
       <Route path="/verify-email/:token" element={<VerifyEmailPage />}/>
       <Route path="/restablecer-contrasena/:token" element={<RestablecerContrasena />}
       />
@@ -115,11 +116,11 @@ const AppRoutes = () => {
   }, [isAnimationDisabled, location.pathname]);
 
   if (isAnimationDisabled) {
-    return routes;
+    return <div id="main-content">{routes}</div>;
   }
 
   return (
-    <div key={location.pathname} ref={pageContainerRef} className="page-enter">
+    <div key={location.pathname} ref={pageContainerRef} id="main-content" className="page-enter">
       {routes}
     </div>
   );
@@ -133,8 +134,15 @@ function PageLoader() {
   );
 }
 
+const SkipLink = () => (
+  <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-md focus:bg-background focus:px-4 focus:py-2 focus:text-foreground focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-ring">
+    Saltar al contenido principal
+  </a>
+);
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
+<<<<<<< HEAD
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
       <TooltipProvider>
         <Toaster />
@@ -150,6 +158,22 @@ const App = () => (
         </BrowserRouter>
       </TooltipProvider>
     </GoogleOAuthProvider>
+=======
+    <TooltipProvider>
+      <SkipLink />
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <AuthProvider>
+          <MembershipProvider>
+            <Suspense fallback={<PageLoader />}>
+              <AppRoutes />
+            </Suspense>
+          </MembershipProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </TooltipProvider>
+>>>>>>> 9532cd4 (corregi 6 errores de seguridad y estabilidad)
   </QueryClientProvider>
 );
 

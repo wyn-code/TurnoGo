@@ -17,7 +17,10 @@ import {
   type WeekDay,
 } from "@/lib/schedule-utils";
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 9532cd4 (corregi 6 errores de seguridad y estabilidad)
 const DashboardHorarios = () => {
   const { business, isLoadingBusiness } = useDashboardBusiness();
   const businessId = business?.id_negocio ? String(business.id_negocio) : null;
@@ -44,11 +47,6 @@ const DashboardHorarios = () => {
       ...prev,
       [day]: { ...prev[day], [field]: value },
     }));
-  };
-
-  const isValidTime = (val: string) => {
-    const [h, m] = val.split(":").map(Number);
-    return !isNaN(h) && !isNaN(m) && h <= 23 && m <= 59;
   };
 
   const isValidTimeRange = (start: string, end: string): boolean => {
@@ -118,7 +116,7 @@ const DashboardHorarios = () => {
   if (isLoading || isLoadingBusiness) {
     return (
       <div className="flex h-48 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" aria-label="Cargando..." />
       </div>
     );
   }

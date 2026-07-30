@@ -27,34 +27,29 @@ function Calendar({
         caption_label: "text-[15px] font-medium capitalize",
         nav: "space-x-1 flex items-center",
         button_previous: cn(
-          "absolute left-1 top-1 h-8 w-8 bg-transparent p-0 opacity-50 hover:opacity-100 rounded-full border border-gray-200 flex items-center justify-center transition-colors"
+          "absolute left-1 top-1 h-8 w-8 bg-transparent p-0 opacity-50 hover:opacity-100 rounded-full border border-border flex items-center justify-center transition-colors"
         ),
         button_next: cn(
-          "absolute right-1 top-1 h-8 w-8 bg-transparent p-0 opacity-50 hover:opacity-100 rounded-full border border-gray-200 flex items-center justify-center transition-colors"
+          "absolute right-1 top-1 h-8 w-8 bg-transparent p-0 opacity-50 hover:opacity-100 rounded-full border border-border flex items-center justify-center transition-colors"
         ),
         month_grid: "w-full border-collapse mx-auto",
         weekdays: "flex justify-center gap-1 mb-2",
-        weekday: "text-gray-500 w-10 font-normal text-[0.85rem] flex items-center justify-center",
+        weekday: "text-muted-foreground w-10 font-normal text-[0.85rem] flex items-center justify-center",
         week: "flex justify-center w-full mt-1 gap-1",
 
-        // 1. EL CONTENEDOR CUADRADO: Totalmente limpio y sin color
         day: "p-0 relative flex items-center justify-center", 
         
-        // 2. EL BOTÓN REDONDO (Días normales): Transparente y con hover clarito
         day_button: cn(
-          "h-10 w-10 p-0 font-normal rounded-xl bg-transparent hover:bg-violet-100 transition-all flex items-center justify-center text-sm",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-400 focus-visible:ring-offset-1"
+          "h-10 w-10 p-0 font-normal rounded-xl bg-transparent hover:bg-accent transition-all flex items-center justify-center text-sm",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
         ),
         
-        // 3. LA MAGIA ACÁ: Si el contenedor está seleccionado, fuerza los estilos SOLAMENTE al botón de adentro.
-        // El `hover:!bg-violet-600` mata al hover clarito del botón.
-        selected: "[&_button]:!bg-violet-600 [&_button]:!text-white [&_button]:!font-medium [&_button]:hover:!bg-violet-600",
+        selected: "[&_button]:!bg-primary [&_button]:!text-primary-foreground [&_button]:!font-medium [&_button]:hover:!bg-primary",
         
-        // Lo mismo para el día de hoy, pintamos el botón y no el contenedor
-        today: "[&_button]:bg-violet-100 [&_button]:text-violet-900 [&_button]:font-bold",
+        today: "[&_button]:bg-accent [&_button]:text-accent-foreground [&_button]:font-bold",
         
-        outside: "text-gray-400 opacity-50",
-        disabled: "text-gray-300 opacity-50",
+        outside: "text-muted-foreground opacity-50",
+        disabled: "text-muted-foreground/50 opacity-50",
         hidden: "invisible",
         ...classNames,
       }}

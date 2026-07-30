@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { CalendarDays, Users, Briefcase, Clock, Loader2 } from "lucide-react";
+import { CalendarDays, Users, Briefcase, Clock, Loader2, CalendarX } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { useDashboardBusiness } from "@/features/dashboard/contexts/DashboardBusinessContext";
 import { useServices } from "@/hooks/queries/useServicesQuery";
@@ -99,15 +99,19 @@ const DashboardResumen = () => {
   if (isLoading) {
     return (
       <div className="flex h-48 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" aria-label="Cargando..." />
       </div>
     );
   }
 
   if (!businessId) {
     return (
-      <div className="rounded-lg border border-dashed p-8 text-center">
-        <p className="text-muted-foreground">
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+          <Briefcase className="h-8 w-8 text-muted-foreground" />
+        </div>
+        <h3 className="text-lg font-medium text-foreground">Sin negocio vinculado</h3>
+        <p className="mt-1 text-sm text-muted-foreground">
           No encontramos un negocio vinculado a tu usuario.
         </p>
       </div>
@@ -118,7 +122,7 @@ const DashboardResumen = () => {
     <div className="space-y-6">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((s) => (
-          <Card key={s.label}>
+          <Card key={s.label} className="transition-shadow hover:shadow-md">
             <CardContent className="flex items-center gap-4 p-5">
               <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
                 <s.icon size={20} className={s.color} />
@@ -137,13 +141,25 @@ const DashboardResumen = () => {
           <h3 className="mb-3 font-semibold text-foreground">Turnos de hoy</h3>
 
           {appointmentsError ? (
-            <p className="text-sm text-destructive">
-              No se pudieron cargar los turnos de hoy.
-            </p>
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+                <CalendarX className="h-6 w-6 text-destructive" />
+              </div>
+              <p className="text-sm font-medium text-destructive">Error al cargar turnos</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                No se pudieron cargar los turnos de hoy. Intentá de nuevo más tarde.
+              </p>
+            </div>
           ) : todayAppointments.length === 0 ? (
-            <p className="text-sm text-muted-foreground">
-              No hay turnos para hoy.
-            </p>
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                <CalendarX className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <p className="text-sm font-medium text-foreground">Sin turnos para hoy</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Los turnos aparecerán aquí cuando los clientes reserven.
+              </p>
+            </div>
           ) : (
             <div className="space-y-2">
               {todayAppointments
@@ -157,7 +173,7 @@ const DashboardResumen = () => {
                 .map((appointment) => (
                   <div
                     key={appointment.id_turno}
-                    className="flex items-center justify-between rounded-md border border-border px-3 py-2"
+                    className="flex items-center justify-between rounded-md border border-border px-3 py-2 transition-colors hover:bg-accent"
                   >
                     <div className="min-w-0">
                       <p className="truncate text-sm font-medium text-foreground">

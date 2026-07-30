@@ -45,7 +45,7 @@ export default function BusinessInfoStep({ form }: Props) {
           id="nombre"
           placeholder="Ej: Barbería Rocco" 
         />
-        {errors.nombre && <p className="text-xs text-red-500">{errors.nombre.message}</p>}
+        {errors.nombre && <p className="text-xs text-destructive">{errors.nombre.message}</p>}
       </div>
 
       {/* Categoría (Select Dinámico) */}
@@ -68,7 +68,7 @@ export default function BusinessInfoStep({ form }: Props) {
             </option>
           ))}
         </select>
-        {errors.id_categoria && <p className="text-xs text-red-500">{errors.id_categoria.message}</p>}
+        {errors.id_categoria && <p className="text-xs text-destructive">{errors.id_categoria.message}</p>}
       </div>
 
       {/* Descripción */}
@@ -80,7 +80,7 @@ export default function BusinessInfoStep({ form }: Props) {
           placeholder="Contanos brevemente qué hacés..."
           className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
-        {errors.descripcion && <p className="text-xs text-red-500">{errors.descripcion.message}</p>}
+        {errors.descripcion && <p className="text-xs text-destructive">{errors.descripcion.message}</p>}
       </div>
     </div>
   );

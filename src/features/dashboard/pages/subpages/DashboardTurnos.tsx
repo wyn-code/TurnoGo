@@ -12,7 +12,8 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, CheckCircle, Ban, UserX } from "lucide-react";
+import { Loader2, CheckCircle, Ban, UserX, CalendarX } from "lucide-react";
+import { toast } from "sonner";
 import { useDashboardBusiness } from "@/features/dashboard/contexts/DashboardBusinessContext";
 import {
   useAppointments,
@@ -138,7 +139,7 @@ const DashboardTurnos = () => {
     },
     onError: (err: unknown) => {
       const msg = err instanceof ApiError ? err.detail : "Error al cambiar estado";
-      alert(msg);
+      toast.error(msg);
     },
   });
 
@@ -178,15 +179,19 @@ const DashboardTurnos = () => {
   if (isLoadingBusiness || (businessId && isLoading)) {
     return (
       <div className="flex h-48 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" aria-label="Cargando..." />
       </div>
     );
   }
 
   if (!businessId) {
     return (
-      <div className="rounded-lg border border-dashed p-8 text-center">
-        <p className="text-muted-foreground">
+      <div className="flex flex-col items-center justify-center py-12 text-center">
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+          <CalendarX className="h-8 w-8 text-muted-foreground" />
+        </div>
+        <h3 className="text-lg font-medium text-foreground">Sin negocio vinculado</h3>
+        <p className="mt-1 text-sm text-muted-foreground">
           No encontramos un negocio vinculado a tu usuario.
         </p>
       </div>
@@ -221,15 +226,29 @@ const DashboardTurnos = () => {
       <Card>
         <CardContent className="p-5">
           {error ? (
-            <p className="text-center text-destructive">
-              Error cargando turnos: {error.message}
-            </p>
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+                <CalendarX className="h-6 w-6 text-destructive" />
+              </div>
+              <p className="text-sm font-medium text-destructive">Error al cargar turnos</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {error.message}
+              </p>
+            </div>
           ) : sortedAppointments.length === 0 ? (
-            <p className="text-center text-muted-foreground">
-              {view === "today"
-                ? "No hay turnos para hoy."
-                : "No hay turnos esta semana."}
-            </p>
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                <CalendarX className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <p className="text-sm font-medium text-foreground">
+                {view === "today" ? "Sin turnos para hoy" : "Sin turnos esta semana"}
+              </p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {view === "today"
+                  ? "Los turnos aparecerán aquí cuando los clientes reserven."
+                  : "No hay turnos programados para esta semana."}
+              </p>
+            </div>
           ) : (
             <div className="space-y-3">
               {sortedAppointments.map((appointment) => {
@@ -239,7 +258,7 @@ const DashboardTurnos = () => {
                   <div
                     key={appointment.id_turno}
                     ref={String(appointment.id_turno) === highlightedId ? highlightedRef : undefined}
-                    className={`flex flex-wrap items-start justify-between gap-2 rounded-lg border p-4 transition-all ${
+                    className={`flex flex-wrap items-start justify-between gap-2 rounded-lg border p-4 transition-all hover:bg-accent/50 ${
                       String(appointment.id_turno) === highlightedId
                         ? "border-primary bg-primary/5 ring-2 ring-primary/20"
                         : "border-border"
@@ -362,7 +381,7 @@ const DashboardTurnos = () => {
               onClick={handleCancel}
             >
               {statusMutation.isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" aria-label="Cargando..." />
               ) : (
                 "Cancelar turno"
               )}

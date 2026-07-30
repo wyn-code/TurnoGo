@@ -63,7 +63,7 @@ const DashboardConfiguracion = () => {
   if (isLoadingBusiness) {
     return (
       <div className="flex h-48 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" aria-label="Cargando..." />
       </div>
     );
   }

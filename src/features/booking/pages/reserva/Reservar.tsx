@@ -704,7 +704,7 @@ const refreshOccupiedAppointments = useCallback(async () => {
               <Button disabled={!canNext() || isSubmitting} onClick={handleConfirm}>
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" aria-label="Cargando..." />
                     Confirmando...
                   </>
                 ) : (

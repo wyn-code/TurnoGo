@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 
 import Navbar from "@/features/landing/components/Navbar";
 import Footer from "@/features/landing/components/Footer";
-import ProfessionalCard from "@/features/business/components/ProfessionalCard";
 import { Button } from "@/components/ui/button";
+import { PLACEHOLDER_IMAGE } from "@/lib/placeholders";
 
 import { businessService } from "@/services/business.service";
 import { servicioService } from "@/services/servicio.service";
@@ -13,6 +13,7 @@ import type { ApiNegocio, ApiEmpleado, ApiServicio } from "@/types/api";
 
 import Map from "@/features/business/components/Map";
 import HorarioCard from "@/features/business/components/HorarioCard";
+import ProfessionalCard from "@/features/business/components/ProfessionalCard";
 import { Instagram, MapPin, Phone } from "lucide-react";
 
 const NegocioPerfil = () => {
@@ -95,7 +96,7 @@ const NegocioPerfil = () => {
   const portada =
   business.imagenes?.find((img) => img.es_portada)?.url ||
   business.imagenes?.[0]?.url ||
-  "https://images.unsplash.com/photo-1621605815971-fbc98d665033"
+  PLACEHOLDER_IMAGE
 
   return (
     <div className="min-h-screen bg-background">

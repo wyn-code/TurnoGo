@@ -78,7 +78,6 @@ const Navbar = () => {
           </Link>
           </Button>
           
-
 {isAuthenticated ? (
   <DropdownMenu>
     <DropdownMenuTrigger asChild>
@@ -135,8 +134,8 @@ const Navbar = () => {
           cursor-pointer
           gap-3
           px-4
-          text-red-500
-          focus:text-red-500
+          text-destructive
+          focus:text-destructive
         "
       >
         <LogOut className="h-4 w-4" />
@@ -160,7 +159,8 @@ const Navbar = () => {
           type="button"
           onClick={() => setMobileOpen(!mobileOpen)}
           className="md:hidden"
-          aria-label="Abrir menú"
+          aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
+          aria-expanded={mobileOpen}
         >
           {mobileOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
@@ -198,7 +198,7 @@ const Navbar = () => {
 
                 <Button
                   variant="ghost"
-                  className="justify-start text-red-500"
+                  className="justify-start text-destructive"
                   onClick={() => {
                     logout();
                     navigate("/");

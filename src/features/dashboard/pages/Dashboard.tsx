@@ -64,7 +64,7 @@ const Dashboard = () => {
   if (authLoading || (user?.id && isLoadingBusiness)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" aria-label="Cargando..." />
       </div>
     );
   }

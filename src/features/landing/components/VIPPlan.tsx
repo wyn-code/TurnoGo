@@ -26,19 +26,19 @@ const VIPPlan = () => (
       <div className="group relative mx-auto mt-12 max-w-lg">
         
         {/* Efecto de borde difuminado animado detrás de la tarjeta */}
-        <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-primary via-violet-500 to-primary opacity-30 blur transition duration-500 group-hover:opacity-60"></div>
+        <div className="absolute -inset-0.5 rounded-2xl bg-gradient-to-r from-primary via-primary/70 to-primary/40 opacity-30 blur transition duration-500 group-hover:opacity-60"></div>
         
         {/* Card Principal */}
         <div className="relative rounded-2xl border border-border/50 bg-card p-8 shadow-xl sm:p-10">
           
           {/* Badge superior */}
-          <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-primary to-violet-500 px-4 py-1 text-xs font-bold uppercase tracking-widest text-white shadow-sm">
+          <div className="absolute -top-4 left-1/2 -translate-x-1/2 rounded-full bg-gradient-to-r from-primary to-primary/70 px-4 py-1 text-xs font-bold uppercase tracking-widest text-primary-foreground shadow-sm">
             Más elegido
           </div>
 
           <div className="flex flex-col items-center justify-center gap-2">
             <Crown size={36} className="text-primary drop-shadow-sm" />
-            <span className="bg-gradient-to-r from-primary to-violet-500 bg-clip-text text-3xl font-extrabold text-transparent">
+            <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-3xl font-extrabold text-transparent">
               VIP
             </span>
           </div>
@@ -57,7 +57,7 @@ const VIPPlan = () => (
           {/* Botón CTA con gradiente */}
           <Button 
             size="lg" 
-            className="mt-8 w-full gap-2 border-0 bg-gradient-to-r from-primary to-violet-600 text-[15px] shadow-md transition-all hover:from-primary/90 hover:to-violet-600/90 active:scale-95"
+            className="mt-8 w-full gap-2 border-0 bg-gradient-to-r from-primary to-primary/80 text-[15px] shadow-md transition-all hover:from-primary/90 hover:to-primary/70 active:scale-95"
           >
             <Crown size={18} />
             Quiero ser VIP

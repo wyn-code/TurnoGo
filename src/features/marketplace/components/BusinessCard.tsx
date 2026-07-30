@@ -2,19 +2,7 @@ import { Link } from "react-router-dom";
 import { MapPin } from "lucide-react";
 import { CardContent } from "@/components/ui/card";
 import type { ApiCategory, ApiNegocio } from "@/types/api";
-
-const categoryDefaults: Record<string, string> = {
-  Barberia:
-    "https://images.unsplash.com/photo-1503951914875-452162b0f3f1?q=80&w=500&auto=format&fit=crop",
-  "Canchas de Padle":
-    "https://plus.unsplash.com/premium_photo-1708692920701-19a470ecd667?q=80&w=1170&auto=format&fit=crop",
-  "Canchas de Futbol":
-    "https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=500&auto=format&fit=crop",
-  Peluqueria:
-    "https://images.unsplash.com/photo-1560066984-138dadb4c035?q=80&w=500&auto=format&fit=crop",
-  "Servicios Tecnicos":
-    "https://images.unsplash.com/photo-1581092160562-40aa08e78837?q=80&w=500&auto=format&fit=crop",
-};
+import { getCategoryImage } from "@/lib/placeholders";
 
 interface BusinessCardProps {
   business: ApiNegocio;
@@ -27,9 +15,7 @@ const BusinessCard = ({ business, categories }: BusinessCardProps) => {
       (cat) => cat.id_categoria === business.id_categoria
     )?.nombre ?? "Sin Categoría";
 
-  const coverImage =
-    categoryDefaults[categoryName] ??
-    "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=500&auto=format&fit=crop";
+  const coverImage = getCategoryImage(categoryName);
 
   return (
     <Link
@@ -80,7 +66,7 @@ const BusinessCard = ({ business, categories }: BusinessCardProps) => {
             </p>
           </div>
 
-        <span className="rounded-lg bg-violet-600 px-4 py-2.5 text-xs font-bold text-white transition-colors hover:bg-violet-700">
+        <span className="rounded-lg bg-primary px-4 py-2.5 text-xs font-bold text-primary-foreground transition-colors hover:bg-primary/90">
           Reservar
         </span>
         </div>

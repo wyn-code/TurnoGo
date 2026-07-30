@@ -167,7 +167,7 @@ const Negocios = () => {
               className={cn(
                 "w-full rounded-lg px-4 py-2.5 text-left text-sm font-medium transition-colors",
                 selectedCategory === null
-                  ? "bg-violet-600 text-white hover:bg-violet-700"
+                  ? "bg-primary text-primary-foreground hover:bg-primary/90"
                   : "text-foreground hover:bg-accent"
               )}
             >
@@ -181,7 +181,7 @@ const Negocios = () => {
                 className={cn(
                   "w-full rounded-lg px-4 py-2.5 text-left text-sm font-medium transition-colors",
                   selectedCategory === cat.id_categoria
-                    ? "bg-violet-600 text-white hover:bg-violet-700"
+                    ? "bg-primary text-primary-foreground hover:bg-primary/90"
                     : "text-foreground hover:bg-accent"
                 )}
               >

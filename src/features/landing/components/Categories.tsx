@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { businessService } from "@/services/business.service";
 import type { ApiCategory } from "@/types/api";
+import { PLACEHOLDER_IMAGE } from "@/lib/placeholders";
 
-const fallbackImage =
-  "https://images.unsplash.com/photo-1521590832167-7bcbfaa6381f?auto=format&fit=crop&w=1200&q=80";
+const fallbackImage = PLACEHOLDER_IMAGE;
 
 const Categories = () => {
   const navigate = useNavigate();
