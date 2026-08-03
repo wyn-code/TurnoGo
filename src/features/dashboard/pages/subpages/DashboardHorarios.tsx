@@ -46,6 +46,13 @@ const DashboardHorarios = () => {
     }));
   };
 
+  const isValidTime = (time: string): boolean => {
+  if (!time) return false;
+
+  const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(time);
+  return !!match;
+  };
+
   const isValidTimeRange = (start: string, end: string): boolean => {
     const [sHour, sMin] = start.split(":").map(Number);
     const [eHour, eMin] = end.split(":").map(Number);
