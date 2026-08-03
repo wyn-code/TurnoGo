@@ -1,5 +1,4 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { GoogleOAuthProvider } from "@react-oauth/google";
 import { lazy, Suspense, useEffect, useRef } from "react";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { ErrorBoundary } from "@/components/error-boundary";
@@ -142,23 +141,6 @@ const SkipLink = () => (
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-<<<<<<< HEAD
-    <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AuthProvider>
-            <MembershipProvider>
-              <Suspense fallback={<PageLoader />}>
-                <AppRoutes />
-              </Suspense>
-            </MembershipProvider>
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </GoogleOAuthProvider>
-=======
     <TooltipProvider>
       <SkipLink />
       <Toaster />
@@ -173,7 +155,6 @@ const App = () => (
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
->>>>>>> 9532cd4 (corregi 6 errores de seguridad y estabilidad)
   </QueryClientProvider>
 );
 

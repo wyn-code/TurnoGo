@@ -17,10 +17,7 @@ import {
   type WeekDay,
 } from "@/lib/schedule-utils";
 
-<<<<<<< HEAD
 
-=======
->>>>>>> 9532cd4 (corregi 6 errores de seguridad y estabilidad)
 const DashboardHorarios = () => {
   const { business, isLoadingBusiness } = useDashboardBusiness();
   const businessId = business?.id_negocio ? String(business.id_negocio) : null;
