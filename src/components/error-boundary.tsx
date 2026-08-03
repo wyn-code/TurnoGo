@@ -35,6 +35,11 @@ export class ErrorBoundary extends Component<Props, State> {
           <p className="mt-1 max-w-sm text-sm text-muted-foreground">
             Ocurrió un error inesperado. Intentá recargar la página.
           </p>
+          {this.state.error?.message && (
+            <pre className="mt-4 max-w-full overflow-auto rounded-md bg-muted p-3 text-left text-xs text-muted-foreground">
+              {this.state.error.message}
+            </pre>
+          )}
           <Button
             variant="outline"
             className="mt-4"
