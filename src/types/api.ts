@@ -213,6 +213,9 @@ export interface ApiNegocioFunciones {
 export interface ApiCrearPreferenciaResponse {
   init_point: string;
   preference_id: string;
+  collector_id?: string | number;
+  sandbox_init_point?: string;
+  [key: string]: unknown;
 }
 
 // Aliases de compatibilidad para transición gradual
