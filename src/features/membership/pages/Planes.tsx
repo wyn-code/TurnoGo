@@ -30,6 +30,14 @@ export default function Planes() {
   const handleSubscribe = async (idPlan: number) => {
     try {
       const result = await crearPreferencia(idPlan);
+      console.log(
+        "[MP DIAG] URL que recibe el frontend y redirige =",
+        result.init_point
+      );
+      console.log(
+        "[MP DIAG] URL que recibe el frontend contiene sandbox =",
+        result.init_point?.includes("sandbox")
+      );
       window.location.href = result.init_point;
     } catch {
       // error handled by mutation toast
