@@ -6,12 +6,12 @@ import { Label } from "@/components/ui/label";
 import { API_BASE_URL } from "@/lib/api-config";
 
 interface Provincia {
-  id: string;
+  id_provincia: number;
   nombre: string;
 }
 
 interface Localidad {
-  id: string;
+  id_localidad: number;
   nombre: string;
 }
 
@@ -33,6 +33,7 @@ export default function BusinessLocationStep({ form }: Props) {
   const [loadingLocalidades, setLoadingLocalidades] = useState(false);
 
   const selectedProvinciaId = watch("id_provincia");
+  const selectedLocalidadId = watch("id_localidad");
 
   // 1. CARGAR PROVINCIAS
   useEffect(() => {
@@ -41,9 +42,11 @@ export default function BusinessLocationStep({ form }: Props) {
       try {
         const response = await fetch(`${API_BASE_URL}/georef/provincias`);
         const data = await response.json();
-        
+
         const lista = Array.isArray(data) ? data : (data.provincias || []);
-        setProvincias(lista.sort((a: Provincia, b: Provincia) => a.nombre.localeCompare(b.nombre)));
+        setProvincias(
+          lista.sort((a: Provincia, b: Provincia) => a.nombre.localeCompare(b.nombre))
+        );
       } catch (e) {
         console.error("Error cargando provincias:", e);
       } finally {
@@ -65,20 +68,23 @@ export default function BusinessLocationStep({ form }: Props) {
 
       setLoadingLocalidades(true);
       try {
-        const url = `${API_BASE_URL}/georef/localidades?provincia=${selectedProvinciaId}`;
+        const url = `${API_BASE_URL}/georef/localidades?id_provincia=${selectedProvinciaId}`;
         const response = await fetch(url);
-        
+
         if (!response.ok) {
           throw new Error(`Error HTTP: ${response.status}`);
         }
 
         const data = await response.json();
-        
+
         if (isMounted) {
           const lista = Array.isArray(data) ? data : (data.localidades || []);
-          
-          setLocalidades(lista.sort((a: Localidad, b: Localidad) => a.nombre.localeCompare(b.nombre)));
-          setValue("ciudad", ""); 
+
+          setLocalidades(
+            lista.sort((a: Localidad, b: Localidad) => a.nombre.localeCompare(b.nombre))
+          );
+          setValue("id_localidad", null);
+          setValue("ciudad", "");
         }
       } catch (error) {
         console.error("Error cargando ciudades:", error);
@@ -88,8 +94,18 @@ export default function BusinessLocationStep({ form }: Props) {
     };
 
     fetchLocalidades();
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, [selectedProvinciaId, setValue]);
+
+  const handleLocalidadChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const idLocalidad = e.target.value ? Number(e.target.value) : null;
+    const localidad = localidades.find((l) => l.id_localidad === idLocalidad);
+
+    setValue("id_localidad", idLocalidad, { shouldValidate: true });
+    setValue("ciudad", localidad?.nombre ?? "", { shouldValidate: true });
+  };
 
   return (
     <div className="space-y-4">
@@ -104,7 +120,7 @@ export default function BusinessLocationStep({ form }: Props) {
         >
           <option value="">{loadingProvincias ? "Cargando..." : "Seleccioná provincia"}</option>
           {provincias.map((p) => (
-            <option key={p.id} value={p.id}>{p.nombre}</option>
+            <option key={p.id_provincia} value={p.id_provincia}>{p.nombre}</option>
           ))}
         </select>
         {errors.id_provincia && <p className="text-xs text-destructive">{errors.id_provincia.message}</p>}
@@ -112,10 +128,11 @@ export default function BusinessLocationStep({ form }: Props) {
 
       {/* CIUDAD */}
       <div className="space-y-2">
-        <Label htmlFor="ciudad">Ciudad / Localidad</Label>
+        <Label htmlFor="id_localidad">Ciudad / Localidad</Label>
         <select
-          {...register("ciudad")}
-          id="ciudad"
+          id="id_localidad"
+          value={selectedLocalidadId ?? ""}
+          onChange={handleLocalidadChange}
           disabled={!selectedProvinciaId || loadingLocalidades}
           className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-50"
         >
@@ -123,7 +140,7 @@ export default function BusinessLocationStep({ form }: Props) {
             {loadingLocalidades ? "Buscando ciudades..." : "Seleccioná ciudad"}
           </option>
           {localidades.map((l) => (
-            <option key={l.id} value={l.id}>{l.nombre}</option>
+            <option key={l.id_localidad} value={l.id_localidad}>{l.nombre}</option>
           ))}
         </select>
         {errors.ciudad && <p className="text-xs text-destructive">{errors.ciudad.message}</p>}
