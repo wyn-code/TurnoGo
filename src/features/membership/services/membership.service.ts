@@ -28,10 +28,22 @@ export const membershipService = {
   crearPreferenciaPago: async (
     idPlan: number
   ): Promise<ApiCrearPreferenciaResponse> => {
-    return apiClient.post<ApiCrearPreferenciaResponse>(
-      "/pagos/crear-preferencia",
-      { id_plan: idPlan }
+    const preferencePayload = { id_plan: idPlan };
+    console.log(
+      "[MP DIAG] payload enviado al backend =",
+      JSON.stringify(preferencePayload)
     );
+    const response = await apiClient.post<ApiCrearPreferenciaResponse>(
+      "/pagos/crear-preferencia",
+      preferencePayload
+    );
+    console.log("[MP DIAG] respuesta completa =", JSON.stringify(response));
+    console.log("[MP DIAG] collector_id =", response.collector_id ?? "undefined");
+    console.log(
+      "[MP DIAG] sandbox_init_point =",
+      response.sandbox_init_point ?? "undefined"
+    );
+    return response;
   },
 
   cancelarSuscripcion: async (
