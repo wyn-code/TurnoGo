@@ -249,7 +249,7 @@ const NegocioPerfil = () => {
             )}
 
             {/* MAPA */}
-            {business.latitud && business.longitud && (
+            {business.tiene_mapa && business.latitud && business.longitud && (
               <section className="mt-10 rounded-xl border bg-card p-5 shadow-sm">
                 <div className="mb-4">
                   <h2 className="text-xl font-semibold">Ubicación</h2>

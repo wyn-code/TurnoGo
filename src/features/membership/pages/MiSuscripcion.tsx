@@ -26,6 +26,10 @@ import { format, differenceInDays } from "date-fns";
 import { es } from "date-fns/locale";
 
 const FEATURE_LABELS: Record<string, string> = {
+  empleados_ilimitados: "Empleados ilimitados",
+  turnos_ilimitados: "Turnos ilimitados",
+  recordatorio_email: "Recordatorios por email",
+  recordatorio_whatsapp: "Recordatorios por WhatsApp",
   mapa_ubicacion: "Mapa de ubicación",
   imagenes_personalizadas: "Imágenes personalizadas",
   soporte_prioritario: "Soporte prioritario",

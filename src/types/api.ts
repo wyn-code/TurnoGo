@@ -49,6 +49,7 @@ export interface ApiNegocio {
 
   latitud: number | null;
   longitud: number | null;
+  tiene_mapa?: boolean;
     
   horarios?: ApiHorario[];
   }
