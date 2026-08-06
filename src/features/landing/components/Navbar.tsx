@@ -20,7 +20,14 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
+
+  const isAuthRoute =
+    location.pathname === "/login" ||
+    location.pathname === "/registro";
+
+  const showRegisterBusiness =
+    !isLoading && !isAuthenticated && !isAuthRoute;
 
   // Cerrar menú mobile al navegar
   useEffect(() => {
@@ -72,11 +79,13 @@ const Navbar = () => {
           <Button variant="ghost" size="sm" asChild>
             <Link to="/negocios">Explorar negocios</Link>
           </Button>
-          <Button asChild size="sm">
-          <Link to="/registro" className="flex items-center gap-2">
-            Registrar negocio
-          </Link>
-          </Button>
+          {showRegisterBusiness && (
+            <Button asChild size="sm">
+              <Link to="/registro" className="flex items-center gap-2">
+                Registrar negocio
+              </Link>
+            </Button>
+          )}
           
 {isAuthenticated ? (
   <DropdownMenu>
