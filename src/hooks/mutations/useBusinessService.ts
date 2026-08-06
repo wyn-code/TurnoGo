@@ -12,6 +12,8 @@ export type BusinessConfigChanges = {
   ig_url?: string | null;
   direccion?: string;
   ciudad?: string;
+  id_localidad?: number | null;
+  id_provincia?: number | null;
 };
 
 export const useUpdateBusiness = () => {

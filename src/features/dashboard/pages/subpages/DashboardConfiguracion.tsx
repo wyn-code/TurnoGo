@@ -1,11 +1,14 @@
+import { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { Combobox } from "@/components/ui/combobox";
 import { Card, CardContent } from "@/components/ui/card";
 import { useDashboardBusiness } from "@/features/dashboard/contexts/DashboardBusinessContext";
 import { useUpdateBusiness } from "@/hooks/mutations/useBusinessService";
+import { useProvincias, useLocalidades } from "@/hooks/queries/useGeorefQuery";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -16,7 +19,8 @@ const configSchema = z.object({
   wsp: z.string().regex(/^\+?[0-9\s\-()]*$/, "WhatsApp inválido"),
   ig_url: z.union([z.string().url("URL inválida"),z.literal(""),z.null(),]).optional(),
   direccion: z.string().min(5, "Dirección requerida"),
-  ciudad: z.string().min(3, "Ciudad requerida"),
+  id_provincia: z.string().min(1, "Seleccioná una provincia"),
+  id_localidad: z.string().min(1, "Seleccioná una ciudad"),
 });
 
 type ConfigFormData = z.infer<typeof configSchema>;
@@ -33,9 +37,44 @@ const DashboardConfiguracion = () => {
       wsp: business?.wsp ?? "",
       ig_url: business?.ig_url ?? "",
       direccion: business?.direccion ?? "",
-      ciudad: business?.ciudad ?? "",
+      id_provincia: business?.id_provincia != null ? String(business.id_provincia) : "",
+      id_localidad: business?.id_localidad != null ? String(business.id_localidad) : "",
     },
   });
+
+  const selectedProvinciaId = form.watch("id_provincia");
+  const selectedLocalidadId = form.watch("id_localidad");
+
+  const { data: provincias, isLoading: loadingProvincias } = useProvincias();
+  const { data: localidades, isLoading: loadingLocalidades } = useLocalidades(
+    selectedProvinciaId ? Number(selectedProvinciaId) : null,
+  );
+
+  useEffect(() => {
+    if (
+      selectedLocalidadId &&
+      localidades &&
+      localidades.length > 0 &&
+      !localidades.some((l) => String(l.id_localidad) === selectedLocalidadId)
+    ) {
+      form.setValue("id_localidad", "", { shouldValidate: true });
+    }
+  }, [localidades, selectedLocalidadId, form]);
+
+  const provinciaOptions = (provincias ?? []).map((p) => ({
+    value: String(p.id_provincia),
+    label: p.nombre,
+  }));
+
+  const localidadOptions = (localidades ?? []).map((l) => ({
+    value: String(l.id_localidad),
+    label: l.nombre,
+  }));
+
+  const handleProvinciaChange = (value: string) => {
+    form.setValue("id_provincia", value, { shouldValidate: true });
+    form.setValue("id_localidad", "", { shouldValidate: true });
+  };
 
   const onSubmit = async (data: ConfigFormData) => {
     if (!business) {
@@ -51,7 +90,8 @@ const DashboardConfiguracion = () => {
           wsp: data.wsp.trim(),
           ig_url: data.ig_url?.trim() || null,
           direccion: data.direccion.trim(),
-          ciudad: data.ciudad.trim(),
+          id_provincia: Number(data.id_provincia),
+          id_localidad: Number(data.id_localidad),
         },
       });
       await refreshBusiness();
@@ -168,18 +208,52 @@ const DashboardConfiguracion = () => {
 
                 <FormField
                   control={form.control}
-                  name="ciudad"
+                  name="id_provincia"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Ciudad *</FormLabel>
+                      <FormLabel>Provincia *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Buenos Aires" {...field} />
+                        <Combobox
+                          options={provinciaOptions}
+                          value={field.value}
+                          onValueChange={handleProvinciaChange}
+                          placeholder="Seleccioná una provincia"
+                          emptyText="No se encontraron provincias"
+                          searchPlaceholder="Buscar provincia..."
+                          disabled={loadingProvincias}
+                          loading={loadingProvincias}
+                          selectedLabel={business.provincia_nombre}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
               </div>
+
+              <FormField
+                control={form.control}
+                name="id_localidad"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Ciudad / Localidad *</FormLabel>
+                    <FormControl>
+                      <Combobox
+                        options={localidadOptions}
+                        value={field.value}
+                        onValueChange={(value) => field.onChange(value)}
+                        placeholder="Seleccioná una ciudad"
+                        emptyText="No se encontraron ciudades"
+                        searchPlaceholder="Buscar ciudad..."
+                        disabled={!selectedProvinciaId}
+                        loading={!!selectedProvinciaId && loadingLocalidades}
+                        selectedLabel={business.localidad_nombre}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </form>
           </Form>
         </CardContent>

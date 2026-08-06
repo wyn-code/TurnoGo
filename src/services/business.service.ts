@@ -110,6 +110,8 @@ export const businessService = {
       ig_url?: string | null;
       direccion?: string;
       ciudad?: string;
+      id_localidad?: number | null;
+      id_provincia?: number | null;
     },
   ) => {
     const usuarioId = business.usuario_id;
@@ -125,8 +127,14 @@ export const businessService = {
         changes.telefono !== undefined ? changes.telefono : business.telefono,
       direccion: (changes.direccion ?? business.direccion).trim(),
       ciudad: (changes.ciudad ?? business.ciudad).trim(),
-      id_localidad: business.id_localidad,
-      id_provincia: business.id_provincia,
+      id_localidad:
+        changes.id_localidad !== undefined
+          ? changes.id_localidad
+          : business.id_localidad,
+      id_provincia:
+        changes.id_provincia !== undefined
+          ? changes.id_provincia
+          : business.id_provincia,
       ig_url: changes.ig_url !== undefined ? changes.ig_url : business.ig_url,
       logo: business.logo,
       activo: business.activo,
@@ -144,6 +152,8 @@ export const businessService = {
       ig_url?: string | null;
       direccion?: string;
       ciudad?: string;
+      id_localidad?: number | null;
+      id_provincia?: number | null;
     },
   ): Promise<ApiNegocio> => {
     const payload = businessService.buildUpdatePayload(business, changes);

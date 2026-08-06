@@ -21,6 +21,16 @@ export interface ApiCategory {
   descripcion?: string | null;
 }
 
+export interface ApiProvincia {
+  id_provincia: number;
+  nombre: string;
+}
+
+export interface ApiLocalidad {
+  id_localidad: number;
+  nombre: string;
+}
+
 export interface ApiNegocio {
   id_negocio: number;
   nombre: string;
@@ -31,6 +41,8 @@ export interface ApiNegocio {
   ciudad: string;
   id_localidad: number | null;
   id_provincia: number | null;
+  localidad_nombre?: string | null;
+  provincia_nombre?: string | null;
   ig_url: string | null;
   logo: string | null;
   activo: boolean;
