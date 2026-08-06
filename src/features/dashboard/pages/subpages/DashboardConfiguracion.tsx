@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -12,6 +12,8 @@ import { useProvincias, useLocalidades } from "@/hooks/queries/useGeorefQuery";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { ImageUpload } from "@/components/ui/image-upload";
+import CLOUDINARY_CONFIG from "@/lib/cloudinary";
 
 const configSchema = z.object({
   nombre: z.string().min(3, "Mínimo 3 caracteres"),
@@ -45,6 +47,14 @@ const DashboardConfiguracion = () => {
   const selectedProvinciaId = form.watch("id_provincia");
   const selectedLocalidadId = form.watch("id_localidad");
 
+  const [logoUrl, setLogoUrl] = useState<string>("");
+
+  useEffect(() => {
+    if (business) {
+      setLogoUrl(business.logo ?? "");
+    }
+  }, [business?.logo, business]);
+
   const { data: provincias, isLoading: loadingProvincias } = useProvincias();
   const { data: localidades, isLoading: loadingLocalidades } = useLocalidades(
     selectedProvinciaId ? Number(selectedProvinciaId) : null,
@@ -74,6 +84,25 @@ const DashboardConfiguracion = () => {
   const handleProvinciaChange = (value: string) => {
     form.setValue("id_provincia", value, { shouldValidate: true });
     form.setValue("id_localidad", "", { shouldValidate: true });
+  };
+
+  const handleLogoChange = async (url: string) => {
+    if (!business) {
+      return toast.error("No hay negocio seleccionado");
+    }
+
+    setLogoUrl(url);
+
+    try {
+      await updateBusiness({
+        business,
+        changes: { logo: url || null },
+      });
+      await refreshBusiness();
+    } catch {
+      setLogoUrl(business.logo ?? "");
+      // El hook ya muestra el error
+    }
   };
 
   const onSubmit = async (data: ConfigFormData) => {
@@ -254,6 +283,20 @@ const DashboardConfiguracion = () => {
                   </FormItem>
                 )}
               />
+
+              <div className="space-y-3 border-t pt-5">
+                <FormLabel>Imagen del negocio</FormLabel>
+                <ImageUpload
+                  value={logoUrl}
+                  onChange={handleLogoChange}
+                  cloudName={CLOUDINARY_CONFIG.cloudName}
+                  uploadPreset={CLOUDINARY_CONFIG.uploadPreset}
+                  disabled={isPending}
+                />
+                <p className="text-xs text-muted-foreground">
+                  Se guarda automáticamente al subirla. PNG, JPG o WEBP (máx. 5MB).
+                </p>
+              </div>
             </form>
           </Form>
         </CardContent>

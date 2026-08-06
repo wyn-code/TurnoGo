@@ -14,6 +14,7 @@ export type BusinessConfigChanges = {
   ciudad?: string;
   id_localidad?: number | null;
   id_provincia?: number | null;
+  logo?: string | null;
 };
 
 export const useUpdateBusiness = () => {
