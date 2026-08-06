@@ -77,19 +77,19 @@ export default function ResultadoPago() {
 
         <div className="flex justify-center gap-4">
           {status === "approved" && (
-            <Button onClick={() => navigate("/mi-suscripcion")}>
+            <Button onClick={() => navigate("/dashboard/mi-suscripcion")}>
               Ver mi suscripción
             </Button>
           )}
           {status === "failure" && (
-            <Button onClick={() => navigate("/planes")}>
+            <Button onClick={() => navigate("/dashboard/planes")}>
               Reintentar
             </Button>
           )}
           {status === "pending" && (
             <Button
               variant="outline"
-              onClick={() => navigate("/mi-suscripcion")}
+              onClick={() => navigate("/dashboard/mi-suscripcion")}
             >
               Ir a mi suscripción
             </Button>

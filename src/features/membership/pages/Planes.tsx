@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 
 function SkeletonGrid() {
   return (
-    <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-3">
+    <div className="grid gap-6 md:grid-cols-3">
       {[1, 2, 3].map((i) => (
         <div key={i} className="space-y-4 rounded-lg border p-6">
           <Skeleton className="h-6 w-24" />
@@ -37,16 +37,16 @@ export default function Planes() {
   };
 
   return (
-    <div className="container mx-auto px-4 py-12">
-      <div className="mb-10 text-center">
-        <h1 className="mb-2 text-3xl font-bold tracking-tight">
-          Elegí el plan ideal para tu negocio
-        </h1>
-        <p className="text-muted-foreground">
-          Todos los planes incluyen funcionalidades básicas de gestión.
-          Actualizá para acceder a más beneficios.
-        </p>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <h2 className="text-lg font-semibold text-foreground">
+          Planes
+        </h2>
       </div>
+      <p className="max-w-2xl text-sm text-muted-foreground">
+        Todos los planes incluyen funcionalidades básicas de gestión.
+        Actualizá para acceder a más beneficios.
+      </p>
 
       {isLoading && <SkeletonGrid />}
 
@@ -73,7 +73,7 @@ export default function Planes() {
       )}
 
       {!isLoading && planes && planes.length > 0 && (
-        <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-3">
           {planes.map((plan) => (
             <PlanCard
               key={plan.id_plan}
@@ -91,13 +91,13 @@ export default function Planes() {
         </div>
       )}
 
-      <div className="mt-12 text-center">
+      <div className="pt-2 text-center">
         <p className="text-sm text-muted-foreground">
           ¿Ya tenés una suscripción activa?{" "}
           <Button
             variant="link"
             className="p-0"
-            onClick={() => navigate("/mi-suscripcion")}
+            onClick={() => navigate("/dashboard/mi-suscripcion")}
           >
             Ver detalle de mi suscripción
           </Button>

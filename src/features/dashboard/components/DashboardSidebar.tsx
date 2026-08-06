@@ -27,8 +27,8 @@ const items = [
 ];
 
 const membershipItems = [
-  { title: "Mi Suscripción", url: "/mi-suscripcion", icon: ShieldCheck },
-  { title: "Planes", url: "/planes", icon: CreditCard },
+  { title: "Mi Suscripción", url: "/dashboard/mi-suscripcion", icon: ShieldCheck },
+  { title: "Planes", url: "/dashboard/planes", icon: CreditCard },
 ];
 
 export function DashboardSidebar() {

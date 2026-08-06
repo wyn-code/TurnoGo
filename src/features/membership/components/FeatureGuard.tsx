@@ -35,7 +35,7 @@ export function FeatureGuard({
       <Button
         variant="default"
         size="sm"
-        onClick={() => navigate("/planes")}
+        onClick={() => navigate("/dashboard/planes")}
       >
         Ver planes
       </Button>

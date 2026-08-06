@@ -14,6 +14,8 @@ import DashboardHorarios from "./subpages/DashboardHorarios";
 import DashboardConfiguracion from "./subpages/DashboardConfiguracion";
 import DashboardPersonalizacion from "./subpages/DashboardPersonalizacion";
 import DashboardEstadisticas from "./subpages/DashboardEstadisticas";
+import Planes from "@/features/membership/pages/Planes";
+import MiSuscripcion from "@/features/membership/pages/MiSuscripcion";
 
 const sectionTitles: Record<string, string> = {
   "": "Resumen",
@@ -24,6 +26,8 @@ const sectionTitles: Record<string, string> = {
   estadisticas: "Estadísticas",
   configuracion: "Configuración",
   personalizacion: "Personalización",
+  planes: "Planes",
+  "mi-suscripcion": "Mi Suscripción",
 };
 
 const DashboardContent = () => {
@@ -46,6 +50,8 @@ const DashboardContent = () => {
             <Route path="estadisticas" element={<DashboardEstadisticas />} />
             <Route path="configuracion" element={<DashboardConfiguracion />} />
             <Route path="personalizacion" element={<DashboardPersonalizacion />} />
+            <Route path="planes" element={<Planes />} />
+            <Route path="mi-suscripcion" element={<MiSuscripcion />} />
           </Routes>
         </main>
       </div>

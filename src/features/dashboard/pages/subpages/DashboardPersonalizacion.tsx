@@ -61,7 +61,7 @@ const DashboardPersonalizacion = () => {
               </FeatureGuard>
             </ul>
             {!tienePremium && (
-              <Button className="w-full" onClick={() => navigate("/planes")}>
+              <Button className="w-full" onClick={() => navigate("/dashboard/planes")}>
                 <ArrowUp size={14} className="mr-2" /> Mejorar plan
               </Button>
             )}
@@ -89,7 +89,7 @@ const DashboardPersonalizacion = () => {
                 <Check size={14} className="mr-1" /> Incluido en tu plan
               </Badge>
             ) : (
-              <Button className="w-full" onClick={() => navigate("/planes")}>
+              <Button className="w-full" onClick={() => navigate("/dashboard/planes")}>
                 <Crown size={14} className="mr-2" /> Actualizar plan
               </Button>
             )}

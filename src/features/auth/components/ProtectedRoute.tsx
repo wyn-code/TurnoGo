@@ -86,11 +86,7 @@ export default function ProtectedRoute({
   // =========================
 
   if (user?.role === "admin") {
-    if (
-      location.pathname.startsWith("/admin") ||
-      location.pathname.startsWith("/planes") ||
-      location.pathname.startsWith("/mi-suscripcion")
-    ) {
+    if (location.pathname.startsWith("/admin")) {
       return <>{children}</>;
     }
     return <Navigate to="/admin" replace />;

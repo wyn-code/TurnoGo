@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { lazy, Suspense, useEffect, useRef } from "react";
-import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -16,8 +16,6 @@ import Login from "./features/auth/pages/Login.tsx";
 import Registro from "./features/auth/pages/Registro.tsx";
 import RegistrarNegocio from "./features/register-business/pages/RegistrarNegocio.tsx";
 import Dashboard from "./features/dashboard/pages/Dashboard.tsx";
-const Planes = lazy(() => import("./features/membership/pages/Planes.tsx"));
-const MiSuscripcion = lazy(() => import("./features/membership/pages/MiSuscripcion.tsx"));
 const ResultadoPago = lazy(() => import("./features/membership/pages/ResultadoPago.tsx"));
 import NotFound from "./features/landing/pages/NotFound.tsx";
 import AdminPanel from "./features/admin/pages/AdminPanel.tsx";
@@ -55,8 +53,8 @@ const AppRoutes = () => {
       {/* Rutas protegidas — solo dueños de negocio */}
       <Route path="/registrar-negocio" element={<ProtectedRoute><RegistrarNegocio /></ProtectedRoute>} />
       <Route path="/dashboard/*" element={<ProtectedRoute><ErrorBoundary><Dashboard /></ErrorBoundary></ProtectedRoute>} />
-      <Route path="/planes" element={<ProtectedRoute><ErrorBoundary><Planes /></ErrorBoundary></ProtectedRoute>} />
-      <Route path="/mi-suscripcion" element={<ProtectedRoute><ErrorBoundary><MiSuscripcion /></ErrorBoundary></ProtectedRoute>} />
+      <Route path="/planes" element={<Navigate to="/dashboard/planes" replace />} />
+      <Route path="/mi-suscripcion" element={<Navigate to="/dashboard/mi-suscripcion" replace />} />
       <Route path="/admin/*" element={<ErrorBoundary><AdminRoute><AdminPanel /></AdminRoute></ErrorBoundary>} />
       <Route path="/verify-email/:token" element={<VerifyEmailPage />}/>
       <Route path="/restablecer-contrasena/:token" element={<RestablecerContrasena />}

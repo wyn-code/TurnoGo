@@ -77,7 +77,7 @@ export default function MiSuscripcion() {
 
   if (isLoading) {
     return (
-      <div className="container mx-auto max-w-2xl space-y-6 px-4 py-12">
+      <div className="mx-auto max-w-3xl space-y-6">
         <Skeleton className="h-8 w-48" />
         <Skeleton className="h-32 w-full" />
         <Skeleton className="h-32 w-full" />
@@ -87,7 +87,7 @@ export default function MiSuscripcion() {
 
   if (error) {
     return (
-      <div className="container mx-auto max-w-2xl px-4 py-12 text-center">
+      <div className="mx-auto max-w-3xl text-center">
         <p className="mb-4 text-destructive">
           Error al cargar la suscripción.
         </p>
@@ -100,20 +100,22 @@ export default function MiSuscripcion() {
 
   if (isFree && !suscripcion) {
     return (
-      <div className="container mx-auto max-w-2xl px-4 py-12 text-center">
-        <div className="mb-6 space-y-4">
-          <h1 className="text-3xl font-bold tracking-tight">
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-foreground">
             Mi Suscripción
-          </h1>
-          <Badge variant="outline" className="text-lg">
+          </h2>
+          <Badge variant="outline">
             Plan Free
           </Badge>
-          <p className="text-muted-foreground">
+        </div>
+        <div className="rounded-lg border border-dashed p-8 text-center">
+          <p className="mb-4 text-muted-foreground">
             Todavía no tenés una suscripción activa.
           </p>
           <Button
             size="lg"
-            onClick={() => navigate("/planes")}
+            onClick={() => navigate("/dashboard/planes")}
           >
             <ArrowUpCircle className="mr-2 h-5 w-5" />
             Ver planes disponibles
@@ -131,11 +133,11 @@ export default function MiSuscripcion() {
   const isActiva = estado === "activa" && !isVencida;
 
   return (
-    <div className="container mx-auto max-w-2xl space-y-8 px-4 py-12">
+    <div className="mx-auto max-w-3xl space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">
+        <h2 className="text-lg font-semibold text-foreground">
           Mi Suscripción
-        </h1>
+        </h2>
         <Badge className={ESTADO_BADGE[estado] ?? ""}>
           {estado.charAt(0).toUpperCase() + estado.slice(1)}
         </Badge>
@@ -148,7 +150,7 @@ export default function MiSuscripcion() {
           <Button
             variant="link"
             className="text-red-800 underline"
-            onClick={() => navigate("/planes")}
+            onClick={() => navigate("/dashboard/planes")}
           >
             Ver planes
           </Button>
