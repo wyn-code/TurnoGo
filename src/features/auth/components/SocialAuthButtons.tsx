@@ -1,35 +1,9 @@
+import { loadGoogleGsiScript } from "@/features/auth/utils/loadGoogleGsi";
 import { useAuth } from "@/features/auth/contexts/AuthContext";
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
-declare global {
-  interface Window {
-    google?: {
-      accounts?: {
-        id?: {
-          initialize: (config: {
-            client_id: string;
-            callback: (response: { credential?: string }) => void;
-          }) => void;
-          renderButton: (
-            parent: HTMLElement,
-            options: {
-              theme?: "outline" | "filled_blue" | "filled_black";
-              size?: "large" | "medium" | "small";
-              width?: number;
-              text?: "signin_with" | "signup_with" | "continue_with" | "signin";
-              shape?: "rectangular" | "pill" | "circle" | "square";
-              logo_alignment?: "left" | "center";
-            }
-          ) => void;
-        };
-      };
-    };
-  }
-}
-
-const MAX_RETRIES = 20; // ~4 segundos (20 * 200ms)
-const RETRY_DELAY_MS = 200;
+const GSI_TIMEOUT_MS = 10_000;
 
 export function SocialAuthButtons({
   onNeedsVerification,
@@ -77,14 +51,30 @@ export function SocialAuthButtons({
     if (initialized.current) return;
 
     let cancelled = false;
-    let attempts = 0;
 
-    const trySetup = () => {
-      if (cancelled) return;
+    const setup = async () => {
+      try {
+        const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
-      if (window.google?.accounts?.id && buttonRef.current) {
+        if (!clientId) {
+          console.error(
+            "[Google GIS] VITE_GOOGLE_CLIENT_ID no está definido. " +
+              "Configurá la variable de entorno en tu entorno de build (Vercel) o en el archivo .env."
+          );
+          setGoogleError(
+            "Servicio de Google no configurado. Revisá la configuración del sitio."
+          );
+          return;
+        }
+
+        await loadGoogleGsiScript();
+
+        if (cancelled || !buttonRef.current || !window.google?.accounts?.id) {
+          return;
+        }
+
         window.google.accounts.id.initialize({
-          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID,
+          client_id: clientId,
           callback: (response) => {
             if (response.credential) {
               handleGoogleCredential(response.credential);
@@ -104,22 +94,44 @@ export function SocialAuthButtons({
         });
 
         initialized.current = true;
-        return;
-      }
+        if (timeoutId) clearTimeout(timeoutId);
+      } catch (error) {
+        if (cancelled) return;
 
-      attempts += 1;
-      if (attempts >= MAX_RETRIES) {
+        console.error(
+          "[Google GIS] Falló la inicialización del botón de Google:",
+          {
+            error,
+            message: error instanceof Error ? error.message : String(error),
+            clientIdSet: !!import.meta.env.VITE_GOOGLE_CLIENT_ID,
+            gsiLoaded: !!window.google?.accounts?.id,
+          }
+        );
+
         setGoogleError("Servicio de Google no disponible. Recargá la página.");
-        return;
       }
-
-      setTimeout(trySetup, RETRY_DELAY_MS);
     };
 
-    setTimeout(trySetup, 0);
+    const timeoutId = setTimeout(() => {
+      if (cancelled || initialized.current) return;
+
+      console.error(
+        "[Google GIS] Timeout de espera: el script de Google no quedó disponible " +
+          `después de ${GSI_TIMEOUT_MS}ms.`,
+        {
+          gsiLoaded: !!window.google?.accounts?.id,
+          readyState: document.readyState,
+        }
+      );
+
+      setGoogleError("Servicio de Google no disponible. Recargá la página.");
+    }, GSI_TIMEOUT_MS);
+
+    setup();
 
     return () => {
       cancelled = true;
+      if (timeoutId) clearTimeout(timeoutId);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
