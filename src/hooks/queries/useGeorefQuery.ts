@@ -19,3 +19,11 @@ export const useLocalidades = (idProvincia: number | null | undefined) =>
     staleTime: 60 * 60 * 1000,
     gcTime: 60 * 60 * 1000,
   });
+
+export const useAllLocalidades = () =>
+  useQuery<ApiLocalidad[], Error>({
+    queryKey: ["localidades", "all"],
+    queryFn: georefService.getAllLocalidades,
+    staleTime: 60 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
+  });

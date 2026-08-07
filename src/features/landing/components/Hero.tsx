@@ -1,10 +1,6 @@
-import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import HeroSearchBar from "@/features/landing/components/HeroSearchBar";
 
 const Hero = () => {
-  const navigate = useNavigate();
-
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-accent via-background to-background">
       {/* Shapes animadas */}
@@ -47,16 +43,7 @@ const Hero = () => {
             TurnoGo conecta clientes con negocios de servicios. Encontrá peluquerías, barberías, centros de estética y más, y reservá tu turno en segundos.
           </p>
 
-          <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Button
-              size="lg"
-              className="gap-2 px-8"
-              onClick={() => navigate("/negocios")}
-            >
-              <Search size={18} />
-              Explorar negocios
-            </Button>
-          </div>
+          <HeroSearchBar />
         </div>
       </div>
 

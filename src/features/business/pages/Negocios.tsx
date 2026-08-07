@@ -21,12 +21,17 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const Negocios = () => {
   const [searchParams] = useSearchParams();
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => searchParams.get("q") ?? "");
   const [selectedCategory, setSelectedCategory] = useState<number | null>(() => {
     const param = searchParams.get("categoria");
     return param ? Number(param) : null;
   });
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
+  const selectedLocalidadId = (() => {
+    const param = searchParams.get("localidad");
+    return param ? Number(param) : null;
+  })();
+  const locationName = searchParams.get("ciudad");
 
   const [businesses, setBusinesses] = useState<ApiNegocio[]>([]);
   const [categories, setCategories] = useState<ApiCategory[]>([]);
@@ -99,8 +104,18 @@ const Negocios = () => {
       }
     }
 
+    if (selectedLocalidadId) {
+      const targetName = locationName?.toLowerCase();
+
+      result = result.filter(
+        (b) =>
+          Number(b.id_localidad) === selectedLocalidadId ||
+          (targetName && b.ciudad.toLowerCase() === targetName),
+      );
+    }
+
     return result;
-  }, [businesses, search, selectedCategory, selectedCity, cities]);
+  }, [businesses, search, selectedCategory, selectedCity, selectedLocalidadId, locationName, cities]);
 
   return (
     <div className="min-h-screen bg-background">
