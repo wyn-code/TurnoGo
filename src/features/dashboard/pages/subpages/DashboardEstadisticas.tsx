@@ -73,20 +73,22 @@ const DashboardEstadisticas = () => {
       <StatsEmptyState
         icon={AlertCircle}
         title="Error al cargar estadísticas"
-        description="No se pudieron cargar las estadísticas del negocio. Intentá novamente más tarde."
+        description="No se pudieron cargar las estadísticas del negocio. Intentá nuevamente más tarde."
       />
     );
   }
 
   return (
-    <div className="relative space-y-6">
+    // 1. Agregamos w-full, overflow-x-hidden en móvil (para evitar scroll horizontal accidental) y min-w-0
+    <div className="relative flex w-full min-w-0 flex-col space-y-6 overflow-x-hidden sm:overflow-visible">
       {isFetching && !isPending && (
         <div className="absolute left-0 right-0 top-0 z-10 h-0.5 overflow-hidden rounded-full bg-primary/10">
           <div className="h-full w-1/3 animate-[loading-bar_1.5s_ease-in-out_infinite] rounded-full bg-primary" />
         </div>
       )}
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      {/* HEADER Y CONTROLES */}
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <StatsHeader
           businessName={business.nombre}
           rango={rango}
@@ -94,13 +96,16 @@ const DashboardEstadisticas = () => {
           isFetching={isFetching && !isPending}
         />
 
-        <div className="flex flex-wrap items-center gap-2">
-          <StatsRangeToggle value={rango} onChange={setRango} />
+        <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center sm:flex-wrap">
+          <div className="w-full overflow-x-auto sm:w-auto">
+            <StatsRangeToggle value={rango} onChange={setRango} />
+          </div>
+          
           <Select
             value={comparar}
             onValueChange={(v) => setComparar(v as StatisticsCompare)}
           >
-            <SelectTrigger className="w-[180px]" aria-label="Comparar con">
+            <SelectTrigger className="w-full sm:w-[180px]" aria-label="Comparar con">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -108,43 +113,48 @@ const DashboardEstadisticas = () => {
               <SelectItem value="anio">vs año anterior</SelectItem>
             </SelectContent>
           </Select>
-          <StatsExportButton onExport={handleExport} />
+          
+          <div className="w-full sm:w-auto">
+            <StatsExportButton onExport={handleExport} />
+          </div>
         </div>
       </div>
 
       <StatsKpiCards statistics={statistics} onNavigate={navigateToTab} />
       <StatsInsights statistics={statistics} />
 
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabValue)}>
-        <TabsList className="flex h-auto flex-wrap">
-          <TabsTrigger value="resumen">Resumen</TabsTrigger>
-          <TabsTrigger value="clientes">Clientes</TabsTrigger>
-          <TabsTrigger value="servicios">Servicios</TabsTrigger>
-          <TabsTrigger value="ingresos">Ingresos</TabsTrigger>
-          <TabsTrigger value="agenda">Agenda</TabsTrigger>
-          <TabsTrigger value="asistencia">Asistencia</TabsTrigger>
-          <TabsTrigger value="empleados">Empleados</TabsTrigger>
+      {/* TABS RESPONSIVE */}
+      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabValue)} className="w-full min-w-0">
+        {/* 2. Cambiamos a 'flex' (sin inline), aseguramos flex-nowrap y scroll horizontal */}
+        <TabsList className="flex h-12 w-full items-center justify-start overflow-x-auto overflow-y-hidden rounded-md p-1 flex-nowrap [&::-webkit-scrollbar]:hidden">
+          <TabsTrigger value="resumen" className="whitespace-nowrap shrink-0">Resumen</TabsTrigger>
+          <TabsTrigger value="clientes" className="whitespace-nowrap shrink-0">Clientes</TabsTrigger>
+          <TabsTrigger value="servicios" className="whitespace-nowrap shrink-0">Servicios</TabsTrigger>
+          <TabsTrigger value="ingresos" className="whitespace-nowrap shrink-0">Ingresos</TabsTrigger>
+          <TabsTrigger value="agenda" className="whitespace-nowrap shrink-0">Agenda</TabsTrigger>
+          <TabsTrigger value="asistencia" className="whitespace-nowrap shrink-0">Asistencia</TabsTrigger>
+          <TabsTrigger value="empleados" className="whitespace-nowrap shrink-0">Empleados</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="resumen" className="space-y-4">
+        <TabsContent value="resumen" className="space-y-4 mt-4 w-full min-w-0">
           <ResumenTab statistics={statistics} />
         </TabsContent>
-        <TabsContent value="clientes" className="space-y-4">
+        <TabsContent value="clientes" className="space-y-4 mt-4 w-full min-w-0">
           <ClientesTab statistics={statistics} />
         </TabsContent>
-        <TabsContent value="servicios" className="space-y-4">
+        <TabsContent value="servicios" className="space-y-4 mt-4 w-full min-w-0">
           <ServiciosTab statistics={statistics} />
         </TabsContent>
-        <TabsContent value="ingresos" className="space-y-4">
+        <TabsContent value="ingresos" className="space-y-4 mt-4 w-full min-w-0">
           <IngresosTab statistics={statistics} />
         </TabsContent>
-        <TabsContent value="agenda" className="space-y-4">
+        <TabsContent value="agenda" className="space-y-4 mt-4 w-full min-w-0">
           <AgendaTab statistics={statistics} />
         </TabsContent>
-        <TabsContent value="asistencia" className="space-y-4">
+        <TabsContent value="asistencia" className="space-y-4 mt-4 w-full min-w-0">
           <AsistenciaTab statistics={statistics} />
         </TabsContent>
-        <TabsContent value="empleados" className="space-y-4">
+        <TabsContent value="empleados" className="space-y-4 mt-4 w-full min-w-0">
           <EmpleadosTab statistics={statistics} />
         </TabsContent>
       </Tabs>

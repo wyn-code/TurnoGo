@@ -29,32 +29,32 @@ export function StatsHeader({
 }: StatsHeaderProps) {
   return (
     <div>
-  <div className="flex items-center gap-2">
-    <h2 className="text-2xl font-bold tracking-tight text-foreground">
-      Estadísticas
-    </h2>
+      {/* AGREGADO: flex-wrap para que si no entra en el celular, baje de línea prolijamente */}
+      <div className="flex flex-wrap items-center gap-2">
+        <h2 className="text-2xl font-bold tracking-tight text-foreground">
+          Estadísticas
+        </h2>
 
-    <Badge className="border-0 bg-gradient-to-r from-amber-500 to-orange-500 text-white">
-      <Crown size={12} className="mr-1" /> Premium
-    </Badge>
+        <Badge className="border-0 bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+          <Crown size={12} className="mr-1" /> Premium
+        </Badge>
 
-    {isFetching ? (
-      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-        <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" aria-label="Cargando..." />
-        <span>Actualizando…</span>
+        {isFetching ? (
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" aria-label="Cargando..." />
+            <span>Actualizando…</span>
+          </div>
+        ) : (
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Check className="h-3.5 w-3.5 text-green-600" />
+            <span>Actualizado</span>
+          </div>
+        )}
       </div>
-    ) : (
-      <div className="flex items-center gap-1 text-xs text-muted-foreground">
-        <Check className="h-3.5 w-3.5 text-green-600" />
-        <span>Actualizado</span>
-      </div>
-    )}
-  </div>
-
-  <p className="mt-0.5 text-sm text-muted-foreground">
-    Rendimiento de {businessName} · Período: {RANGE_LABELS[rango]} ·
-    Comparando con: {COMPARE_LABELS[comparar]}
-  </p>
-</div>
+      <p className="mt-1 text-sm text-muted-foreground leading-relaxed">
+        Rendimiento de {businessName} · Período: {RANGE_LABELS[rango]} ·
+        Comparando con: {COMPARE_LABELS[comparar]}
+      </p>
+    </div>
   );
 }

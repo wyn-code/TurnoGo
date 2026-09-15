@@ -1,5 +1,11 @@
 import { memo } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import {
   ChartContainer,
   ChartTooltip,
@@ -68,21 +74,33 @@ interface ResumenChartProps {
   data: DailyComparisonItem[];
 }
 
-export const ResumenChart = memo(function ResumenChart({ data }: ResumenChartProps) {
+export const ResumenChart = memo(function ResumenChart({
+  data,
+}: ResumenChartProps) {
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-lg">
           Comparación con período anterior
         </CardTitle>
-        <CardDescription>Turnos diarios actuales vs período previo</CardDescription>
+        <CardDescription>
+          Turnos diarios actuales vs período previo
+        </CardDescription>
       </CardHeader>
       <CardContent>
         <ChartContainer config={resumenConfig} className="h-[300px] w-full">
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis dataKey="dia" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-            <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+            <XAxis
+              dataKey="dia"
+              stroke="hsl(var(--muted-foreground))"
+              fontSize={12}
+            />
+            <YAxis
+              stroke="hsl(var(--muted-foreground))"
+              fontSize={12}
+              allowDecimals={false}
+            />
             <ChartTooltip content={SafeTooltip} />
             <ChartLegend content={SafeLegend} />
             <Bar
@@ -118,7 +136,9 @@ interface ServiciosBarChartProps {
   data: ServiceStatItem[];
 }
 
-export const ServiciosBarChart = memo(function ServiciosBarChart({ data }: ServiciosBarChartProps) {
+export const ServiciosBarChart = memo(function ServiciosBarChart({
+  data,
+}: ServiciosBarChartProps) {
   if (data.length === 0) {
     return (
       <StatsEmptyState
@@ -135,16 +155,25 @@ export const ServiciosBarChart = memo(function ServiciosBarChart({ data }: Servi
         <CardTitle className="text-lg">Servicios más solicitados</CardTitle>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={serviciosBarConfig} className="h-[300px] w-full">
+        <ChartContainer
+          config={serviciosBarConfig}
+          className="h-[300px] w-full"
+        >
           <BarChart data={data} layout="vertical">
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis type="number" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+           <XAxis 
+              type="number" 
+              stroke="hsl(var(--muted-foreground))" 
+              fontSize={12} 
+              allowDecimals={false} 
+            />
             <YAxis
               dataKey="nombre"
               type="category"
               width={120}
               stroke="hsl(var(--muted-foreground))"
               fontSize={12}
+              allowDecimals={false}
             />
             <ChartTooltip content={SafeTooltip} />
             <Bar
@@ -171,7 +200,9 @@ interface IngresosLineChartProps {
   data: MonthlyIncomeItem[];
 }
 
-export const IngresosLineChart = memo(function IngresosLineChart({ data }: IngresosLineChartProps) {
+export const IngresosLineChart = memo(function IngresosLineChart({
+  data,
+}: IngresosLineChartProps) {
   return (
     <Card>
       <CardHeader>
@@ -182,7 +213,11 @@ export const IngresosLineChart = memo(function IngresosLineChart({ data }: Ingre
         <ChartContainer config={ingresosConfig} className="h-[300px] w-full">
           <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis dataKey="mes" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+            <XAxis
+              dataKey="mes"
+              stroke="hsl(var(--muted-foreground))"
+              fontSize={12}
+            />
             <YAxis
               stroke="hsl(var(--muted-foreground))"
               fontSize={12}
@@ -218,7 +253,9 @@ interface AgendaChartProps {
   data: HourlyDemandItem[];
 }
 
-export const AgendaChart = memo(function AgendaChart({ data }: AgendaChartProps) {
+export const AgendaChart = memo(function AgendaChart({
+  data,
+}: AgendaChartProps) {
   return (
     <Card>
       <CardHeader>
@@ -229,8 +266,12 @@ export const AgendaChart = memo(function AgendaChart({ data }: AgendaChartProps)
         <ChartContainer config={agendaConfig} className="h-[280px] w-full">
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis dataKey="hora" stroke="hsl(var(--muted-foreground))" fontSize={12} />
-            <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} />
+            <XAxis
+              dataKey="hora"
+              stroke="hsl(var(--muted-foreground))"
+              fontSize={12}
+            />
+            <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} allowDecimals={false} />
             <ChartTooltip content={SafeTooltip} />
             <Bar
               dataKey="turnos"
@@ -250,7 +291,9 @@ interface AsistenciaPieChartProps {
   data: AttendanceSlice[];
 }
 
-export const AsistenciaPieChart = memo(function AsistenciaPieChart({ data }: AsistenciaPieChartProps) {
+export const AsistenciaPieChart = memo(function AsistenciaPieChart({
+  data,
+}: AsistenciaPieChartProps) {
   if (data.length === 0) {
     return (
       <StatsEmptyState
@@ -268,7 +311,10 @@ export const AsistenciaPieChart = memo(function AsistenciaPieChart({ data }: Asi
       </CardHeader>
       <CardContent>
         <div className="flex justify-center">
-          <ChartContainer config={{}} className="h-[280px] w-full max-w-[400px]">
+          <ChartContainer
+            config={{}}
+            className="h-[280px] w-full max-w-[400px]"
+          >
             <PieChart>
               <Pie
                 data={data}
@@ -310,7 +356,9 @@ interface EmpleadosBarChartProps {
   data: { nombre: string; ingresos: number }[];
 }
 
-export const EmpleadosBarChart = memo(function EmpleadosBarChart({ data }: EmpleadosBarChartProps) {
+export const EmpleadosBarChart = memo(function EmpleadosBarChart({
+  data,
+}: EmpleadosBarChartProps) {
   return (
     <Card>
       <CardHeader>
@@ -320,7 +368,11 @@ export const EmpleadosBarChart = memo(function EmpleadosBarChart({ data }: Emple
         <ChartContainer config={empleadosConfig} className="h-[260px] w-full">
           <BarChart data={data}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-            <XAxis dataKey="nombre" stroke="hsl(var(--muted-foreground))" fontSize={12} />
+            <XAxis
+              dataKey="nombre"
+              stroke="hsl(var(--muted-foreground))"
+              fontSize={12}
+            />
             <YAxis
               stroke="hsl(var(--muted-foreground))"
               fontSize={12}

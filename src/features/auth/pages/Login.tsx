@@ -1,12 +1,8 @@
 // pages/Login.tsx
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-import {
-  useNavigate,
-  Link,
-  useLocation,
-} from "react-router-dom";
+import { useNavigate, Link, useLocation } from "react-router-dom";
 
 import { useForm } from "react-hook-form";
 
@@ -22,72 +18,48 @@ import { Input } from "@/components/ui/input";
 
 import { Label } from "@/components/ui/label";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 
 import { SocialAuthButtons } from "@/features/auth/components/SocialAuthButtons";
 import { LogIn, AlertCircle, Eye, EyeOff } from "lucide-react";
 
-
 const schema = z.object({
-  email: z
-    .string()
-    .min(
-      1,
-      "Ingresá tu email o usuario",
-    ),
+  email: z.string().min(1, "Ingresá tu email o usuario"),
 
-  password: z
-    .string()
-    .min(
-      6,
-      "Mínimo 6 caracteres",
-    ),
+  password: z.string().min(6, "Mínimo 6 caracteres"),
 });
 
-type FormData = z.infer<
-  typeof schema
->;
+type FormData = z.infer<typeof schema>;
 
 const Login = () => {
-  const { login } = useAuth();
+  const { login, user } = useAuth(); 
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const redirectPath = location.state?.from;
 
-  const location =
-    useLocation();
+  const [serverError, setServerError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
-  const redirectPath =
-    location.state?.from;
-
-  const [serverError, setServerError] =
-    useState("");
-
-  const [
-    showPassword,
-    setShowPassword,
-  ] = useState(false);
+  // Si en algún momento detecta que hay un usuario logueado, lo manda al dashboard
+  useEffect(() => {
+    if (user) { 
+      navigate(redirectPath || "/dashboard", { replace: true });
+    }
+  }, [user, navigate, redirectPath]);
 
   const {
     register,
     handleSubmit,
-    formState: {
-      errors,
-      isSubmitting,
-    },
+    formState: { errors, isSubmitting },
   } = useForm<FormData>({
-    resolver:
-      zodResolver(schema),
+    resolver: zodResolver(schema),
   });
 
-  const onSubmit = async (
-    data: FormData,
-  ) => {
+  const onSubmit = async (data: FormData) => {
     setServerError("");
     const result = await login(data.email, data.password);
+    
     if (result.success) {
       navigate(redirectPath || "/dashboard", { replace: true });
       return;
@@ -157,8 +129,7 @@ const Login = () => {
                 text-muted-foreground
               "
             >
-              Accedé para administrar
-              tu negocio.
+              Accedé para administrar tu negocio.
             </p>
           </CardHeader>
 
@@ -185,9 +156,7 @@ const Login = () => {
                   text-destructive
                 "
               >
-                <AlertCircle
-                  size={16}
-                />
+                <AlertCircle size={16} />
 
                 {serverError}
               </div>
@@ -195,23 +164,14 @@ const Login = () => {
 
             {/* FORM */}
 
-            <form
-              onSubmit={handleSubmit(
-                onSubmit,
-              )}
-              className="space-y-4"
-            >
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               {/* EMAIL */}
 
               <div className="space-y-2">
-                <Label>
-                  Email o Usuario
-                </Label>
+                <Label>Email o Usuario</Label>
 
                 <Input
-                  {...register(
-                    "email",
-                  )}
+                  {...register("email")}
                   type="text"
                   placeholder="tu@email.com o usuario"
                 />
@@ -223,10 +183,7 @@ const Login = () => {
                       text-destructive
                     "
                   >
-                    {
-                      errors.email
-                        .message
-                    }
+                    {errors.email.message}
                   </p>
                 )}
               </div>
@@ -234,30 +191,18 @@ const Login = () => {
               {/* PASSWORD */}
 
               <div className="space-y-2">
-                <Label>
-                  Contraseña
-                </Label>
+                <Label>Contraseña</Label>
 
                 <div className="relative">
                   <Input
-                    {...register(
-                      "password",
-                    )}
-                    type={
-                      showPassword
-                        ? "text"
-                        : "password"
-                    }
+                    {...register("password")}
+                    type={showPassword ? "text" : "password"}
                     placeholder="••••••"
                   />
 
                   <button
                     type="button"
-                    onClick={() =>
-                      setShowPassword(
-                        !showPassword,
-                      )
-                    }
+                    onClick={() => setShowPassword(!showPassword)}
                     className="
                       absolute
                       right-3
@@ -268,15 +213,7 @@ const Login = () => {
                       hover:text-foreground
                     "
                   >
-                    {showPassword ? (
-                      <EyeOff
-                        size={18}
-                      />
-                    ) : (
-                      <Eye
-                        size={18}
-                      />
-                    )}
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
 
@@ -287,14 +224,14 @@ const Login = () => {
                       text-destructive
                     "
                   >
-                    {
-                      errors.password
-                        .message
-                    }
+                    {errors.password.message}
                   </p>
                 )}
                 <div className="text-right">
-                  <Link to="/olvide-contrasena" className="text-sm font-medium text-primary hover:underline">
+                  <Link
+                    to="/olvide-contrasena"
+                    className="text-sm font-medium text-primary hover:underline"
+                  >
                     ¿Has olvidado la contraseña?
                   </Link>
                 </div>
@@ -302,16 +239,8 @@ const Login = () => {
 
               {/* SUBMIT */}
 
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={
-                  isSubmitting
-                }
-              >
-                {isSubmitting
-                  ? "Ingresando..."
-                  : "Iniciar sesión"}
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? "Ingresando..." : "Iniciar sesión"}
               </Button>
             </form>
 
@@ -327,7 +256,6 @@ const Login = () => {
               "
             >
               ¿No tenés cuenta?{" "}
-
               <Link
                 to="/registro"
                 className="

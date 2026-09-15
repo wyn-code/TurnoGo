@@ -7,10 +7,18 @@ interface ResumenTabProps {
   statistics: DashboardStatistics;
 }
 
+const getDeltaColor = (deltaStr: string) => {
+  if (!deltaStr) return "text-muted-foreground";
+  if (deltaStr.includes("+")) return "text-emerald-500 font-medium"; 
+  if (deltaStr.includes("-")) return "text-rose-500 font-medium";    
+  return "text-muted-foreground";                                   
+};
+
 export function ResumenTab({ statistics }: ResumenTabProps) {
   return (
     <div className="space-y-4">
       <div className="grid gap-4 md:grid-cols-3">
+        {/* TARJETA 1: Turnos hoy */}
         <Card>
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
@@ -22,8 +30,12 @@ export function ResumenTab({ statistics }: ResumenTabProps) {
                   {statistics.resumen.turnosHoy.value}
                 </p>
                 {statistics.resumen.turnosHoy.delta && (
-                  <p className="text-xs text-muted-foreground">
-                    {statistics.resumen.turnosHoy.delta} vs ayer
+                  <p className="text-xs flex items-center gap-1">
+                    {/* 2. Aplicamos la función aquí */}
+                    <span className={getDeltaColor(statistics.resumen.turnosHoy.delta)}>
+                      {statistics.resumen.turnosHoy.delta}
+                    </span>
+                    <span className="text-muted-foreground">vs ayer</span>
                   </p>
                 )}
               </div>
@@ -33,6 +45,8 @@ export function ResumenTab({ statistics }: ResumenTabProps) {
             </div>
           </CardContent>
         </Card>
+
+        {/* TARJETA 2: Turnos esta semana */}
         <Card>
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
@@ -44,8 +58,12 @@ export function ResumenTab({ statistics }: ResumenTabProps) {
                   {statistics.resumen.turnosSemana.value}
                 </p>
                 {statistics.resumen.turnosSemana.delta && (
-                  <p className="text-xs text-muted-foreground">
-                    {statistics.resumen.turnosSemana.delta} vs semana anterior
+                  <p className="text-xs flex items-center gap-1">
+                     {/* 2. Aplicamos la función aquí */}
+                    <span className={getDeltaColor(statistics.resumen.turnosSemana.delta)}>
+                      {statistics.resumen.turnosSemana.delta}
+                    </span>
+                    <span className="text-muted-foreground">vs semana anterior</span>
                   </p>
                 )}
               </div>
@@ -55,6 +73,8 @@ export function ResumenTab({ statistics }: ResumenTabProps) {
             </div>
           </CardContent>
         </Card>
+
+        {/* TARJETA 3: Turnos este mes */}
         <Card>
           <CardContent className="p-5">
             <div className="flex items-start justify-between">
@@ -66,8 +86,12 @@ export function ResumenTab({ statistics }: ResumenTabProps) {
                   {statistics.resumen.turnosMes.value}
                 </p>
                 {statistics.resumen.turnosMes.delta && (
-                  <p className="text-xs text-muted-foreground">
-                    {statistics.resumen.turnosMes.delta} vs mes anterior
+                  <p className="text-xs flex items-center gap-1">
+                     {/* 2. Aplicamos la función aquí */}
+                    <span className={getDeltaColor(statistics.resumen.turnosMes.delta)}>
+                      {statistics.resumen.turnosMes.delta}
+                    </span>
+                    <span className="text-muted-foreground">vs mes anterior</span>
                   </p>
                 )}
               </div>
@@ -79,6 +103,7 @@ export function ResumenTab({ statistics }: ResumenTabProps) {
         </Card>
       </div>
 
+      {/* Aquí está el gráfico para el punto 4 */}
       <ResumenChart data={statistics.resumen.turnosPorDia} />
     </div>
   );

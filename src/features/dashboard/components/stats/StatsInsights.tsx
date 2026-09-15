@@ -80,7 +80,7 @@ export function StatsInsights({ statistics }: StatsInsightsProps) {
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {visible.map((insight, i) => {
             const Icon = insight.icon;
             return (
