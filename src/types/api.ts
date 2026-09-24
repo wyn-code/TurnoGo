@@ -21,6 +21,16 @@ export interface ApiCategory {
   descripcion?: string | null;
 }
 
+// Envelope paginado que devuelve el backend en endpoints de listado
+// (espejo de app/schemas/negocio_schema.py:PaginatedResponse).
+export interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  page_size: number;
+  total_pages: number;
+}
+
 export interface ApiProvincia {
   id_provincia: number;
   nombre: string;

@@ -1,5 +1,10 @@
 import apiClient, { ApiError } from "@/lib/api-client";
-import type { ApiCategory, ApiNegocio, NegocioMapa } from "@/types/api";
+import type {
+  ApiCategory,
+  ApiNegocio,
+  NegocioMapa,
+  PaginatedResponse,
+} from "@/types/api";
 
 
 export const obtenerNegociosMapa = async (): Promise<NegocioMapa[]> => {
@@ -42,11 +47,16 @@ export interface CreateCompleteBusinessRequest {
 }
 
 export const businessService = {
-  // PÚBLICO: solo activos
+  // PÚBLICO: solo activos. El backend responde un envelope paginado; aquí
+  // extraemos `items` para mantener el contrato de array que consumen los hooks.
   getAll: async (
     params?: Record<string, string | number | boolean>,
   ): Promise<ApiNegocio[]> => {
-    return apiClient.get<ApiNegocio[]>("/negocios/", params);
+    const { items } = await apiClient.get<PaginatedResponse<ApiNegocio>>(
+      "/negocios/",
+      params,
+    );
+    return items;
   },
 
   // ADMIN: todos los negocios (activos e inactivos)
@@ -74,7 +84,7 @@ export const businessService = {
         error instanceof ApiError &&
         (error.status === 404 || error.status === 405)
       ) {
-        const negocios = await apiClient.get<ApiNegocio[]>("/negocios/");
+        const negocios = await businessService.getAll();
         const mine = negocios.find(
           (n) => String(n.usuario_id) === String(usuarioId),
         );
