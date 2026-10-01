@@ -22,16 +22,37 @@ export const schema = z.object({
     activo: z.boolean().default(true),
   })).min(1),
 
+  /**
+   * Los negocios "Deportes" reservan espacios, no empleados. El backend deriva
+   * la categoría de la fila elegida en el paso de información, así que
+   * `es_deportes` solo sirve para la UI y la validación condicional.
+   */
+  es_deportes: z.boolean().default(false),
+  cantidad_espacios: z.coerce.number().min(1).max(50).optional().nullable(),
+
   empleados: z.array(z.object({
     nombre: z.string().min(2),
     apellido: z.string().min(2),
-  })).min(1),
+  })),
 
   horarios: z.record(z.string(), z.object({
     open: z.boolean(),
     start: z.string(),
     end: z.string(),
   })),
-});
+})
+  // Un negocio de espacios no necesita empleados cargados, y un negocio
+  // tradicional sigue exigiendo al menos uno.
+  .refine(
+    (data) => data.es_deportes || data.empleados.length > 0,
+    { message: "Cargá al menos un empleado", path: ["empleados"] },
+  )
+  .refine(
+    (data) => !data.es_deportes || (data.cantidad_espacios ?? 0) >= 1,
+    {
+      message: "Indicá al menos un espacio",
+      path: ["cantidad_espacios"],
+    },
+  );
 
 export type FormData = z.infer<typeof schema>;

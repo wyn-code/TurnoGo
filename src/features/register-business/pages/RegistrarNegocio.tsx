@@ -42,7 +42,14 @@ export default function RegistrarNegocioPage() {
     mode: "onTouched",
   });
 
-  const { trigger, getValues } = form;
+  const { trigger, getValues, watch } = form;
+
+  // El paso 6 carga empleados o, si la categoría es "Deportes", la cantidad
+  // de espacios a crear.
+  const esDeportes = watch("es_deportes");
+  const stepTitles = esDeportes
+    ? STEPS.map((title, index) => (index === 5 ? "Espacios" : title))
+    : STEPS;
 
   const next = async () => {
     const valid = await trigger(fieldsPerStep[step - 1] as (keyof FormData)[]);
@@ -181,7 +188,7 @@ export default function RegistrarNegocioPage() {
           Completá los datos y creá tu página en minutos.
         </p>
 
-        <BookingStepper currentStep={step} steps={STEPS} />
+        <BookingStepper currentStep={step} steps={stepTitles} />
 
         <Card className="mt-8">
           <form onSubmit={handleFormSubmit}>

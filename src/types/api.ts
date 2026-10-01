@@ -19,6 +19,18 @@ export interface ApiCategory {
   slug?: string;
   created_at?: string;
   descripcion?: string | null;
+  /** Categoría padre; null/undefined = categoría raíz. */
+  parent_id?: number | null;
+}
+
+/** Item de GET /categorias/top: categoría + negocios activos. */
+export interface ApiCategoryTop extends ApiCategory {
+  cantidad_negocios: number;
+}
+
+/** Nodo de GET /categorias/tree: la categoría con sus hijos anidados. */
+export interface ApiCategoryTree extends ApiCategory {
+  children: ApiCategoryTree[];
 }
 
 // Envelope paginado que devuelve el backend en endpoints de listado
@@ -64,6 +76,7 @@ export interface ApiNegocio {
 
   categoria?: {
     id_categoria: number;
+    parent_id?: number | null;
     nombre: string;
     icono?: string | null;
     descripcion?: string | null;
@@ -103,6 +116,24 @@ export interface ApiEmpleado {
   activo: boolean;
 }
 
+/** Espacio reservable de negocios de la categoría "Deportes". */
+/** Recurso reservable de un negocio (antes "cancha"). */
+export interface ApiEspacio {
+  id_espacio: number;
+  /** Alias legado de `id_espacio`; el backend lo sigue enviando. */
+  id_cancha: number;
+  id_negocio: number;
+  nombre: string;
+  numero?: number | null;
+  descripcion?: string | null;
+  activo: boolean;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+/** @deprecated usar ApiEspacio */
+export type ApiCancha = ApiEspacio;
+
 export type ApiEmpleadoCalendarioEstado =
   | "sin_calendario"
   | "activo"
@@ -127,6 +158,7 @@ export interface ApiTurno {
   id_servicio: number;
   id_estado: number;
   id_empleado: number | null;
+  id_cancha?: number | null;
   fecha_hora_inicio: string;
   fecha_hora_fin: string | null;
   rechazado_motivo?: string | null;
@@ -156,9 +188,31 @@ export interface ApiTurnoDisponibilidad {
   id_servicio: number;
   id_estado: number;
   id_empleado: number | null;
+  id_espacio?: number | null;
+  id_cancha?: number | null;
   fecha_hora_inicio: string;
   fecha_hora_fin: string | null;
   rechazado_motivo?: string | null;
+}
+
+/** Recurso reservado por un turno: un empleado o un espacio. */
+export interface ApiRecurso {
+  tipo: "empleado" | "espacio";
+  id: number;
+  nombre: string;
+}
+
+/** Item de GET /turnos/disponibles (público, sin datos del cliente). */
+export interface ApiTurnoConRecurso {
+  id_turno: number;
+  id_negocio: number;
+  id_servicio: number;
+  id_estado: number;
+  id_empleado: number | null;
+  id_espacio: number | null;
+  fecha_hora_inicio: string;
+  fecha_hora_fin: string | null;
+  recurso: ApiRecurso | null;
 }
 
 export interface ApiHorario {
@@ -173,6 +227,8 @@ export interface ApiHorario {
 export interface BookingData {
   serviceId: string;
   professionalId: string;
+  /** Espacio reservado en negocios "Deportes". */
+  espacioId: string;
   date: Date | null;
   timeSlot: string;
   client: {

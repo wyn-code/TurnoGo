@@ -6,6 +6,7 @@ import {
   Briefcase,
   CalendarPlus,
   QrCode,
+  MapPin,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,10 @@ import type { ApiEmpleado, ApiServicio } from "@/types/api";
 
 interface BookingSummaryProps {
   service: ApiServicio;
-  professional: ApiEmpleado;
+  /** Opcional: los negocios "Deportes" reservan un espacio, no un profesional. */
+  professional?: ApiEmpleado | null;
+  /** Nombre del espacio reservado, si aplica. */
+  canchaName?: string | null;
   date: Date;
   time: string;
   client: { firstName: string; lastName: string; email: string; phone: string };
@@ -84,6 +88,7 @@ const generateGoogleCalendarLink = (
 const BookingSummary = ({
   service,
   professional,
+  canchaName,
   date,
   time,
   client,
@@ -107,8 +112,9 @@ const BookingSummary = ({
       </Card>
     );
   }
-  const professionalName =
-    `${professional.nombre} ${professional.apellido}`.trim();
+  const professionalName = professional
+    ? `${professional.nombre} ${professional.apellido}`.trim()
+    : null;
 
   return (
     <Card className="border-border shadow-sm">
@@ -179,10 +185,19 @@ const BookingSummary = ({
             </span>
           </div>
 
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <User size={16} className="shrink-0 text-primary" />
-            <span>{professionalName}</span>
-          </div>
+          {professionalName && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <User size={16} className="shrink-0 text-primary" />
+              <span>{professionalName}</span>
+            </div>
+          )}
+
+          {canchaName && (
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <MapPin size={16} className="shrink-0 text-primary" />
+              <span>{canchaName}</span>
+            </div>
+          )}
 
           <div className="flex items-center gap-2 text-muted-foreground">
             <Calendar size={16} className="shrink-0 text-primary" />

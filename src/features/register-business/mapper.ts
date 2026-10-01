@@ -30,16 +30,24 @@ export const toCreateCompleteBusinessRequest = (
       activo: s.activo ?? true,
     })),
 
-    empleados: form.empleados.map((e) => {
-      return {
-        nombre: e.nombre,
-        apellido: e.apellido,
+    // "Deportes" autogenera "Cancha 1..N" en el backend; el resto de
+    // categorías ignora el campo.
+    ...(form.es_deportes
+      ? { cantidad_espacios: Number(form.cantidad_espacios) || 1 }
+      : {}),
 
-        // ⚠️ temporal → después deberías pedirlo en el form
-        telefono: Math.floor(Math.random() * 1000000000).toString(),
+    empleados: form.es_deportes
+      ? []
+      : form.empleados.map((e) => {
+          return {
+            nombre: e.nombre,
+            apellido: e.apellido,
 
-        activo: true,
-      };
-    }),
+            // ⚠️ temporal → después deberías pedirlo en el form
+            telefono: Math.floor(Math.random() * 1000000000).toString(),
+
+            activo: true,
+          };
+        }),
   };
 };

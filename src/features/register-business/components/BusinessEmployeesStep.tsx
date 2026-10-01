@@ -11,12 +11,42 @@ type Props = {
 };
 
 export default function BusinessEmployeesStep({ form }: Props) {
-  const { control, register, formState: { errors } } = form;
+  const { control, register, watch, formState: { errors } } = form;
+
+  const esDeportes = watch("es_deportes");
 
   const { fields, append, remove } = useFieldArray({
     control,
     name: "empleados",
   });
+
+  // Los negocios "Deportes" no manejan empleados: reservan espacios.
+  if (esDeportes) {
+    return (
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="cantidad_espacios">Cantidad de espacios</Label>
+          <Input
+            {...register("cantidad_espacios")}
+            id="cantidad_espacios"
+            type="number"
+            min={1}
+            max={50}
+            placeholder="Ej: 2"
+          />
+          <p className="text-xs text-muted-foreground">
+            Vamos a crear {Number(watch("cantidad_espacios")) || 0} espacios
+            llamados &quot;Cancha 1&quot;, &quot;Cancha 2&quot;, etc.
+          </p>
+          {errors.cantidad_espacios && (
+            <p className="text-xs text-destructive">
+              {errors.cantidad_espacios.message}
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

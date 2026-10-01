@@ -1,18 +1,35 @@
+import { useEffect, useMemo } from "react";
 import type { UseFormReturn } from "react-hook-form";
 import type { FormData } from "../schema";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useCategories } from "@/hooks/useApi";
+import { isDeportesCategoria } from "@/lib/business-category";
 
 type Props = {
   form: UseFormReturn<FormData>;
 };
 
 export default function BusinessInfoStep({ form }: Props) {
-  const { register, formState: { errors } } = form;
+  const { register, watch, setValue, formState: { errors } } = form;
   const categoriesQuery = useCategories();
-  const categorias = categoriesQuery.data ?? [];
+  const categorias = useMemo(
+    () => categoriesQuery.data ?? [],
+    [categoriesQuery.data],
+  );
   const isLoading = categoriesQuery.isLoading;
+
+  const idCategoriaSeleccionada = watch("id_categoria");
+
+  // "Deportes" reserva espacios en lugar de empleados: hay que avisarle al
+  // resto del formulario apenas se elige la categoría.
+  useEffect(() => {
+    const categoria = categorias.find(
+      (cat) => String(cat.id_categoria) === String(idCategoriaSeleccionada),
+    );
+
+    setValue("es_deportes", isDeportesCategoria(categoria, categorias));
+  }, [categorias, idCategoriaSeleccionada, setValue]);
 
   return (
     <div className="space-y-6">

@@ -29,6 +29,7 @@ import { IngresosTab } from "@/features/dashboard/components/stats/tabs/Ingresos
 import { AgendaTab } from "@/features/dashboard/components/stats/tabs/AgendaTab";
 import { AsistenciaTab } from "@/features/dashboard/components/stats/tabs/AsistenciaTab";
 import { EmpleadosTab } from "@/features/dashboard/components/stats/tabs/EmpleadosTab";
+import { CanchasTab } from "@/features/dashboard/components/stats/tabs/CanchasTab";
 
 const DashboardEstadisticas = () => {
   const [rango, setRango] = useState<StatisticsRange>("mes");
@@ -134,6 +135,7 @@ const DashboardEstadisticas = () => {
           <TabsTrigger value="agenda" className="whitespace-nowrap shrink-0">Agenda</TabsTrigger>
           <TabsTrigger value="asistencia" className="whitespace-nowrap shrink-0">Asistencia</TabsTrigger>
           <TabsTrigger value="empleados" className="whitespace-nowrap shrink-0">Empleados</TabsTrigger>
+          <TabsTrigger value="canchas" className="whitespace-nowrap shrink-0">Espacios</TabsTrigger>
         </TabsList>
 
         <TabsContent value="resumen" className="space-y-4 mt-4 w-full min-w-0">
@@ -156,6 +158,9 @@ const DashboardEstadisticas = () => {
         </TabsContent>
         <TabsContent value="empleados" className="space-y-4 mt-4 w-full min-w-0">
           <EmpleadosTab statistics={statistics} />
+        </TabsContent>
+        <TabsContent value="canchas" className="space-y-4 mt-4 w-full min-w-0">
+          <CanchasTab statistics={statistics} />
         </TabsContent>
       </Tabs>
     </div>

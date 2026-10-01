@@ -8,6 +8,8 @@ export type AppointmentAvailabilityParams = {
   desde: string;
   hasta: string;
   employeeId?: QueryEntityId | null;
+  /** Filtra por espacio en negocios multi-espacio. */
+  espacioId?: QueryEntityId | null;
 };
 
 export function useAppointmentAvailability(
@@ -22,6 +24,7 @@ export function useAppointmentAvailability(
             params.desde,
             params.hasta,
             params.employeeId,
+            params.espacioId,
           ),
     queryFn: () => {
       if (params == null) return [];
@@ -31,6 +34,7 @@ export function useAppointmentAvailability(
         desde: params.desde,
         hasta: params.hasta,
         ...(params.employeeId != null && { id_empleado: params.employeeId }),
+        ...(params.espacioId != null && { id_espacio: params.espacioId }),
       });
     },
     enabled: params != null,

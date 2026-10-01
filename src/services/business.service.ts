@@ -1,6 +1,8 @@
 import apiClient, { ApiError } from "@/lib/api-client";
 import type {
   ApiCategory,
+  ApiCategoryTree,
+  ApiCategoryTop,
   ApiNegocio,
   NegocioMapa,
   PaginatedResponse,
@@ -44,6 +46,13 @@ export interface CreateCompleteBusinessRequest {
     telefono: string;
     activo: boolean;
   }[];
+  /** Espacios del negocio "Deportes"; el backend los crea con este nombre. */
+  canchas?: {
+    nombre: string;
+    activo?: boolean;
+  }[];
+  /** Cantidad de canchas a autogenerar. No se envía si viene `canchas`. */
+  cantidad_espacios?: number;
 }
 
 export const businessService = {
@@ -110,6 +119,12 @@ export const businessService = {
 
   getCategories: async (): Promise<ApiCategory[]> =>
     apiClient.get<ApiCategory[]>("/categorias/"),
+
+  getTopCategories: async (limit = 5): Promise<ApiCategoryTop[]> =>
+    apiClient.get<ApiCategoryTop[]>("/categorias/top", { limit }),
+
+  getCategoriesTree: async (): Promise<ApiCategoryTree[]> =>
+    apiClient.get<ApiCategoryTree[]>("/categorias/tree"),
 
   buildUpdatePayload: (
     business: ApiNegocio,

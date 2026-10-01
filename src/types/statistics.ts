@@ -8,7 +8,8 @@ export type TabValue =
   | "ingresos"
   | "agenda"
   | "asistencia"
-  | "empleados";
+  | "empleados"
+  | "canchas";
 
 export interface StatisticsQueryOptions {
   rango: StatisticsRange;
@@ -60,6 +61,16 @@ export interface EmployeeStatItem {
   turnos: number;
   ingresos: number;
   ocupacion: number;
+}
+
+/** Métricas por espacio de negocios "Deportes". */
+export interface CanchaStatItem {
+  id_cancha: number;
+  nombre: string;
+  turnos: number;
+  ingresos: number;
+  ocupacion: number;
+  inactiva: boolean;
 }
 
 export interface MonthlyIncomeItem {
@@ -117,4 +128,5 @@ export interface DashboardStatistics {
     totalTurnos: number;
   };
   empleados: EmployeeStatItem[];
+  canchas: CanchaStatItem[];
 }

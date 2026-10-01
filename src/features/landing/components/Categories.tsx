@@ -1,15 +1,19 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useCategories } from "@/hooks/useApi";
+import { useTopCategories } from "@/hooks/queries/useTopCategories";
 import { PLACEHOLDER_IMAGE } from "@/lib/placeholders";
 
 const fallbackImage = PLACEHOLDER_IMAGE;
 
+/** Cantidad de categorías destacadas en la home. */
+const TOP_CATEGORIES_LIMIT = 5;
+
 const Categories = () => {
   const navigate = useNavigate();
-  const { data: categories = [], isLoading, error } = useCategories();
+  const { data: categories = [], isLoading, error } = useTopCategories(TOP_CATEGORIES_LIMIT);
   const [activeCategory, setActiveCategory] = useState<number | null>(null);
 
+  // Filtra por esa categoría exacta (también si es una sub-categoría hija).
   const handleCategoryClick = (idCategoria: number) => {
     navigate(`/negocios?categoria=${idCategoria}`);
   };
@@ -30,7 +34,7 @@ const Categories = () => {
           </h2>
 
           <p className="mt-3 text-muted-foreground">
-            Explorá por tipo de servicio.
+            Las más elegidas, por cantidad de negocios.
           </p>
         </div>
 

@@ -1,5 +1,9 @@
 import apiClient from "@/lib/api-client";
-import type { ApiTurno, ApiTurnoDisponibilidad } from "@/types/api";
+import type {
+  ApiTurno,
+  ApiTurnoConRecurso,
+  ApiTurnoDisponibilidad,
+} from "@/types/api";
 
 export interface CreateAppointmentRequest {
   id_negocio: number;
@@ -7,6 +11,8 @@ export interface CreateAppointmentRequest {
   id_servicio: number;
   fecha_hora_inicio: string;
   id_empleado: number | null;
+  /** Espacio reservado. Un turno tiene empleado O espacio, nunca ambos. */
+  id_espacio?: number | null;
 }
 
 export interface ChangeStatusRequest {
@@ -62,7 +68,17 @@ export const appointmentService = {
     desde: string;
     hasta: string;
     id_empleado?: string | number;
+    id_espacio?: string | number;
   }): Promise<ApiTurnoDisponibilidad[]> => {
     return apiClient.get<ApiTurnoDisponibilidad[]>("/turnos/disponibilidad", params);
+  },
+
+  /** Turnos por categoría (con sub-categorías), fecha y estado, con su recurso. */
+  getDisponibles: async (params: {
+    categoria_padre?: string | number;
+    fecha?: string;
+    estado?: string | number;
+  }): Promise<ApiTurnoConRecurso[]> => {
+    return apiClient.get<ApiTurnoConRecurso[]>("/turnos/disponibles", params);
   },
 };

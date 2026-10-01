@@ -24,6 +24,8 @@ export const queryKeys = {
   },
   categories: {
     all: () => ["categories"] as const,
+    tree: () => ["categories", "tree"] as const,
+    top: (limit: number) => ["categories", "top", limit] as const,
   },
   services: {
     all: () => ["services"] as const,
@@ -38,6 +40,17 @@ export const queryKeys = {
       ["employees", id(businessId)] as const,
     calendarState: (businessId: QueryEntityId, employeeId: QueryEntityId) =>
       ["employees", id(businessId), "calendar-state", id(employeeId)] as const,
+  },
+  espacios: {
+    all: () => ["espacios"] as const,
+    byBusiness: (businessId: QueryEntityId) =>
+      ["espacios", id(businessId)] as const,
+  },
+  /** Alias legado de `espacios`: comparten caché para invalidar juntos. */
+  canchas: {
+    all: () => ["espacios"] as const,
+    byBusiness: (businessId: QueryEntityId) =>
+      ["espacios", id(businessId)] as const,
   },
   schedules: {
     all: () => ["schedules"] as const,
@@ -57,6 +70,7 @@ export const queryKeys = {
       desde: string,
       hasta: string,
       employeeId?: QueryEntityId | null,
+      espacioId?: QueryEntityId | null,
     ) =>
       [
         "appointments",
@@ -65,6 +79,19 @@ export const queryKeys = {
         desde,
         hasta,
         employeeId == null ? null : id(employeeId),
+        espacioId == null ? null : id(espacioId),
+      ] as const,
+    slots: (
+      categoriaId: QueryEntityId | null,
+      fecha: string | null,
+      estado: QueryEntityId | null,
+    ) =>
+      [
+        "appointments",
+        "slots",
+        categoriaId == null ? null : id(categoriaId),
+        fecha,
+        estado == null ? null : id(estado),
       ] as const,
     availabilityRoot: (businessId: QueryEntityId) =>
       ["appointments", id(businessId), "availability"] as const,

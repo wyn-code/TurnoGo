@@ -18,6 +18,8 @@ import {
 import { useBusinessBySlug } from "@/hooks/useApi";
 import { useServices } from "@/hooks/queries/useServicesQuery";
 import { useEmployees } from "@/hooks/queries/useEmployeesQuery";
+import { useEspacios } from "@/hooks/queries/useEspaciosQuery";
+import { useCategoriesTree } from "@/hooks/queries/useCategoriesTree";
 import { useHorarios } from "@/hooks/queries/useHorariosQuery";
 
 import { cn } from "@/lib/utils";
@@ -26,7 +28,7 @@ import BookingStepper from "@/features/booking/components/BookingStepper";
 import BookingForm from "@/features/booking/components/BookingForm";
 import BookingSummary from "@/features/booking/components/BookingSummary";
 import ServiceCard from "@/features/business/components/ServiceCard";
-import ProfessionalCard from "@/features/business/components/ProfessionalCard";
+import BookingResourceStep from "@/features/booking/components/BookingResourceStep";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import type {
@@ -36,6 +38,8 @@ import type {
   ApiHorario,
 } from "@/types/api";
 import { ApiError } from "@/lib/api-client";
+import { isDeportesNegocio, resourceStepTitle } from "@/lib/business-category";
+import { flattenTree } from "@/lib/category-tree";
 import { buildLocalDateTimeString } from "@/lib/datetime-utils";
 import { apiDayToWeekDayIndex, WEEK_DAYS } from "@/lib/schedule-utils";
 import { useAppointmentAvailability } from "@/features/booking/hooks/useAppointmentAvailability";
@@ -119,7 +123,17 @@ const Reservar = () => {
   const businessQuery = useBusinessBySlug(slug ?? "");
   const businessId = businessQuery.data?.id_negocio ?? null;
   const servicesQuery = useServices(businessId);
-  const employeesQuery = useEmployees(businessId);
+  const treeQuery = useCategoriesTree();
+  const categories = useMemo(() => flattenTree(treeQuery.data ?? []), [treeQuery.data]);
+  // Un negocio es multi-espacio si tiene espacios activos o es de Deportes
+  // (o una sub-categoría): ahí se reservan espacios, no profesionales.
+  const espaciosQuery = useEspacios(businessId);
+  const canchas = espaciosQuery.data ?? [];
+  const esMultiEspacio =
+    canchas.length > 0 || isDeportesNegocio(businessQuery.data, categories);
+  const employeesQuery = useEmployees(
+    espaciosQuery.isSuccess && !esMultiEspacio ? businessId : null,
+  );
   const schedulesQuery = useHorarios(businessId);
   const services = servicesQuery.data ?? [];
   const professionals = employeesQuery.data ?? [];
@@ -135,9 +149,14 @@ const Reservar = () => {
     (businessId != null &&
       (servicesQuery.isLoading ||
         employeesQuery.isLoading ||
+        espaciosQuery.isLoading ||
         schedulesQuery.isLoading));
   const error =
-    !slug || businessQuery.error || servicesQuery.error || employeesQuery.error
+    !slug ||
+    businessQuery.error ||
+    servicesQuery.error ||
+    employeesQuery.error ||
+    espaciosQuery.error
       ? "No se pudo cargar el negocio para reservar"
       : null;
 
@@ -145,6 +164,7 @@ const Reservar = () => {
   const [booking, setBooking] = useState<BookingData>({
     serviceId: preSelectedService,
     professionalId: "",
+    espacioId: "",
     date: null,
     timeSlot: "",
     client: { firstName: "", lastName: "", phone: "", email: "", notes: "" },
@@ -186,6 +206,12 @@ const Reservar = () => {
   const selectedProfessional = professionals.find(
     (p) => String(p.id_empleado) === String(booking.professionalId),
   );
+  const selectedEspacio = canchas.find(
+    (c) => String(c.id_espacio) === String(booking.espacioId),
+  );
+  // El recurso reservado: la cancha si el negocio es de Deportes, si no el
+  // profesional. el turno lleva uno u otro, nunca ambos.
+  const recursoId = esMultiEspacio ? booking.espacioId : booking.professionalId;
   const serviceDuration = selectedService?.duracion_min ?? 30;
   const businessHours = getBusinessHoursForDate(business, booking.date);
 
@@ -196,9 +222,10 @@ const Reservar = () => {
       businessId,
       desde: buildLocalDateTimeString(booking.date, "00:00"),
       hasta: buildLocalDateTimeString(booking.date, "23:59"),
-      employeeId: booking.professionalId || null,
+      employeeId: esMultiEspacio ? null : booking.professionalId || null,
+      espacioId: esMultiEspacio ? booking.espacioId || null : null,
     };
-  }, [businessId, booking.date, booking.professionalId]);
+  }, [businessId, booking.date, booking.professionalId, booking.espacioId, esMultiEspacio]);
 
   const monthAvailabilityParams = useMemo(() => {
     if (businessId == null) return null;
@@ -209,9 +236,10 @@ const Reservar = () => {
       businessId,
       desde: buildLocalDateTimeString(monthStart, "00:00"),
       hasta: buildLocalDateTimeString(monthEnd, "23:59"),
-      employeeId: booking.professionalId || null,
+      employeeId: esMultiEspacio ? null : booking.professionalId || null,
+      espacioId: esMultiEspacio ? booking.espacioId || null : null,
     };
-  }, [businessId, visibleMonth, booking.professionalId]);
+  }, [businessId, visibleMonth, booking.professionalId, booking.espacioId, esMultiEspacio]);
 
   const dayAvailabilityQuery = useAppointmentAvailability(dayAvailabilityParams);
   const monthAvailabilityQuery = useAppointmentAvailability(monthAvailabilityParams);
@@ -256,7 +284,7 @@ const Reservar = () => {
 
   const canNext = (): boolean => {
     switch (step) {
-      case 1: return !!booking.serviceId && !!booking.professionalId;
+      case 1: return !!booking.serviceId && !!recursoId;
       case 2: return !!booking.date && timeSlots.some((s) => s.time === effectiveSelectedTime && s.available);
       case 3: return !!(booking.client.firstName && booking.client.lastName && booking.client.phone && booking.client.email);
       default: return false;
@@ -282,7 +310,14 @@ const Reservar = () => {
         appointment: {
           id_negocio: Number(business.id_negocio),
           id_servicio: Number(booking.serviceId),
-          id_empleado: booking.professionalId ? Number(booking.professionalId) : null,
+          id_empleado: esMultiEspacio
+            ? null
+            : booking.professionalId
+              ? Number(booking.professionalId)
+              : null,
+          ...(esMultiEspacio && booking.espacioId
+            ? { id_espacio: Number(booking.espacioId) }
+            : {}),
           fecha_hora_inicio: buildLocalDateTimeString(booking.date, effectiveSelectedTime),
         },
       });
@@ -333,7 +368,12 @@ const Reservar = () => {
   }
 
   // -------- Success --------
-  if (step === 4 && selectedService && selectedProfessional && booking.date) {
+  if (
+    step === 4 &&
+    selectedService &&
+    (esMultiEspacio ? selectedEspacio : selectedProfessional) &&
+    booking.date
+  ) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-amber-50/40 via-background to-background">
         <div className="max-w-2xl mx-auto px-4 py-16">
@@ -347,6 +387,7 @@ const Reservar = () => {
               businessName={business.nombre}
               service={selectedService}
               professional={selectedProfessional}
+              canchaName={selectedEspacio?.nombre ?? null}
               date={booking.date}
               time={effectiveSelectedTime}
               client={booking.client}
@@ -432,26 +473,36 @@ const Reservar = () => {
                 <section className="animate-in fade-in slide-in-from-bottom-2 duration-300">
                   <div className="flex items-center gap-2 mb-4">
                     <span className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-semibold">2</span>
-                    <h2 className="text-xl font-semibold">Elegí un profesional</h2>
+                    <h2 className="text-xl font-semibold">
+                      {resourceStepTitle(esMultiEspacio)}
+                    </h2>
                   </div>
-                  <div className="grid sm:grid-cols-2 gap-3">
-                    {professionals.map((professional) => (
-                      <ProfessionalCard
-                        key={professional.id_empleado}
-                        professional={professional}
-                        selected={String(professional.id_empleado) === String(booking.professionalId)}
-                        onSelect={() => {
-                          setSubmitError(null);
-                          setBooking((c) => ({
-                            ...c,
-                            professionalId: String(professional.id_empleado),
-                            timeSlot: "",
-                          }));
-                          setStep(2);
-                        }}
-                      />
-                    ))}
-                  </div>
+
+                  <BookingResourceStep
+                    multiEspacio={esMultiEspacio}
+                    espacios={canchas}
+                    professionals={professionals}
+                    selectedEspacioId={booking.espacioId}
+                    selectedProfessionalId={booking.professionalId}
+                    onSelectEspacio={(espacio) => {
+                      setSubmitError(null);
+                      setBooking((c) => ({
+                        ...c,
+                        espacioId: String(espacio.id_espacio),
+                        timeSlot: "",
+                      }));
+                      setStep(2);
+                    }}
+                    onSelectProfessional={(professional) => {
+                      setSubmitError(null);
+                      setBooking((c) => ({
+                        ...c,
+                        professionalId: String(professional.id_empleado),
+                        timeSlot: "",
+                      }));
+                      setStep(2);
+                    }}
+                  />
                 </section>
               )}
             </div>
@@ -622,12 +673,15 @@ const Reservar = () => {
                   onChange={(client) => setBooking((c) => ({ ...c, client }))}
                 />
               </div>
-              {selectedService && selectedProfessional && booking.date && (
+              {selectedService &&
+                (esMultiEspacio ? selectedEspacio : selectedProfessional) &&
+                booking.date && (
                 <aside className="lg:sticky lg:top-6 self-start">
                   <BookingSummary
                     businessName={business.nombre}
                     service={selectedService}
                     professional={selectedProfessional}
+                    canchaName={selectedEspacio?.nombre ?? null}
                     date={booking.date}
                     time={effectiveSelectedTime}
                     client={booking.client}

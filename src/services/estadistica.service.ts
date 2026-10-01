@@ -1,4 +1,5 @@
 import apiClient, { ApiError } from "@/lib/api-client";
+import { canchaService } from "@/services/cancha.service";
 import { empleadoService } from "@/services/empleado.service";
 import { horarioService } from "@/services/horario.service";
 import { servicioService } from "@/services/servicio.service";
@@ -65,17 +66,20 @@ async function buildLocalStatistics(
   businessId: number | string,
   options: StatisticsQueryOptions,
 ): Promise<DashboardStatistics> {
-  const [appointments, services, employees, horarios] = await Promise.all([
-    fetchAppointmentsForAnalysis(businessId, options),
-    servicioService.getByBusiness(businessId, { includeInactive: true }),
-    empleadoService.getByBusiness(businessId),
-    horarioService.getByBusiness(businessId),
-  ]);
+  const [appointments, services, employees, canchas, horarios] =
+    await Promise.all([
+      fetchAppointmentsForAnalysis(businessId, options),
+      servicioService.getByBusiness(businessId, { includeInactive: true }),
+      empleadoService.getByBusiness(businessId),
+      canchaService.getByBusiness(businessId, true),
+      horarioService.getByBusiness(businessId),
+    ]);
 
   return buildDashboardStatistics({
     appointments,
     services,
     employees,
+    canchas,
     horarios,
     options,
   });

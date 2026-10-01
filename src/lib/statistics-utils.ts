@@ -1,10 +1,12 @@
 import type {
+  ApiCancha,
   ApiEmpleado,
   ApiHorario,
   ApiServicio,
   ApiTurno,
 } from "@/types/api";
 import type {
+  CanchaStatItem,
   DashboardStatistics,
   MetricWithDelta,
   StatisticsCompare,
@@ -550,6 +552,41 @@ function buildEmployeeStats(
   });
 }
 
+/**
+ * Métricas por espacio. Replica `buildEmployeeStats` (los turnos cuelgan de
+ * `id_cancha` en vez de `id_empleado`) e informa también las canchas inactivas
+ * para que el dueño vea si tiene espacio dado de baja.
+ */
+export function buildCanchaStats(
+  appointments: ApiTurno[],
+  canchas: ApiCancha[],
+  servicesById: Map<number, ApiServicio>,
+  openMinutes: number,
+): CanchaStatItem[] {
+  const activeCanchas = canchas.filter((cancha) => cancha.activo);
+  const capacityMinutes = openMinutes / Math.max(activeCanchas.length, 1);
+
+  return canchas.map((cancha) => {
+    const canchaAppointments = appointments.filter(
+      (appointment) => appointment.id_cancha === cancha.id_cancha,
+    );
+
+    const bookedMinutes = estimateBookedMinutes(canchaAppointments, servicesById);
+    const ocupacion = cancha.activo
+      ? Math.min(100, Math.round((bookedMinutes / Math.max(capacityMinutes, 1)) * 100))
+      : 0;
+
+    return {
+      id_cancha: cancha.id_cancha,
+      nombre: cancha.nombre,
+      turnos: canchaAppointments.length,
+      ingresos: sumRevenue(canchaAppointments, servicesById),
+      ocupacion,
+      inactiva: !cancha.activo,
+    };
+  });
+}
+
 function buildAttendanceStats(appointments: ApiTurno[]) {
   let completados = 0;
   let cancelados = 0;
@@ -604,6 +641,7 @@ export function buildDashboardStatistics(input: {
   appointments: ApiTurno[];
   services: ApiServicio[];
   employees: ApiEmpleado[];
+  canchas?: ApiCancha[];
   horarios: ApiHorario[];
   options: StatisticsQueryOptions;
   reference?: Date;
@@ -813,6 +851,12 @@ export function buildDashboardStatistics(input: {
       servicesById,
       openMinutes,
     ),
+    canchas: buildCanchaStats(
+      periodAppointments,
+      input.canchas ?? [],
+      servicesById,
+      openMinutes,
+    ),
   };
 }
 
@@ -839,6 +883,10 @@ export function exportStatisticsFile(
     ...statistics.empleados.map(
       (employee) =>
         `Empleados,${employee.nombre},${employee.turnos} turnos / $${employee.ingresos}`,
+    ),
+    ...(statistics.canchas ?? []).map(
+      (cancha) =>
+        `Espacios,${cancha.nombre},${cancha.turnos} turnos / $${cancha.ingresos}`,
     ),
   ];
 
@@ -878,6 +926,7 @@ export function mergeStatisticsPayload(
     agenda: { ...localData.agenda, ...apiData.agenda },
     asistencia: { ...localData.asistencia, ...apiData.asistencia },
     empleados: apiData.empleados?.length ? apiData.empleados : localData.empleados,
+    canchas: apiData.canchas?.length ? apiData.canchas : localData.canchas,
   };
 }
 

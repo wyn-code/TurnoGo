@@ -24,6 +24,9 @@ export const defaultValues: FormData = {
     },
   ],
 
+  es_deportes: false,
+  cantidad_espacios: 2,
+
   empleados: [
     {
       nombre: "",
@@ -76,6 +79,6 @@ export const fieldsPerStep = [
   ["wsp", "telefono", "ig_url", "url_fb"],
   ["direccion", "ciudad", "id_localidad", "id_provincia"],
   ["servicios"],
-  ["empleados"],
+  ["empleados", "cantidad_espacios"],
   ["horarios"],
 ];

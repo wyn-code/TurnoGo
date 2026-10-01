@@ -6,8 +6,15 @@ import {
   isPartialStatisticsPayload,
   mergeStatisticsPayload,
   mapLegacySummaryToStatistics,
+  buildCanchaStats,
 } from "./statistics-utils";
-import type { ApiTurno, ApiServicio, ApiEmpleado, ApiHorario } from "@/types/api";
+import type {
+  ApiCancha,
+  ApiTurno,
+  ApiServicio,
+  ApiEmpleado,
+  ApiHorario,
+} from "@/types/api";
 
 // ── Helpers ──
 
@@ -49,6 +56,17 @@ function makeEmployee(overrides: Partial<ApiEmpleado> = {}): ApiEmpleado {
     nombre: "María",
     apellido: "López",
     telefono: "5678",
+    activo: true,
+    ...overrides,
+  };
+}
+
+function makeCancha(overrides: Partial<ApiCancha> = {}): ApiCancha {
+  return {
+    id_espacio: 1,
+    id_cancha: 1,
+    id_negocio: 1,
+    nombre: "Cancha 1",
     activo: true,
     ...overrides,
   };
@@ -364,5 +382,93 @@ describe("buildDashboardStatistics", () => {
 
     expect(result.clientes.topVisitas.length).toBeGreaterThanOrEqual(1);
     expect(result.clientes.topCancelaciones.length).toBeGreaterThanOrEqual(1);
+  });
+});
+
+// ── buildCanchaStats ──
+
+describe("buildCanchaStats", () => {
+  const servicesById = new Map<number, ApiServicio>([[1, makeService()]]);
+
+  it("devuelve una fila por cancha, incluso sin turnos", () => {
+    const stats = buildCanchaStats(
+      [],
+      [makeCancha({ id_cancha: 1 }), makeCancha({ id_cancha: 2, nombre: "Cancha 2" })],
+      servicesById,
+      600,
+    );
+
+    expect(stats).toHaveLength(2);
+    expect(stats[0]).toMatchObject({ turnos: 0, ingresos: 0, inactiva: false });
+  });
+
+  it("agrupa los turnos por id_cancha", () => {
+    const stats = buildCanchaStats(
+      [
+        makeTurno({ id_turno: 1, id_cancha: 1 }),
+        makeTurno({ id_turno: 2, id_cancha: 1 }),
+        makeTurno({ id_turno: 3, id_cancha: 2 }),
+      ],
+      [makeCancha({ id_cancha: 1 }), makeCancha({ id_cancha: 2, nombre: "Cancha 2" })],
+      servicesById,
+      600,
+    );
+
+    expect(stats[0].turnos).toBe(2);
+    expect(stats[0].ingresos).toBe(2000);
+    expect(stats[1].turnos).toBe(1);
+    expect(stats[1].ingresos).toBe(1000);
+  });
+
+  it("ignora los turnos que no tienen cancha", () => {
+    const stats = buildCanchaStats(
+      [makeTurno({ id_turno: 1, id_cancha: null, id_empleado: 7 })],
+      [makeCancha()],
+      servicesById,
+      600,
+    );
+
+    expect(stats[0].turnos).toBe(0);
+  });
+
+  it("marca las canchas inactivas con ocupación 0", () => {
+    const stats = buildCanchaStats(
+      [makeTurno({ id_turno: 1, id_cancha: 1 })],
+      [makeCancha({ activo: false })],
+      servicesById,
+      600,
+    );
+
+    expect(stats[0].inactiva).toBe(true);
+    expect(stats[0].ocupacion).toBe(0);
+    expect(stats[0].turnos).toBe(1);
+  });
+
+  it("se incluye en buildDashboardStatistics", () => {
+    const result = buildDashboardStatistics({
+      appointments: [makeTurno({ id_cancha: 1 })],
+      services: [makeService()],
+      employees: [],
+      canchas: [makeCancha()],
+      horarios: [],
+      options: { rango: "mes", comparar: "anterior" },
+      reference: REFERENCE,
+    });
+
+    expect(result.canchas).toHaveLength(1);
+    expect(result.canchas[0]).toMatchObject({ nombre: "Cancha 1", turnos: 1 });
+  });
+
+  it("no rompe cuando el negocio no tiene canchas", () => {
+    const result = buildDashboardStatistics({
+      appointments: [],
+      services: [],
+      employees: [],
+      horarios: [],
+      options: { rango: "mes", comparar: "anterior" },
+      reference: REFERENCE,
+    });
+
+    expect(result.canchas).toEqual([]);
   });
 });

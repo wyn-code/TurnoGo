@@ -3,7 +3,9 @@ import { useSearchParams } from "react-router-dom";
 import { Search } from "lucide-react";
 import BusinessGrid from "@/features/marketplace/components/BusinessesGrid";
 import { useBusinesses, useCategories } from "@/hooks/useApi";
-import { cn } from "@/lib/utils";
+import { useCategoriesTree } from "@/hooks/queries/useCategoriesTree";
+import CategoryFilter from "@/components/CategoryFilter";
+import { idsWithDescendants, matchesCategories } from "@/lib/category-tree";
 
 import type { City } from "@/types/api";
 
@@ -20,10 +22,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 const Negocios = () => {
   const [searchParams] = useSearchParams();
   const [search, setSearch] = useState(() => searchParams.get("q") ?? "");
-  const [selectedCategory, setSelectedCategory] = useState<number | null>(() => {
-    const param = searchParams.get("categoria");
-    return param ? Number(param) : null;
-  });
+  // ?categoria=<id> (desde la landing) preselecciona esa categoría y su subárbol
+  // hasta que el usuario toque el filtro (null = sin tocar).
+  const categoriaParam = searchParams.get("categoria");
+  const [userCategories, setUserCategories] = useState<number[] | null>(null);
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
   const selectedLocalidadId = (() => {
     const param = searchParams.get("localidad");
@@ -40,7 +42,15 @@ const Negocios = () => {
     data: categories = [],
     isLoading: isLoadingCategories,
   } = useCategories();
-  const isLoading = isLoadingBusinesses || isLoadingCategories;
+  const { data: categoryTree = [], isLoading: isLoadingTree } = useCategoriesTree();
+  const isLoading = isLoadingBusinesses || isLoadingCategories || isLoadingTree;
+
+  const selectedCategories = useMemo(() => {
+    if (userCategories) return userCategories;
+    if (!categoriaParam) return [];
+    const ids = idsWithDescendants(categoryTree, Number(categoriaParam));
+    return ids.length ? ids : [Number(categoriaParam)];
+  }, [userCategories, categoriaParam, categoryTree]);
   const error = businessesError ? "No se pudieron cargar los negocios" : null;
 
   const cities = useMemo<City[]>(() => {
@@ -73,8 +83,8 @@ const Negocios = () => {
       );
     }
 
-    if (selectedCategory) {
-      result = result.filter((b) => b.id_categoria === selectedCategory);
+    if (selectedCategories.length > 0) {
+      result = result.filter((b) => matchesCategories(b.id_categoria, selectedCategories));
     }
 
     if (selectedCity) {
@@ -96,7 +106,7 @@ const Negocios = () => {
     }
 
     return result;
-  }, [businesses, search, selectedCategory, selectedCity, selectedLocalidadId, locationName, cities]);
+  }, [businesses, search, selectedCategories, selectedCity, selectedLocalidadId, locationName, cities]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -155,33 +165,12 @@ const Negocios = () => {
             <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
               Categoría
             </p>
-            <button
-              onClick={() => setSelectedCategory(null)}
+            <CategoryFilter
+              tree={categoryTree}
+              selectedIds={selectedCategories}
+              onChange={setUserCategories}
               disabled={isLoading}
-              className={cn(
-                "w-full rounded-lg px-4 py-2.5 text-left text-sm font-medium transition-colors",
-                selectedCategory === null
-                  ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                  : "text-foreground hover:bg-accent"
-              )}
-            >
-              Todas
-            </button>
-            {categories.map((cat) => (
-              <button
-                key={cat.id_categoria}
-                onClick={() => setSelectedCategory(cat.id_categoria)}
-                disabled={isLoading}
-                className={cn(
-                  "w-full rounded-lg px-4 py-2.5 text-left text-sm font-medium transition-colors",
-                  selectedCategory === cat.id_categoria
-                    ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                    : "text-foreground hover:bg-accent"
-                )}
-              >
-                {cat.nombre}
-              </button>
-            ))}
+            />
           </aside>
 
           {/* Resultados */}
