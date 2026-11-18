@@ -1,16 +1,24 @@
 import apiClient, { ApiError } from "@/lib/api-client";
+import { extractItems, extractTotalPages } from "@/lib/api-response";
 import type {
   ApiCategory,
   ApiCategoryTree,
   ApiCategoryTop,
   ApiNegocio,
   NegocioMapa,
-  PaginatedResponse,
 } from "@/types/api";
 
+const normalizeCategoryTree = (node: ApiCategoryTree): ApiCategoryTree => ({
+  ...node,
+  parent_id: node.parent_id ?? null,
+  children: Array.isArray(node.children)
+    ? node.children.map(normalizeCategoryTree)
+    : [],
+});
 
 export const obtenerNegociosMapa = async (): Promise<NegocioMapa[]> => {
-  return apiClient.get<NegocioMapa[]>("/negocios/mapa");
+  const response = await apiClient.get<unknown>("/negocios/mapa");
+  return extractItems<NegocioMapa>(response);
 };
 
 export interface CreateBusinessResponse {
@@ -61,34 +69,28 @@ export const businessService = {
   getAll: async (
     params?: Record<string, string | number | boolean>,
   ): Promise<ApiNegocio[]> => {
-    const { items } = await apiClient.get<PaginatedResponse<ApiNegocio>>(
-      "/negocios/",
-      params,
-    );
-    return items;
+    const response = await apiClient.get<unknown>("/negocios/", params);
+    return extractItems<ApiNegocio>(response);
   },
 
   // ADMIN: todos los negocios (activos e inactivos). El backend responde un
   // envelope paginado; se recorren todas las páginas para no perder registros.
   getAllAdmin: async (): Promise<ApiNegocio[]> => {
     const pageSize = 100;
-    const firstPage = await apiClient.get<
-      ApiNegocio[] | PaginatedResponse<ApiNegocio>
-    >("/negocios/admin", { page: 1, page_size: pageSize });
+    const firstPage = await apiClient.get<unknown>("/negocios/admin", {
+      page: 1,
+      page_size: pageSize,
+    });
+    const negocios = extractItems<ApiNegocio>(firstPage);
+    const totalPages = extractTotalPages(firstPage);
 
-    if (Array.isArray(firstPage)) {
-      return firstPage;
-    }
+    for (let page = 2; page <= totalPages; page += 1) {
+      const nextPage = await apiClient.get<unknown>("/negocios/admin", {
+        page,
+        page_size: pageSize,
+      });
 
-    const negocios = [...firstPage.items];
-
-    for (let page = 2; page <= firstPage.total_pages; page += 1) {
-      const nextPage = await apiClient.get<PaginatedResponse<ApiNegocio>>(
-        "/negocios/admin",
-        { page, page_size: pageSize },
-      );
-
-      negocios.push(...nextPage.items);
+      negocios.push(...extractItems<ApiNegocio>(nextPage));
     }
 
     return negocios;
@@ -138,14 +140,20 @@ export const businessService = {
     return apiClient.post<CreateBusinessResponse>("/negocios/complete", data);
   },
 
-  getCategories: async (): Promise<ApiCategory[]> =>
-    apiClient.get<ApiCategory[]>("/categorias/"),
+  getCategories: async (): Promise<ApiCategory[]> => {
+    const response = await apiClient.get<unknown>("/categorias/");
+    return extractItems<ApiCategory>(response);
+  },
 
-  getTopCategories: async (limit = 5): Promise<ApiCategoryTop[]> =>
-    apiClient.get<ApiCategoryTop[]>("/categorias/top", { limit }),
+  getTopCategories: async (limit = 5): Promise<ApiCategoryTop[]> => {
+    const response = await apiClient.get<unknown>("/categorias/top", { limit });
+    return extractItems<ApiCategoryTop>(response);
+  },
 
-  getCategoriesTree: async (): Promise<ApiCategoryTree[]> =>
-    apiClient.get<ApiCategoryTree[]>("/categorias/tree"),
+  getCategoriesTree: async (): Promise<ApiCategoryTree[]> => {
+    const response = await apiClient.get<unknown>("/categorias/tree");
+    return extractItems<ApiCategoryTree>(response).map(normalizeCategoryTree);
+  },
 
   buildUpdatePayload: (
     business: ApiNegocio,

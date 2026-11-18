@@ -1,5 +1,6 @@
 import apiClient from "@/lib/api-client";
-import type { ApiUsuario, PaginatedResponse } from "@/types/api";
+import { extractItems } from "@/lib/api-response";
+import type { ApiUsuario } from "@/types/api";
 
 export interface UpdateUserRequest {
   usuario_us?: string;
@@ -37,12 +38,8 @@ function normalizeUser(raw: Record<string, unknown>): ApiUsuario {
 
 export const userService = {
   getAllAdmin: async (): Promise<ApiUsuario[]> => {
-    const response = await apiClient.get<
-      | Record<string, unknown>[]
-      | PaginatedResponse<Record<string, unknown>>
-    >("/usuarios/admin");
-
-    const data = Array.isArray(response) ? response : response.items;
+    const response = await apiClient.get<unknown>("/usuarios/admin");
+    const data = extractItems<Record<string, unknown>>(response);
 
     return data.map(normalizeUser);
   },

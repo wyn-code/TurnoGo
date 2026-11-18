@@ -21,6 +21,7 @@ import {
   useToggleAdminUserStatus,
   useUpdateAdminUser,
 } from "@/hooks/mutations/useAdminMutations";
+import { AdminListError, AdminListLoading } from "@/features/admin/components/AdminListState";
 
 function getUserRole(user: ApiUsuario) {
   return (user.role_us ?? user.rol ?? "—").toLowerCase();
@@ -48,7 +49,7 @@ export function AdminUsersSection() {
   const updateUser = useUpdateAdminUser();
   const toggleUserStatus = useToggleAdminUserStatus();
   const deleteUserMutation = useDeleteAdminUser();
-  const users = usersQuery.data ?? [];
+  const users = Array.isArray(usersQuery.data) ? usersQuery.data : [];
 
   useEffect(() => {
     if (!usersQuery.isError) return;
@@ -56,6 +57,19 @@ export function AdminUsersSection() {
     console.error("Error cargando usuarios:", usersQuery.error);
     toast.error("No se pudieron cargar los usuarios");
   }, [usersQuery.error, usersQuery.isError]);
+
+  if (usersQuery.isLoading) {
+    return <AdminListLoading label="Cargando usuarios..." />;
+  }
+
+  if (usersQuery.isError) {
+    return (
+      <AdminListError
+        message={usersQuery.error?.message}
+        onRetry={() => void usersQuery.refetch()}
+      />
+    );
+  }
 
   const filtered = users.filter((u) => {
     const q = search.toLowerCase();

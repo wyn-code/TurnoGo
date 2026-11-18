@@ -20,6 +20,7 @@ import {
   useDeleteAdminBusiness,
   useUpdateAdminBusiness,
 } from "@/hooks/mutations/useAdminMutations";
+import { AdminListError, AdminListLoading } from "@/features/admin/components/AdminListState";
 
 export function AdminBusinessesSection() {
   const [search, setSearch] = useState("");
@@ -28,7 +29,9 @@ export function AdminBusinessesSection() {
   const businessesQuery = useAdminBusinesses();
   const updateBusiness = useUpdateAdminBusiness();
   const deleteBusinessMutation = useDeleteAdminBusiness();
-  const businesses = businessesQuery.data ?? [];
+  const businesses = Array.isArray(businessesQuery.data)
+    ? businessesQuery.data
+    : [];
 
   useEffect(() => {
     if (!businessesQuery.isError) return;
@@ -36,6 +39,19 @@ export function AdminBusinessesSection() {
     console.error("Error cargando negocios:", businessesQuery.error);
     toast.error("No se pudieron cargar los negocios");
   }, [businessesQuery.error, businessesQuery.isError]);
+
+  if (businessesQuery.isLoading) {
+    return <AdminListLoading label="Cargando negocios..." />;
+  }
+
+  if (businessesQuery.isError) {
+    return (
+      <AdminListError
+        message={businessesQuery.error?.message}
+        onRetry={() => void businessesQuery.refetch()}
+      />
+    );
+  }
 
   const filtered = businesses.filter((b) => {
     const q = search.toLowerCase();
