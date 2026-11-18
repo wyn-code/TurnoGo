@@ -68,9 +68,30 @@ export const businessService = {
     return items;
   },
 
-  // ADMIN: todos los negocios (activos e inactivos)
+  // ADMIN: todos los negocios (activos e inactivos). El backend responde un
+  // envelope paginado; se recorren todas las páginas para no perder registros.
   getAllAdmin: async (): Promise<ApiNegocio[]> => {
-    return apiClient.get<ApiNegocio[]>("/negocios/admin");
+    const pageSize = 100;
+    const firstPage = await apiClient.get<
+      ApiNegocio[] | PaginatedResponse<ApiNegocio>
+    >("/negocios/admin", { page: 1, page_size: pageSize });
+
+    if (Array.isArray(firstPage)) {
+      return firstPage;
+    }
+
+    const negocios = [...firstPage.items];
+
+    for (let page = 2; page <= firstPage.total_pages; page += 1) {
+      const nextPage = await apiClient.get<PaginatedResponse<ApiNegocio>>(
+        "/negocios/admin",
+        { page, page_size: pageSize },
+      );
+
+      negocios.push(...nextPage.items);
+    }
+
+    return negocios;
   },
 
   // Alias para compatibilidad
